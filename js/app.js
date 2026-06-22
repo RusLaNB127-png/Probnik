@@ -1,20 +1,7 @@
 /* ============================================================
-   ПРИЛОЖЕНИЕ: переключение объектов, вкладки, поиск,
-   уведомления, календарь, инициализация.
+   ПРИЛОЖЕНИЕ: вкладки, поиск, уведомления, инициализация.
+   Календарь вынесен в calendar.js, шахматка — в chess.js.
    ============================================================ */
-
-/* ---------- Переключатель объектов в шапке ---------- */
-function renderObjSwitch(){
-  const wrap = document.getElementById('objSwitch');
-  wrap.innerHTML = Object.entries(BUILDINGS).map(([k,b])=>
-    `<button class="${k===state.building?'active':''}" data-obj="${k}">${b.short}</button>`).join('');
-  wrap.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
-    state.building = btn.dataset.obj;
-    state.filters = { corp:'', floor:'', status:'', manager:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'' };
-    renderObjSwitch(); buildFilters(); renderChess(); renderAside(); renderDashboard(); renderFunnel();
-    toast('Объект: '+BUILDINGS[state.building].name);
-  });
-}
 
 /* ---------- Вкладки ---------- */
 document.getElementById('tabs').querySelectorAll('.tab').forEach(tab=>{
@@ -47,30 +34,8 @@ document.addEventListener('click',(e)=>{
     document.getElementById('notifPop').classList.remove('show');
 });
 
-/* ---------- Календарь показов ---------- */
-function renderCalendar(){
-  // Июнь 2026: 1 июня — понедельник (firstDow=0), 30 дней, сегодня 22-е
-  const firstDow=0, days=30, today=22;
-  const dows = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  let html = dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  for(let i=0;i<firstDow;i++) html += `<div class="cal-day empty"></div>`;
-  for(let d=1;d<=days;d++){
-    const ev = SHOW_EVENTS[d]||[];
-    html += `<div class="cal-day ${d===today?'today':''}"><div class="dn">${d}</div>
-      ${ev.map(([t,c])=>`<div class="cal-event ${c}">${t}</div>`).join('')}</div>`;
-  }
-  document.getElementById('calGrid').innerHTML = html;
-}
-function openCal(){
-  renderCalendar();
-  document.getElementById('calModal').classList.add('show');
-}
-document.getElementById('calBtn').onclick = openCal;
-document.getElementById('calBtn2').onclick = openCal;
-document.getElementById('calClose').onclick = ()=>document.getElementById('calModal').classList.remove('show');
-document.getElementById('calModal').onclick = (e)=>{
-  if(e.target.id==='calModal') document.getElementById('calModal').classList.remove('show');
-};
+/* ---------- Админ-режим ---------- */
+document.getElementById('adminToggle').onclick = toggleAdminMode;
 
 /* ---------- Глобальный поиск ---------- */
 const search = document.getElementById('globalSearch');
@@ -79,18 +44,39 @@ search.addEventListener('input',()=>{
   const q = search.value.trim().toLowerCase();
   if(!q){ results.classList.remove('show'); return; }
   const found = [];
+
+  // клиенты
   CLIENTS.forEach(c=>{
     if(c.name.toLowerCase().includes(q) || c.phone.replace(/\s/g,'').includes(q.replace(/\s/g,'')))
       found.push({kind:'Клиент', label:c.name, sub:c.phone+' · '+c.object, action:()=>goClient(c.id)});
   });
-  Object.keys(BUILDINGS).forEach(bk=>{
-    if(!state.units[bk]) state.units[bk] = genUnits(bk);
-    state.units[bk].forEach(u=>{
-      if(u.displayNum.toLowerCase().includes(q) || (''+u.area).includes(q))
-        found.push({kind:'Помещение', label:u.displayNum+' · '+BUILDINGS[bk].short, sub:u.area+' м² · '+STATUSES[u.status].label, action:()=>goUnit(bk,u.id)});
-    });
+
+  // помещения
+  units().forEach(u=>{
+    if(u.displayNum.toLowerCase().includes(q) || (''+u.area).includes(q))
+      found.push({
+        kind:'Помещение',
+        label:u.displayNum+' · '+u.corp,
+        sub:u.area+' м² · '+STATUSES[u.status].label,
+        action:()=>goUnit(u.id)
+      });
   });
-  const top = found.slice(0,8);
+
+  // показы
+  state.shows.forEach(s=>{
+    const c = getClient(s.clientId);
+    if(c && c.name.toLowerCase().includes(q)){
+      const u = getUnit(s.unitId);
+      found.push({
+        kind:'Показ',
+        label:c.name+' · '+s.time,
+        sub:fmtDateRu(s.date)+(u?' · '+u.displayNum:'')+' · '+SHOW_STATUSES[s.status].label,
+        action:()=>openCalendarOnShow(s.id),
+      });
+    }
+  });
+
+  const top = found.slice(0,10);
   results.innerHTML = top.length
     ? top.map((r,i)=>`<div class="sr-item" data-i="${i}"><span class="sr-kind">${r.kind}</span><div><b style="font-size:13px;">${r.label}</b><div style="font-size:12px;color:var(--brown-soft)">${r.sub}</div></div></div>`).join('')
     : `<div class="sr-empty">Ничего не найдено по запросу «${search.value}»</div>`;
@@ -109,11 +95,8 @@ function goClient(id){
   state.activeClientId = id;
   renderClientList(); renderClientCard();
 }
-function goUnit(bk,id){
-  if(state.building!==bk){
-    state.building = bk;
-    renderObjSwitch(); buildFilters(); renderChess(); renderAside(); renderDashboard(); renderFunnel();
-  }
+
+function goUnit(id){
   document.querySelector('.tab[data-view="chess"]').click();
   openPanel(id);
 }
@@ -123,16 +106,19 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){
     closePanel();
     document.getElementById('calModal').classList.remove('show');
+    document.getElementById('showFormModal').classList.remove('show');
+    document.getElementById('unitFormModal').classList.remove('show');
     document.getElementById('notifPop').classList.remove('show');
   }
 });
 
 /* ---------- Инициализация ---------- */
 function init(){
-  renderObjSwitch();
+  initState();
   buildLegend();
   buildFilters();
   bindFilters();
+  renderAdminPanel();
   renderChess();
   renderAside();
   renderClientList();
@@ -140,5 +126,8 @@ function init(){
   renderFunnel();
   renderDashboard();
   renderNotifs();
+  initCalendar();
+  initUnitForm();
+  renderCalLauncher();
 }
 init();

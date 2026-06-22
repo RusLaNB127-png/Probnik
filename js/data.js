@@ -1,9 +1,13 @@
 /* ============================================================
    ДАННЫЕ (тестовые)
-   Здесь вся «начинка» — клиенты, менеджеры, объекты, цифры.
-   Редактируй этот файл, чтобы изменить контент без правки логики.
-   В проде заменяется на запросы к API.
+   Структура подготовлена для миграции на бэкенд:
+   - каждая сущность имеет id, createdAt, updatedAt
+   - связи между сущностями через id (clientId, unitId, managerId)
+   - конфигурация шахматки редактируема и сохраняется в localStorage
    ============================================================ */
+
+// Ключ хранилища в localStorage. Меняем при breaking-изменениях схемы.
+const STORAGE_KEY = 'terra-crm-v1';
 
 // ---------- Статусы помещений ----------
 const STATUSES = {
@@ -15,8 +19,16 @@ const STATUSES = {
   unavailable: { label:'Недоступно',     color:'var(--st-unavail)' },
 };
 const STATUS_ORDER = ['free','booked','show','contract','sold','unavailable'];
-// Веса для генератора (чем чаще статус — тем больше его в массиве)
 const STATUS_WEIGHT = ['free','free','free','free','booked','booked','show','contract','sold','sold','unavailable'];
+
+// ---------- Статусы показов ----------
+const SHOW_STATUSES = {
+  planned:   { label:'Запланирован', color:'#6B92BC' },
+  confirmed: { label:'Подтверждён',  color:'#7C9B6E' },
+  completed: { label:'Состоялся',    color:'#7A4A36' },
+  cancelled: { label:'Отменён',      color:'#B7AB9B' },
+};
+const SHOW_STATUS_ORDER = ['planned','confirmed','completed','cancelled'];
 
 // ---------- Менеджеры ----------
 const MANAGERS = [
@@ -26,25 +38,19 @@ const MANAGERS = [
   { id:'m4', name:'Полина Адова',    short:'ПА' },
 ];
 
-const CLIENT_NAMES = ['Сергей Морозов','Елена Гаврилова','Дмитрий Котов','Анастасия Лунёва','Руслан Бек','Татьяна Орлова','Виктор Зимин','Юлия Краснова'];
-
-// ---------- Объекты ----------
-const BUILDINGS = {
-  italika: {
-    name:'ЖК «Италика»', short:'Италика', seed:101,
-    corps:['Корпус A','Корпус B'], floors:16, perFloor:6,
-    basePrice:285, kind:'Квартира', startNum:1,
-  },
-  kabardinka: {
-    name:'Отели Кабардинка', short:'Кабардинка', seed:202,
-    corps:['Башня Море','Башня Парк'], floors:9, perFloor:8,
-    basePrice:340, kind:'Апартамент', startNum:1,
-  },
-  gaspra: {
-    name:'Гаспра', short:'Гаспра', seed:303,
-    corps:['Литер 1'], floors:11, perFloor:5,
-    basePrice:410, kind:'Апартамент', startNum:1,
-  },
+// ---------- Конфигурация объекта ----------
+// Дефолт; в рантайме копируется в state.buildingConfig и может редактироваться.
+const DEFAULT_BUILDING = {
+  id:      'italika',
+  name:    'ЖК «Италика»',
+  short:   'Италика',
+  seed:    101,
+  corps:   ['Корпус A','Корпус B'],
+  floors:  16,
+  perFloor:6,
+  basePrice:285,
+  kind:    'Квартира',
+  startNum:1,
 };
 
 // ---------- Стадии сделки ----------
@@ -79,7 +85,13 @@ const CLIENTS = [
     ai:{ rec:'Премиум-лид с высоким бюджетом и без касания! Скорость ответа критична — у конкурентов реакция 15 мин. Закрепить за сильным менеджером.', next:'Позвонить в течение 15 минут, иначе лид остынет' } },
 ];
 
-// ---------- Данные воронки ----------
+// ---------- Совместимость с другими вкладками ----------
+// Воронка/дашборд используют BUILDINGS как объект ключ→конфиг.
+// Оставляем один реальный объект.
+const BUILDINGS = { italika: DEFAULT_BUILDING };
+const CLIENT_NAMES = CLIENTS.map(c=>c.name);
+
+// ---------- Данные воронки (для совместимости) ----------
 const FUNNEL_DATA = [
   ['Новый лид',420], ['Квалифицирован',286], ['Показ назначен',198],
   ['Показ проведен',151], ['Бронь',97], ['Договор',64], ['Оплата',48], ['Сделка закрыта',41],
@@ -87,11 +99,11 @@ const FUNNEL_DATA = [
 const SOURCES = [['Авито',34],['Сайт застройщика',24],['Я.Директ',18],['Рекомендации',13],['Соцсети',11]];
 const REFUSALS = [['Не устроила цена',38],['Выбрал конкурента',22],['Передумал покупать',16],['Не одобрили ипотеку',14],['Не дозвонились',10]];
 const MGR_EFF = [['Игорь Васнецов',14.2],['Марина Дёмина',11.8],['Олег Кравцов',9.4],['Полина Адова',12.6]];
-const WEEKLY = [['Нед 1',18,9],['Нед 2',22,12],['Нед 3',16,15],['Нед 4',27,21]]; // [неделя, брони, продажи]
+const WEEKLY = [['Нед 1',18,9],['Нед 2',22,12],['Нед 3',16,15],['Нед 4',27,21]];
 
 // ---------- Дашборд РОП ----------
 const DASH = {
-  plan: 180, // план млн ₽
+  plan: 180,
   managers: [
     { id:'m1', name:'Игорь Васнецов', plan:50, fact:47, books:6, conv:14.2, rating:4.8 },
     { id:'m4', name:'Полина Адова',   plan:45, fact:41, books:5, conv:12.6, rating:4.6 },
@@ -132,9 +144,19 @@ const NOTIFS = [
   ['Бронь без оплаты','Гаспра, №14 — 11 дней без движения'],
 ];
 
-// ---------- События календаря (день месяца → массив [текст, класс]) ----------
-const SHOW_EVENTS = {
-  3:[['11:00 С. Морозов','show2']], 5:[['14:30 Е. Гаврилова','']],
-  9:[['10:00 Д. Котов','show2'],['16:00 А. Лунёва','']], 12:[['12:00 Р. Бек','']],
-  17:[['11:30 Е. Гаврилова','show2']], 22:[['15:00 С. Морозов','']], 24:[['10:30 Показ группы','show2']], 27:[['13:00 А. Лунёва','']],
-};
+// ---------- Тестовые показы ----------
+// unitId здесь — null; на init свяжем с конкретными помещениями по индексу.
+// Дата — текущий месяц (см. utils.js: SHOWS_SEED_DATE).
+const DEFAULT_SHOWS_SEED = [
+  { clientId:'c1', unitIdx:0,   managerId:'m1', dayOffset:0, time:'11:00', status:'confirmed', comment:'Показ корпуса A, повторный с супругой' },
+  { clientId:'c2', unitIdx:6,   managerId:'m2', dayOffset:0, time:'14:30', status:'planned',   comment:'Онлайн-показ + расчёт доходности' },
+  { clientId:'c3', unitIdx:12,  managerId:'m3', dayOffset:1, time:'10:00', status:'planned',   comment:'Показ с обсуждением рассрочки' },
+  { clientId:'c4', unitIdx:3,   managerId:'m1', dayOffset:1, time:'16:00', status:'confirmed', comment:'Финальный показ перед сделкой' },
+  { clientId:'c5', unitIdx:18,  managerId:'m4', dayOffset:2, time:'12:00', status:'planned',   comment:'Премиум-клиент, дать чек-лист преимуществ' },
+  { clientId:'c1', unitIdx:24,  managerId:'m1', dayOffset:3, time:'13:00', status:'planned',   comment:'Альтернативный вариант на 7 этаже' },
+  { clientId:'c2', unitIdx:9,   managerId:'m2', dayOffset:3, time:'15:00', status:'planned',   comment:'Очный показ' },
+  { clientId:'c3', unitIdx:30,  managerId:'m3', dayOffset:5, time:'17:30', status:'cancelled', comment:'Клиент перенёс на следующую неделю' },
+  { clientId:'c4', unitIdx:3,   managerId:'m1', dayOffset:-1, time:'11:30', status:'completed',comment:'Показ прошёл, готовим договор' },
+  { clientId:'c5', unitIdx:18,  managerId:'m4', dayOffset:7, time:'10:30', status:'planned',   comment:'Группа инвесторов' },
+  { clientId:'c1', unitIdx:0,   managerId:'m1', dayOffset:0, time:'18:00', status:'planned',   comment:'Дополнительный осмотр вечером' },
+];

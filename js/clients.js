@@ -67,5 +67,46 @@ function renderClientCard(){
           <button class="btn btn-sm" style="margin-top:11px;">＋ Добавить задачу</button>
         </div>
       </div>
+
+      ${renderClientShows(c.id)}
+    </div>`;
+
+  document.querySelectorAll('[data-go-show]').forEach(b=>b.onclick=()=>openCalendarOnShow(b.dataset.goShow));
+  document.querySelectorAll('[data-go-unit]').forEach(b=>b.onclick=()=>goUnit(b.dataset.goUnit));
+  const newShowBtn = document.getElementById('clientNewShow');
+  if(newShowBtn) newShowBtn.onclick = ()=>{
+    openShowForm(null);
+    document.getElementById('showClient').value = state.activeClientId;
+  };
+}
+
+function renderClientShows(clientId){
+  if(typeof state==='undefined' || !state.shows) return '';
+  const shows = state.shows
+    .filter(s=>s.clientId===clientId)
+    .sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  return `
+    <div style="padding:0 22px 22px;">
+      <div class="sub-card">
+        <h4>📅 Назначенные показы (${shows.length})</h4>
+        ${ shows.length
+            ? shows.map(s=>{
+                const u = getUnit(s.unitId);
+                const ss = SHOW_STATUSES[s.status];
+                return `<div class="task-item" style="border-left:3px solid ${ss.color}; padding-left:9px;">
+                  <div style="display:flex;flex-direction:column;gap:1px;flex:1;">
+                    <b style="font-size:13px;">${fmtDateRu(s.date)} · ${s.time} · ${ss.label}</b>
+                    <span style="font-size:11.5px;color:var(--brown-soft);">${u?u.displayNum+' · '+u.kind+' · '+u.corp:'Помещение не указано'} · ${mgrName(s.managerId)}</span>
+                    ${s.comment?`<span style="font-size:11.5px;color:var(--brown-soft); font-style:italic; margin-top:2px;">«${s.comment}»</span>`:''}
+                  </div>
+                  <div style="display:flex; gap:6px; flex-shrink:0;">
+                    ${u?`<button class="go-link" data-go-unit="${u.id}">→ Помещение</button>`:''}
+                    <button class="go-link" data-go-show="${s.id}">→ В календарь</button>
+                  </div>
+                </div>`;
+              }).join('')
+            : `<div style="color:var(--brown-soft); font-size:13px; padding:6px 2px;">Показы не назначены</div>` }
+        <button class="btn btn-sm" id="clientNewShow" style="margin-top:11px;">＋ Назначить показ</button>
+      </div>
     </div>`;
 }
