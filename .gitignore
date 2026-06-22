@@ -5,3 +5,6 @@ Thumbs.db
 .idea/
 .vscode/
 node_modules/
+
+# Сборочные артефакты single-file превью
+terra-crm-preview.html
