@@ -165,53 +165,49 @@ function renderClientCard(){
 }
 
 /* ============================================================
-   ВКЛАДКА: ОБЗОР (inline-редактируемые поля)
+   ВКЛАДКА: ОБЗОР (только просмотр; редактирование — через кнопку ✎)
    ============================================================ */
 function renderTabOverview(pane, c){
-  const goalOptions      = GOAL_OPTIONS.map(g=>`<option value="${g}" ${g===c.goal?'selected':''}>${g}</option>`).join('');
-  const sourceOptions    = SOURCE_OPTIONS.map(s=>`<option value="${s}" ${s===c.source?'selected':''}>${s}</option>`).join('');
-  const mgrOptions       = MANAGERS.map(m=>`<option value="${m.id}" ${m.id===c.mgr?'selected':''}>${m.name}</option>`).join('');
-  const stageOptions     = STAGES.map(s=>`<option value="${s}" ${s===c.stage?'selected':''}>${s}</option>`).join('');
-  const priorityOptions  = PRIORITY_ORDER.map(p=>`<option value="${p}" ${p===c.priority?'selected':''}>${PRIORITIES[p].label}</option>`).join('');
+  const priorityLabel = (PRIORITIES[c.priority]||{}).label || '—';
 
   pane.innerHTML = `
     <div class="cc-block-title">Основная информация</div>
     <div class="cc-fields">
-      <div class="cc-field"><span class="k">ФИО</span><input class="v" data-f="name" value="${esc(c.name)}"></div>
-      <div class="cc-field"><span class="k">Дата рождения</span><input type="date" class="v" data-f="dob" value="${esc(c.dob)}"></div>
-      <div class="cc-field"><span class="k">Город</span><input class="v" data-f="city" value="${esc(c.city)}"></div>
-      <div class="cc-field"><span class="k">Телефон</span><input class="v" data-f="phone" value="${esc(c.phone)}"></div>
-      <div class="cc-field"><span class="k">Доп. телефон</span><input class="v" data-f="phone2" value="${esc(c.phone2)}"></div>
-      <div class="cc-field"><span class="k">E-mail</span><input class="v" data-f="email" value="${esc(c.email)}"></div>
-      <div class="cc-field"><span class="k">Гражданство</span><input class="v" data-f="citizenship" value="${esc(c.citizenship)}"></div>
+      <div class="cc-field"><span class="k">ФИО</span><div class="v ro">${esc(c.name)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Дата рождения</span><div class="v ro">${c.dob?fmtDateRu(c.dob):'—'}</div></div>
+      <div class="cc-field"><span class="k">Город</span><div class="v ro">${esc(c.city)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Телефон</span><div class="v ro">${esc(c.phone)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Доп. телефон</span><div class="v ro">${esc(c.phone2)||'—'}</div></div>
+      <div class="cc-field"><span class="k">E-mail</span><div class="v ro">${esc(c.email)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Гражданство</span><div class="v ro">${esc(c.citizenship)||'—'}</div></div>
     </div>
 
     <div class="cc-block-title">Информация о покупке</div>
     <div class="cc-fields">
-      <div class="cc-field"><span class="k">Бюджет</span><input class="v" data-f="budget" value="${esc(c.budget)}"></div>
-      <div class="cc-field"><span class="k">Цель покупки</span><select class="v" data-f="goal">${goalOptions}</select></div>
-      <div class="cc-field"><span class="k">Тип помещения</span><input class="v" data-f="propertyKind" value="${esc(c.propertyKind)}"></div>
-      <div class="cc-field cc-field-2"><span class="k">Интересующий объект</span><input class="v" data-f="targetObject" value="${esc(c.targetObject)}"></div>
-      <div class="cc-field"><span class="k">Желаемая площадь</span><input class="v" data-f="areaPref" value="${esc(c.areaPref)}"></div>
-      <div class="cc-field"><span class="k">Предпочтительный этаж</span><input class="v" data-f="floorPref" value="${esc(c.floorPref)}"></div>
-      <div class="cc-field"><span class="k">Предпочтительный вид</span><input class="v" data-f="viewPref" value="${esc(c.viewPref)}"></div>
+      <div class="cc-field"><span class="k">Бюджет</span><div class="v ro">${esc(c.budget)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Цель покупки</span><div class="v ro">${esc(c.goal)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Тип помещения</span><div class="v ro">${esc(c.propertyKind)||'—'}</div></div>
+      <div class="cc-field cc-field-2"><span class="k">Интересующий объект</span><div class="v ro">${esc(c.targetObject)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Желаемая площадь</span><div class="v ro">${esc(c.areaPref)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Предпочтительный этаж</span><div class="v ro">${esc(c.floorPref)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Предпочтительный вид</span><div class="v ro">${esc(c.viewPref)||'—'}</div></div>
     </div>
 
     <div class="cc-block-title">Работа отдела продаж</div>
     <div class="cc-fields">
-      <div class="cc-field"><span class="k">Источник лида</span><select class="v" data-f="source">${sourceOptions}</select></div>
-      <div class="cc-field"><span class="k">Ответственный менеджер</span><select class="v" data-f="mgr">${mgrOptions}</select></div>
-      <div class="cc-field"><span class="k">Стадия воронки</span><select class="v" data-f="stage">${stageOptions}</select></div>
-      <div class="cc-field"><span class="k">Приоритет клиента</span><select class="v" data-f="priority">${priorityOptions}</select></div>
-      <div class="cc-field"><span class="k">Дата следующего контакта</span><input type="date" class="v" data-f="nextContact" value="${esc(c.nextContact)}"></div>
+      <div class="cc-field"><span class="k">Источник лида</span><div class="v ro">${esc(c.source)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Ответственный менеджер</span><div class="v ro">${esc(mgrName(c.mgr))}</div></div>
+      <div class="cc-field"><span class="k">Стадия воронки</span><div class="v ro">${esc(c.stage)||'—'}</div></div>
+      <div class="cc-field"><span class="k">Приоритет клиента</span><div class="v ro">${esc(priorityLabel)}</div></div>
+      <div class="cc-field"><span class="k">Дата следующего контакта</span><div class="v ro">${c.nextContact?fmtDateRu(c.nextContact):'—'}</div></div>
     </div>
 
     <div class="cc-block-title">Заметки и пожелания</div>
     <div class="cc-fields">
-      <div class="cc-field cc-field-full"><span class="k">Комментарий менеджера</span><textarea class="v" data-f="note">${esc(c.note)}</textarea></div>
-      <div class="cc-field cc-field-full"><span class="k">Пожелания клиента</span><textarea class="v" data-f="wishes">${esc(c.wishes)}</textarea></div>
-      <div class="cc-field cc-field-full"><span class="k">Возражения клиента</span><textarea class="v" data-f="objections">${esc(c.objections)}</textarea></div>
-      <div class="cc-field cc-field-full"><span class="k">Причины отказа (если есть)</span><textarea class="v" data-f="refusalReason">${esc(c.refusalReason)}</textarea></div>
+      <div class="cc-field cc-field-full"><span class="k">Комментарий менеджера</span><div class="v ro multi">${esc(c.note)||'—'}</div></div>
+      <div class="cc-field cc-field-full"><span class="k">Пожелания клиента</span><div class="v ro multi">${esc(c.wishes)||'—'}</div></div>
+      <div class="cc-field cc-field-full"><span class="k">Возражения клиента</span><div class="v ro multi">${esc(c.objections)||'—'}</div></div>
+      <div class="cc-field cc-field-full"><span class="k">Причины отказа (если есть)</span><div class="v ro multi">${esc(c.refusalReason)||'—'}</div></div>
     </div>
 
     <div class="cc-block-title">Контактные лица <button class="btn btn-sm" id="ccAddContact" style="margin-left:auto;">＋ Добавить</button></div>
@@ -226,24 +222,6 @@ function renderTabOverview(pane, c){
       <button class="btn" style="color:var(--terra-dark); border-color:var(--terra-dark); margin-left:auto;" id="ccDelete">Удалить клиента</button>
     </div>
   `;
-
-  // inline-сохранение полей
-  pane.querySelectorAll('.v[data-f]').forEach(el=>{
-    const ev = el.tagName==='SELECT' ? 'change' : 'blur';
-    el.addEventListener(ev, ()=>{
-      const field = el.dataset.f;
-      const newVal = el.value;
-      if(c[field] !== newVal){
-        updateClient(c.id, { [field]: newVal });
-        toast('Сохранено');
-        // Если поменялся mgr/stage — перерисуем список (метки могли измениться)
-        if(field==='mgr' || field==='stage' || field==='priority' || field==='name'){
-          renderClientList();
-          renderClientCard();
-        }
-      }
-    });
-  });
 
   document.getElementById('ccAddContact').onclick = ()=>openContactForm(c.id);
   document.querySelectorAll('[data-contact-del]').forEach(b=>b.onclick=()=>{
