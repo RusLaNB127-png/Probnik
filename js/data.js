@@ -53,37 +53,184 @@ const DEFAULT_BUILDING = {
   startNum:1,
 };
 
+// ---------- Источники лидов ----------
+const SOURCE_OPTIONS = ['Сайт','Звонок','Авито','Я.Директ','Рекомендация','Соцсети','Агентство','Реклама','Другое'];
+
+// ---------- Цели покупки ----------
+const GOAL_OPTIONS = ['Проживание','Инвестиции','Сдача в аренду','Перепродажа','Другое'];
+
+// ---------- Приоритет клиента ----------
+const PRIORITIES = {
+  high:   { label:'Высокий', color:'#C2683E' },
+  medium: { label:'Средний', color:'#E0A458' },
+  low:    { label:'Низкий',  color:'#B7AB9B' },
+};
+const PRIORITY_ORDER = ['high','medium','low'];
+
+// ---------- Типы событий timeline ----------
+const INTERACTION_TYPES = {
+  created:          { label:'Создан клиент',          icon:'＋', color:'#7C9B6E' },
+  call:             { label:'Звонок',                 icon:'☎',  color:'#6B92BC' },
+  meeting:          { label:'Встреча',                icon:'☕', color:'#E0A458' },
+  show:             { label:'Показ',                  icon:'👁', color:'#6B92BC' },
+  booking:          { label:'Бронирование',           icon:'⌂',  color:'#E0A458' },
+  deal:             { label:'Сделка',                 icon:'✎',  color:'#C2683E' },
+  status_change:    { label:'Изменён статус',         icon:'⟳',  color:'#7A6354' },
+  comment:          { label:'Комментарий',            icon:'✉',  color:'#7A6354' },
+  document_added:   { label:'Документ добавлен',      icon:'📄', color:'#7A6354' },
+  task_created:     { label:'Задача создана',         icon:'✓',  color:'#6B92BC' },
+  task_completed:   { label:'Задача выполнена',       icon:'✓',  color:'#7C9B6E' },
+  manager_changed:  { label:'Смена менеджера',        icon:'⇄',  color:'#E0A458' },
+  favorite_added:   { label:'В избранное',            icon:'★',  color:'#E0A458' },
+};
+
 // ---------- Стадии сделки ----------
 const STAGES = ['Новый лид','Квалифицирован','Показ назначен','Показ проведен','Бронь','Договор','Оплата','Сделка закрыта'];
 
-// ---------- Клиенты ----------
-const CLIENTS = [
-  { id:'c1', name:'Сергей Морозов', phone:'+7 916 240-18-77', source:'Авито', object:'ЖК «Италика», №142', budget:'до 14 млн ₽', goal:'Жить', stage:'Бронь', mgr:'m1',
-    comms:[['18 июня','Перезвонил, готов вносить бронь на 2-комн.'],['14 июня','Показ корпуса A, понравился вид'],['9 июня','Первичный звонок с Авито']],
-    tasks:[['Подготовить договор брони','завтра',false],['Согласовать скидку с РОП','просрочено',true]],
+// ---------- Клиенты (расширенная структура, готова к API) ----------
+const DEFAULT_CLIENTS = [
+  { id:'c1', name:'Сергей Морозов',
+    dob:'1985-03-14', phone:'+7 916 240-18-77', phone2:'', email:'morozov.s@mail.ru',
+    city:'Москва', citizenship:'РФ',
+    budget:'до 14 млн ₽', goal:'Проживание',
+    targetObject:'ЖК «Италика», 2-комн.', propertyKind:'Квартира',
+    areaPref:'55–70 м²', floorPref:'4–10', viewPref:'Парк',
+    source:'Авито',
+    mgr:'m1', stage:'Бронь', priority:'high',
+    nextContact:'2026-06-23',
     note:'Решение принимает с супругой. Важна школа рядом.',
-    ai:{ rec:'Клиент на стадии брони, мотивация высокая. Предложить фиксацию цены на 5 дней и ипотечного партнёра — банк одобрил похожий профиль за 2 дня.', next:'Отправить договор брони и расчёт ипотеки сегодня' } },
-  { id:'c2', name:'Елена Гаврилова', phone:'+7 903 551-09-32', source:'Сайт', object:'Гаспра, №7', budget:'до 22 млн ₽', goal:'Инвестиции', stage:'Показ проведен', mgr:'m2',
-    comms:[['17 июня','Показ онлайн, просит расчёт доходности'],['12 июня','Заявка с сайта, интересуют апартаменты у моря']],
-    tasks:[['Прислать модель доходности от сдачи','сегодня',false]],
+    wishes:'Балкон, кухня от 10 м², светлая отделка.',
+    objections:'Сомневается в сроках сдачи — нужны гарантии.',
+    refusalReason:'',
+    favoriteUnitIds:[],
+    contacts:[{id:'ct-1', name:'Анна Морозова', role:'Супруга', phone:'+7 916 240-19-22', email:''}],
+    managerHistory:[{managerId:'m1', from:'2026-06-09', to:null, reason:'Первичное закрепление'}],
+    documents:[
+      {id:'d-1', name:'Паспорт.pdf', type:'Паспорт', addedAt:'2026-06-12', size:'1.4 МБ'},
+      {id:'d-2', name:'Согласие_на_обработку.pdf', type:'Анкета', addedAt:'2026-06-09', size:'380 КБ'},
+    ],
+    tasks:[
+      {id:'t-1', title:'Подготовить договор брони', assigneeId:'m1', dueDate:'2026-06-23', done:false, createdAt:'2026-06-18'},
+      {id:'t-2', title:'Согласовать скидку с РОП',   assigneeId:'m1', dueDate:'2026-06-19', done:false, createdAt:'2026-06-17'},
+    ],
+    interactions:[
+      {id:'i-1', type:'created', at:'2026-06-09 11:30', text:'Лид с Авито', refId:null, refType:null},
+      {id:'i-2', type:'call',    at:'2026-06-09 12:05', text:'Первичный звонок, 14 мин. Заинтересован в 2-комн.', refId:null, refType:null},
+      {id:'i-3', type:'show',    at:'2026-06-14 15:00', text:'Показ корпуса A, понравился вид', refId:null, refType:'show'},
+      {id:'i-4', type:'call',    at:'2026-06-18 10:42', text:'Перезвонил, готов вносить бронь', refId:null, refType:null},
+      {id:'i-5', type:'status_change', at:'2026-06-18 10:44', text:'Статус: Квалифицирован → Бронь', refId:null, refType:null},
+    ],
+    createdAt:'2026-06-09', updatedAt:'2026-06-18' },
+
+  { id:'c2', name:'Елена Гаврилова',
+    dob:'1979-11-02', phone:'+7 903 551-09-32', phone2:'', email:'e.gavrilova@gmail.com',
+    city:'Санкт-Петербург', citizenship:'РФ',
+    budget:'до 22 млн ₽', goal:'Инвестиции',
+    targetObject:'ЖК «Италика», апартаменты', propertyKind:'Апартамент',
+    areaPref:'40–60 м²', floorPref:'6–12', viewPref:'Море',
+    source:'Сайт',
+    mgr:'m2', stage:'Показ проведен', priority:'high',
+    nextContact:'2026-06-23',
     note:'Сравнивает с конкурентом в Ялте. Чувствительна к цифрам ROI.',
-    ai:{ rec:'Инвест-мотив. Главный рычаг — доходность, а не эмоции. Показать сценарий аренды и рост цены за 12 мес. Конкурент в Ялте дороже на 8% за м².', next:'Отправить инвест-модель и закрыть на показ вживую' } },
-  { id:'c3', name:'Дмитрий Котов', phone:'+7 925 778-44-10', source:'Реклама Я.Директ', object:'Отели Кабардинка, №305', budget:'до 9 млн ₽', goal:'Сдача', stage:'Квалифицирован', mgr:'m3',
-    comms:[['16 июня','Уточнял условия рассрочки'],['15 июня','Заявка с Я.Директ']],
-    tasks:[['Назначить показ','завтра',false]],
+    wishes:'Готовая мебель, управление сдачей под ключ.',
+    objections:'Доходность ниже ожидаемой по её расчёту.',
+    refusalReason:'',
+    favoriteUnitIds:[],
+    contacts:[],
+    managerHistory:[{managerId:'m2', from:'2026-06-12', to:null, reason:'Назначение по заявке с сайта'}],
+    documents:[],
+    tasks:[
+      {id:'t-3', title:'Прислать модель доходности от сдачи', assigneeId:'m2', dueDate:'2026-06-22', done:false, createdAt:'2026-06-17'},
+    ],
+    interactions:[
+      {id:'i-6', type:'created', at:'2026-06-12 09:15', text:'Заявка с сайта', refId:null, refType:null},
+      {id:'i-7', type:'show',    at:'2026-06-17 14:30', text:'Показ онлайн, просит расчёт доходности', refId:null, refType:'show'},
+    ],
+    createdAt:'2026-06-12', updatedAt:'2026-06-17' },
+
+  { id:'c3', name:'Дмитрий Котов',
+    dob:'1991-07-25', phone:'+7 925 778-44-10', phone2:'', email:'kotov.dm@yandex.ru',
+    city:'Краснодар', citizenship:'РФ',
+    budget:'до 9 млн ₽', goal:'Сдача в аренду',
+    targetObject:'ЖК «Италика», 1-комн.', propertyKind:'Квартира',
+    areaPref:'30–45 м²', floorPref:'3–8', viewPref:'Не принципиально',
+    source:'Я.Директ',
+    mgr:'m3', stage:'Квалифицирован', priority:'medium',
+    nextContact:'2026-06-24',
     note:'Бюджет ограничен, важна рассрочка от застройщика.',
-    ai:{ rec:'Бюджет на нижней границе. Предложить юнит на 3–4 этаже с рассрочкой 0% на 18 мес — это снимет ценовое возражение. Не давить, прогревать контентом.', next:'Назначить показ и показать варианты с рассрочкой' } },
-  { id:'c4', name:'Анастасия Лунёва', phone:'+7 911 302-66-21', source:'Рекомендация', object:'ЖК «Италика», №88', budget:'до 17 млн ₽', goal:'Жить', stage:'Договор', mgr:'m1',
-    comms:[['19 июня','Подписала договор брони, готовит документы'],['13 июня','Повторный показ с дизайнером']],
-    tasks:[['Собрать пакет документов для ДДУ','через 2 дня',false]],
+    wishes:'Рассрочка 0% на максимальный срок.',
+    objections:'Цена выше его ожиданий по рынку.',
+    refusalReason:'',
+    favoriteUnitIds:[],
+    contacts:[],
+    managerHistory:[{managerId:'m3', from:'2026-06-15', to:null, reason:'Заявка с Я.Директ'}],
+    documents:[],
+    tasks:[
+      {id:'t-4', title:'Назначить показ', assigneeId:'m3', dueDate:'2026-06-24', done:false, createdAt:'2026-06-16'},
+    ],
+    interactions:[
+      {id:'i-8',  type:'created', at:'2026-06-15 18:20', text:'Заявка с Я.Директ', refId:null, refType:null},
+      {id:'i-9',  type:'call',    at:'2026-06-16 11:00', text:'Уточнял условия рассрочки', refId:null, refType:null},
+    ],
+    createdAt:'2026-06-15', updatedAt:'2026-06-16' },
+
+  { id:'c4', name:'Анастасия Лунёва',
+    dob:'1988-09-08', phone:'+7 911 302-66-21', phone2:'', email:'anastasia.luneva@bk.ru',
+    city:'Москва', citizenship:'РФ',
+    budget:'до 17 млн ₽', goal:'Проживание',
+    targetObject:'ЖК «Италика», 2-комн.', propertyKind:'Квартира',
+    areaPref:'60–80 м²', floorPref:'5–14', viewPref:'Парк',
+    source:'Рекомендация',
+    mgr:'m1', stage:'Договор', priority:'high',
+    nextContact:'2026-06-25',
     note:'Пришла по рекомендации соседа. Лояльна, торг минимальный.',
-    ai:{ rec:'Тёплый клиент по рекомендации, почти на сделке. Риск — затягивание с документами. Помочь с ипотечным брокером, чтобы не сорвалась оплата.', next:'Сопроводить подачу документов в банк до пятницы' } },
-  { id:'c5', name:'Руслан Бек', phone:'+7 962 014-88-05', source:'Авито', object:'Гаспра, №14', budget:'до 30 млн ₽', goal:'Апартаменты', stage:'Новый лид', mgr:'m4',
-    comms:[['20 июня','Оставил заявку, пока не дозвонились']],
-    tasks:[['Первый дозвон','просрочено',true]],
+    wishes:'Заехать после Нового года.',
+    objections:'',
+    refusalReason:'',
+    favoriteUnitIds:[],
+    contacts:[],
+    managerHistory:[{managerId:'m1', from:'2026-06-10', to:null, reason:'Рекомендация'}],
+    documents:[
+      {id:'d-3', name:'Договор_бронирования.pdf', type:'Договор', addedAt:'2026-06-19', size:'2.1 МБ'},
+    ],
+    tasks:[
+      {id:'t-5', title:'Собрать пакет документов для ДДУ', assigneeId:'m1', dueDate:'2026-06-25', done:false, createdAt:'2026-06-19'},
+    ],
+    interactions:[
+      {id:'i-10', type:'created', at:'2026-06-10 10:00', text:'Пришла по рекомендации', refId:null, refType:null},
+      {id:'i-11', type:'show',    at:'2026-06-13 16:00', text:'Повторный показ с дизайнером', refId:null, refType:'show'},
+      {id:'i-12', type:'booking', at:'2026-06-19 11:00', text:'Подписала договор брони', refId:null, refType:null},
+    ],
+    createdAt:'2026-06-10', updatedAt:'2026-06-19' },
+
+  { id:'c5', name:'Руслан Бек',
+    dob:'1982-01-19', phone:'+7 962 014-88-05', phone2:'', email:'',
+    city:'Москва', citizenship:'РФ',
+    budget:'до 30 млн ₽', goal:'Инвестиции',
+    targetObject:'ЖК «Италика», премиум', propertyKind:'Апартамент',
+    areaPref:'70–110 м²', floorPref:'10+', viewPref:'Море',
+    source:'Авито',
+    mgr:'m4', stage:'Новый лид', priority:'high',
+    nextContact:'2026-06-22',
     note:'Высокий бюджет, премиум-сегмент. Реагировать быстро.',
-    ai:{ rec:'Премиум-лид с высоким бюджетом и без касания! Скорость ответа критична — у конкурентов реакция 15 мин. Закрепить за сильным менеджером.', next:'Позвонить в течение 15 минут, иначе лид остынет' } },
+    wishes:'Видовые верхние этажи.',
+    objections:'',
+    refusalReason:'',
+    favoriteUnitIds:[],
+    contacts:[],
+    managerHistory:[{managerId:'m4', from:'2026-06-20', to:null, reason:'Закрепление по бюджету'}],
+    documents:[],
+    tasks:[
+      {id:'t-6', title:'Первый дозвон', assigneeId:'m4', dueDate:'2026-06-21', done:false, createdAt:'2026-06-20'},
+    ],
+    interactions:[
+      {id:'i-13', type:'created', at:'2026-06-20 16:40', text:'Заявка с Авито', refId:null, refType:null},
+    ],
+    createdAt:'2026-06-20', updatedAt:'2026-06-20' },
 ];
+
+// Совместимость со старым кодом
+const CLIENTS = DEFAULT_CLIENTS;
 
 // ---------- Совместимость с другими вкладками ----------
 // Воронка/дашборд используют BUILDINGS как объект ключ→конфиг.

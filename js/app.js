@@ -13,8 +13,8 @@ document.getElementById('tabs').querySelectorAll('.tab').forEach(tab=>{
   };
 });
 
-/* ---------- Создать клиента (заглушка) ---------- */
-document.getElementById('newClientBtn').onclick = ()=>toast('Открыта форма создания клиента');
+/* ---------- Создать клиента ---------- */
+document.getElementById('newClientBtn').onclick = ()=>openClientForm(null);
 
 /* ---------- Закрытие боковой панели по клику на затемнение ---------- */
 document.getElementById('scrim').onclick = closePanel;
@@ -46,9 +46,9 @@ search.addEventListener('input',()=>{
   const found = [];
 
   // клиенты
-  CLIENTS.forEach(c=>{
-    if(c.name.toLowerCase().includes(q) || c.phone.replace(/\s/g,'').includes(q.replace(/\s/g,'')))
-      found.push({kind:'Клиент', label:c.name, sub:c.phone+' · '+c.object, action:()=>goClient(c.id)});
+  clients().forEach(c=>{
+    if((c.name||'').toLowerCase().includes(q) || (c.phone||'').replace(/\s/g,'').includes(q.replace(/\s/g,'')))
+      found.push({kind:'Клиент', label:c.name, sub:(c.phone||'—')+' · '+(c.targetObject||'—'), action:()=>goClient(c.id)});
   });
 
   // помещения
@@ -65,7 +65,7 @@ search.addEventListener('input',()=>{
   // показы
   state.shows.forEach(s=>{
     const c = getClient(s.clientId);
-    if(c && c.name.toLowerCase().includes(q)){
+    if(c && (c.name||'').toLowerCase().includes(q)){
       const u = getUnit(s.unitId);
       found.push({
         kind:'Показ',
@@ -105,9 +105,7 @@ function goUnit(id){
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){
     closePanel();
-    document.getElementById('calModal').classList.remove('show');
-    document.getElementById('showFormModal').classList.remove('show');
-    document.getElementById('unitFormModal').classList.remove('show');
+    document.querySelectorAll('.cal-modal.show, .form-modal.show').forEach(el=>el.classList.remove('show'));
     document.getElementById('notifPop').classList.remove('show');
   }
 });
@@ -121,6 +119,7 @@ function init(){
   renderAdminPanel();
   renderChess();
   renderAside();
+  initClientsTab();
   renderClientList();
   renderClientCard();
   renderFunnel();

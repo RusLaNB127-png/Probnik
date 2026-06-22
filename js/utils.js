@@ -98,10 +98,13 @@ const state = {
   buildingConfig:  null,              // редактируемая копия конфига объекта
   unitsList:       [],                // массив помещений (плоский, готов к API)
   shows:           [],                // массив показов
-  favorites:       new Set(),         // id избранных помещений
+  clients:         [],                // массив клиентов (расширенная структура)
+  favorites:       new Set(),         // id избранных помещений (общий чек)
   selectedUnitId:  null,
   activeClientId:  'c1',
   filters:         { corp:'', floor:'', status:'', manager:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'', favoritesOnly:false, query:'' },
+  clientFilters:   { query:'', mgr:'', stage:'', source:'', priority:'' },
+  clientCardTab:   'overview',        // overview | units | shows | tasks | docs | timeline
   adminMode:       false,
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
@@ -116,12 +119,46 @@ function saveState(){
       buildingConfig: state.buildingConfig,
       unitsList:      state.unitsList,
       shows:          state.shows,
+      clients:        state.clients,
       favorites:      [...state.favorites],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
     console.warn('Не удалось сохранить состояние:', err);
   }
+}
+
+function migrateClient(c){
+  // Дополняем недостающие поля для совместимости со старыми сохранениями
+  const defaults = {
+    dob:'', phone2:'', email:'', city:'', citizenship:'РФ',
+    propertyKind:'', areaPref:'', floorPref:'', viewPref:'',
+    targetObject: c.object || '', priority: 'medium', nextContact:'',
+    wishes:'', objections:'', refusalReason:'',
+    favoriteUnitIds:[], contacts:[], managerHistory:[], documents:[],
+    tasks:[], interactions:[],
+    createdAt: isoDate(TODAY), updatedAt: Date.now(),
+  };
+  Object.keys(defaults).forEach(k=>{ if(c[k]===undefined) c[k] = defaults[k]; });
+
+  // Старый формат tasks: [[title, due, overdue]] → новый массив объектов
+  if(Array.isArray(c.tasks) && c.tasks.length && Array.isArray(c.tasks[0])){
+    c.tasks = c.tasks.map(([title,due,od])=>({
+      id: uid('t'), title, assigneeId: c.mgr,
+      dueDate: od ? isoDate(addDays(TODAY,-1)) : isoDate(addDays(TODAY,1)),
+      done: false, createdAt: isoDate(TODAY),
+    }));
+  }
+  // Старые comms → interactions
+  if(Array.isArray(c.comms) && c.comms.length && (!c.interactions || !c.interactions.length)){
+    c.interactions = c.comms.map(([t,d])=>({
+      id: uid('i'), type:'comment', at:t, text:d, refId:null, refType:null,
+    }));
+  }
+  if(!c.managerHistory || !c.managerHistory.length){
+    c.managerHistory = [{managerId: c.mgr, from: c.createdAt || isoDate(TODAY), to:null, reason:'Первичное закрепление'}];
+  }
+  return c;
 }
 
 function loadState(){
@@ -133,6 +170,7 @@ function loadState(){
     state.buildingConfig = data.buildingConfig;
     state.unitsList      = data.unitsList;
     state.shows          = data.shows || [];
+    state.clients        = (data.clients && data.clients.length ? data.clients : JSON.parse(JSON.stringify(DEFAULT_CLIENTS))).map(migrateClient);
     state.favorites      = new Set(data.favorites || []);
     return true;
   }catch(err){
@@ -145,6 +183,7 @@ function resetToDefaults(){
   state.buildingConfig = JSON.parse(JSON.stringify(DEFAULT_BUILDING));
   state.unitsList      = genUnits(state.buildingConfig);
   state.shows          = genShows(state.unitsList);
+  state.clients        = JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
   state.favorites      = new Set();
   saveState();
 }
@@ -159,7 +198,8 @@ function initState(){
 // ---------- Доступ к данным ----------
 function units(){ return state.unitsList; }
 function getUnit(id){ return state.unitsList.find(u=>u.id===id); }
-function getClient(id){ return CLIENTS.find(c=>c.id===id); }
+function clients(){ return state.clients; }
+function getClient(id){ return state.clients.find(c=>c.id===id); }
 function mgrName(id){ return (MANAGERS.find(m=>m.id===id)||{}).name||'—'; }
 function mgrShort(id){ return (MANAGERS.find(m=>m.id===id)||{}).short||'—'; }
 function fmtMoney(mln){ return mln.toLocaleString('ru-RU',{maximumFractionDigits:1})+' млн ₽'; }
@@ -167,7 +207,219 @@ function fmtMoney(mln){ return mln.toLocaleString('ru-RU',{maximumFractionDigits
 // Поиск клиента по имени (для legacy unit.client → clientId)
 function findClientByName(name){
   if(!name) return null;
-  return CLIENTS.find(c=>c.name===name) || null;
+  return state.clients.find(c=>c.name===name) || null;
+}
+
+// ---------- Хелпер: «сейчас» в формате YYYY-MM-DD HH:MM ----------
+function nowStamp(){
+  const d = TODAY;
+  return isoDate(d)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+// ---------- Логирование событий timeline клиента ----------
+function logInteraction(clientId, type, text, refType=null, refId=null){
+  const c = getClient(clientId);
+  if(!c) return;
+  if(!c.interactions) c.interactions = [];
+  c.interactions.push({
+    id: uid('i'),
+    type, text,
+    at: nowStamp(),
+    refType, refId,
+  });
+  c.updatedAt = Date.now();
+  saveState();
+}
+
+// ---------- CRUD клиентов ----------
+function createClient(data){
+  const client = {
+    id:           uid('c'),
+    name:         data.name || 'Без имени',
+    dob:          data.dob || '',
+    phone:        data.phone || '',
+    phone2:       data.phone2 || '',
+    email:        data.email || '',
+    city:         data.city || '',
+    citizenship:  data.citizenship || '',
+    budget:       data.budget || '',
+    goal:         data.goal || 'Проживание',
+    targetObject: data.targetObject || '',
+    propertyKind: data.propertyKind || '',
+    areaPref:     data.areaPref || '',
+    floorPref:    data.floorPref || '',
+    viewPref:     data.viewPref || '',
+    source:       data.source || 'Сайт',
+    mgr:          data.mgr || MANAGERS[0].id,
+    stage:        data.stage || 'Новый лид',
+    priority:     data.priority || 'medium',
+    nextContact:  data.nextContact || '',
+    note:         data.note || '',
+    wishes:       data.wishes || '',
+    objections:   data.objections || '',
+    refusalReason:data.refusalReason || '',
+    favoriteUnitIds: [],
+    contacts:        [],
+    managerHistory:  [{managerId: data.mgr || MANAGERS[0].id, from: isoDate(TODAY), to: null, reason:'Создание клиента'}],
+    documents:       [],
+    tasks:           [],
+    interactions:    [],
+    createdAt:    isoDate(TODAY),
+    updatedAt:    Date.now(),
+  };
+  state.clients.push(client);
+  logInteraction(client.id, 'created', 'Создан клиент · источник: '+client.source);
+  saveState();
+  return client;
+}
+
+function updateClient(id, patch){
+  const c = getClient(id);
+  if(!c) return;
+  // Отслеживаем смену стадии и менеджера
+  if(patch.stage && patch.stage !== c.stage){
+    logInteraction(id, 'status_change', `Статус: ${c.stage} → ${patch.stage}`);
+  }
+  if(patch.mgr && patch.mgr !== c.mgr){
+    const fromName = mgrName(c.mgr), toName = mgrName(patch.mgr);
+    if(!c.managerHistory) c.managerHistory = [];
+    const last = c.managerHistory[c.managerHistory.length-1];
+    if(last) last.to = isoDate(TODAY);
+    c.managerHistory.push({managerId: patch.mgr, from: isoDate(TODAY), to: null, reason: patch.managerReason || 'Смена менеджера'});
+    logInteraction(id, 'manager_changed', `Менеджер: ${fromName} → ${toName}`);
+  }
+  delete patch.managerReason;
+  Object.assign(c, patch, { updatedAt: Date.now() });
+  saveState();
+}
+
+function deleteClient(id){
+  const i = state.clients.findIndex(c=>c.id===id);
+  if(i<0) return;
+  state.clients.splice(i,1);
+  // Развязываем помещения
+  state.unitsList.forEach(u=>{ if(u.clientId===id) u.clientId = null; });
+  // Удаляем показы клиента
+  state.shows = state.shows.filter(s=>s.clientId!==id);
+  saveState();
+}
+
+// ---------- Задачи ----------
+function createTask(clientId, data){
+  const c = getClient(clientId);
+  if(!c) return;
+  if(!c.tasks) c.tasks = [];
+  const task = {
+    id: uid('t'),
+    title: data.title || 'Новая задача',
+    assigneeId: data.assigneeId || c.mgr,
+    dueDate: data.dueDate || isoDate(TODAY),
+    done: false,
+    createdAt: isoDate(TODAY),
+  };
+  c.tasks.push(task);
+  logInteraction(clientId, 'task_created', 'Задача: '+task.title);
+  saveState();
+  return task;
+}
+
+function updateTask(clientId, taskId, patch){
+  const c = getClient(clientId);
+  if(!c || !c.tasks) return;
+  const t = c.tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  const wasDone = t.done;
+  Object.assign(t, patch);
+  if(!wasDone && t.done) logInteraction(clientId, 'task_completed', 'Выполнена задача: '+t.title);
+  saveState();
+}
+
+function deleteTask(clientId, taskId){
+  const c = getClient(clientId);
+  if(!c || !c.tasks) return;
+  c.tasks = c.tasks.filter(t=>t.id!==taskId);
+  saveState();
+}
+
+// ---------- Документы ----------
+function addDocument(clientId, data){
+  const c = getClient(clientId);
+  if(!c) return;
+  if(!c.documents) c.documents = [];
+  const doc = {
+    id: uid('d'),
+    name: data.name || 'document.pdf',
+    type: data.type || 'Документ',
+    addedAt: isoDate(TODAY),
+    size: data.size || '—',
+  };
+  c.documents.push(doc);
+  logInteraction(clientId, 'document_added', 'Добавлен документ: '+doc.name);
+  saveState();
+  return doc;
+}
+
+function deleteDocument(clientId, docId){
+  const c = getClient(clientId);
+  if(!c || !c.documents) return;
+  c.documents = c.documents.filter(d=>d.id!==docId);
+  saveState();
+}
+
+// ---------- Контактные лица ----------
+function addContact(clientId, data){
+  const c = getClient(clientId);
+  if(!c) return;
+  if(!c.contacts) c.contacts = [];
+  const contact = {
+    id: uid('ct'),
+    name: data.name || '',
+    role: data.role || '',
+    phone: data.phone || '',
+    email: data.email || '',
+  };
+  c.contacts.push(contact);
+  saveState();
+  return contact;
+}
+
+function deleteContact(clientId, contactId){
+  const c = getClient(clientId);
+  if(!c || !c.contacts) return;
+  c.contacts = c.contacts.filter(ct=>ct.id!==contactId);
+  saveState();
+}
+
+// ---------- Избранные помещения клиента ----------
+function toggleClientFavorite(clientId, unitId){
+  const c = getClient(clientId);
+  if(!c) return;
+  if(!c.favoriteUnitIds) c.favoriteUnitIds = [];
+  const i = c.favoriteUnitIds.indexOf(unitId);
+  if(i>=0){
+    c.favoriteUnitIds.splice(i,1);
+  } else {
+    c.favoriteUnitIds.push(unitId);
+    const u = getUnit(unitId);
+    if(u) logInteraction(clientId, 'favorite_added', 'Добавлено в избранное: '+u.displayNum);
+  }
+  saveState();
+}
+
+// Подборки помещений по клиенту
+function unitsForClient(clientId){
+  return {
+    owned:    state.unitsList.filter(u=>u.clientId===clientId && (u.status==='sold' || u.status==='contract')),
+    booked:   state.unitsList.filter(u=>u.clientId===clientId && u.status==='booked'),
+    shown:    state.unitsList.filter(u=>{
+      // помещения по которым были показы (любой статус показа)
+      return state.shows.some(s=>s.clientId===clientId && s.unitId===u.id);
+    }),
+    favorite: state.unitsList.filter(u=>{
+      const c = getClient(clientId);
+      return c && c.favoriteUnitIds && c.favoriteUnitIds.includes(u.id);
+    }),
+  };
 }
 
 // ---------- Мутации шахматки ----------

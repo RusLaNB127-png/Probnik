@@ -61,7 +61,7 @@
 <!-- ======================= ВКЛАДКИ ======================= -->
 <nav class="tabs" id="tabs">
   <button class="tab active" data-view="chess">Шахматка</button>
-  <button class="tab" data-view="clients">Цифровые профили клиентов</button>
+  <button class="tab" data-view="clients">Профиль клиента</button>
   <button class="tab" data-view="funnel">Воронка и статистика</button>
   <button class="tab" data-view="dashboard">Дашборд РОП</button>
 </nav>
@@ -112,12 +112,26 @@
   </div>
 </main>
 
-<!-- ============ ВКЛАДКА 2: КЛИЕНТЫ ============ -->
+<!-- ============ ВКЛАДКА 2: ПРОФИЛЬ КЛИЕНТА ============ -->
 <main class="view" id="view-clients">
   <div class="view-head">
-    <div><h2>Цифровые профили клиентов</h2><p>Единая карточка клиента: коммуникации, задачи, AI-подсказки</p></div>
+    <div><h2>Профиль клиента</h2><p>Центр работы с клиентом: помещения, показы, сделки, задачи, документы и история коммуникаций</p></div>
     <button class="btn btn-primary" id="newClientBtn">＋ Создать клиента</button>
   </div>
+
+  <!-- Фильтры списка клиентов -->
+  <div class="clients-filter">
+    <div class="cl-filter-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="clFilterQuery" type="text" placeholder="Поиск: ФИО, телефон, e-mail…">
+    </div>
+    <select id="clFilterMgr"><option value="">Все менеджеры</option></select>
+    <select id="clFilterStage"><option value="">Все этапы воронки</option></select>
+    <select id="clFilterSource"><option value="">Все источники</option></select>
+    <select id="clFilterPriority"><option value="">Любой приоритет</option></select>
+    <button class="btn btn-sm" id="clFilterReset">Сбросить</button>
+  </div>
+
   <div class="clients-grid">
     <div class="client-list">
       <div class="client-list-head"><b style="font-family:'Fraunces',serif;font-size:16px;">Клиенты</b><span id="clientCount" style="font-size:12px;color:var(--brown-soft);"></span></div>
@@ -426,6 +440,198 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ======================= ФОРМА КЛИЕНТА (создание / редактирование) ======================= -->
+<div class="form-modal" id="clientFormModal">
+  <div class="form-shell" style="width:min(820px, 100%);">
+    <header class="form-head">
+      <div>
+        <h3 id="clientFormTitle">Добавление клиента</h3>
+        <div class="form-sub">Заполните данные клиента отдела продаж</div>
+      </div>
+      <button class="icon-btn" id="clientFormClose">✕</button>
+    </header>
+    <form id="clientForm" class="form-body">
+      <input type="hidden" id="clientFormId">
+
+      <div class="form-section">
+        <div class="form-section-title">Основная информация</div>
+        <div class="form-row form-row-2">
+          <div><label>ФИО</label><input type="text" id="clName" required></div>
+          <div><label>Дата рождения</label><input type="date" id="clDob"></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>Телефон</label><input type="tel" id="clPhone" placeholder="+7 ___ ___-__-__" required></div>
+          <div><label>Доп. телефон</label><input type="tel" id="clPhone2"></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>E-mail</label><input type="email" id="clEmail"></div>
+          <div><label>Город проживания</label><input type="text" id="clCity"></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>Гражданство</label><input type="text" id="clCitizenship" placeholder="РФ"></div>
+          <div></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Информация о покупке</div>
+        <div class="form-row form-row-2">
+          <div><label>Бюджет</label><input type="text" id="clBudget" placeholder="до 15 млн ₽"></div>
+          <div><label>Цель покупки</label><select id="clGoal"></select></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>Интересующий объект</label><input type="text" id="clTarget" placeholder="ЖК «Италика», 2-комн."></div>
+          <div><label>Тип помещения</label><input type="text" id="clPropKind" placeholder="Квартира / Апартамент"></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>Желаемая площадь</label><input type="text" id="clAreaPref" placeholder="50–70 м²"></div>
+          <div><label>Предпочтительный этаж</label><input type="text" id="clFloorPref" placeholder="4–10"></div>
+        </div>
+        <div class="form-row">
+          <label>Предпочтительный вид</label><input type="text" id="clViewPref" placeholder="Парк / Море / Не принципиально">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Источник обращения</div>
+        <div class="form-row">
+          <label>Источник</label><select id="clSource"></select>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Работа отдела продаж</div>
+        <div class="form-row form-row-2">
+          <div><label>Ответственный менеджер</label><select id="clMgr"></select></div>
+          <div><label>Стадия воронки</label><select id="clStage"></select></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div><label>Приоритет</label><select id="clPriority"></select></div>
+          <div><label>Следующий контакт</label><input type="date" id="clNextContact"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Дополнительная информация</div>
+        <div class="form-row"><label>Комментарии менеджера</label><textarea id="clNote" rows="2"></textarea></div>
+        <div class="form-row"><label>Пожелания клиента</label><textarea id="clWishes" rows="2"></textarea></div>
+        <div class="form-row"><label>Возражения клиента</label><textarea id="clObjections" rows="2"></textarea></div>
+        <div class="form-row"><label>Причины отказа (если есть)</label><textarea id="clRefusal" rows="2"></textarea></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn" id="clDelete" style="display:none; color:var(--terra-dark); border-color:var(--terra-dark);">Удалить клиента</button>
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button type="button" class="btn" id="clCancel">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================= ФОРМА ЗАДАЧИ ======================= -->
+<div class="form-modal" id="taskFormModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3 id="taskFormTitle">Новая задача</h3><div class="form-sub" id="taskFormSub">—</div></div>
+      <button class="icon-btn" id="taskFormClose">✕</button>
+    </header>
+    <form id="taskForm" class="form-body">
+      <input type="hidden" id="taskClientId">
+      <input type="hidden" id="taskId">
+      <div class="form-row"><label>Что нужно сделать</label><input type="text" id="taskTitle" required></div>
+      <div class="form-row form-row-2">
+        <div><label>Ответственный</label><select id="taskAssignee"></select></div>
+        <div><label>Срок</label><input type="date" id="taskDue" required></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn" id="taskDelete" style="display:none; color:var(--terra-dark); border-color:var(--terra-dark);">Удалить</button>
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button type="button" class="btn" id="taskCancel">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================= ФОРМА ДОКУМЕНТА ======================= -->
+<div class="form-modal" id="docFormModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3>Прикрепить документ</h3><div class="form-sub" id="docFormSub">—</div></div>
+      <button class="icon-btn" id="docFormClose">✕</button>
+    </header>
+    <form id="docForm" class="form-body">
+      <input type="hidden" id="docClientId">
+      <div class="form-row"><label>Файл</label><input type="file" id="docFile"></div>
+      <div class="form-row form-row-2">
+        <div><label>Название документа</label><input type="text" id="docName" required></div>
+        <div><label>Тип</label>
+          <select id="docType">
+            <option>Договор</option>
+            <option>Анкета</option>
+            <option>Паспорт</option>
+            <option>Дополнительный файл</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button type="button" class="btn" id="docCancel">Отмена</button>
+          <button type="submit" class="btn btn-primary">Прикрепить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================= ФОРМА КОНТАКТНОГО ЛИЦА ======================= -->
+<div class="form-modal" id="contactFormModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3>Контактное лицо</h3><div class="form-sub" id="contactFormSub">—</div></div>
+      <button class="icon-btn" id="contactFormClose">✕</button>
+    </header>
+    <form id="contactForm" class="form-body">
+      <input type="hidden" id="contactClientId">
+      <div class="form-row form-row-2">
+        <div><label>ФИО</label><input type="text" id="contactName" required></div>
+        <div><label>Роль</label><input type="text" id="contactRole" placeholder="Супруг(а), представитель…"></div>
+      </div>
+      <div class="form-row form-row-2">
+        <div><label>Телефон</label><input type="tel" id="contactPhone"></div>
+        <div><label>E-mail</label><input type="email" id="contactEmail"></div>
+      </div>
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button type="button" class="btn" id="contactCancel">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ======================= ПОДБОР ПОМЕЩЕНИЯ ДЛЯ ИЗБРАННОГО ======================= -->
+<div class="form-modal" id="pickUnitModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3>Добавить помещение в избранное</h3><div class="form-sub" id="pickUnitSub">—</div></div>
+      <button class="icon-btn" id="pickUnitClose">✕</button>
+    </header>
+    <div class="form-body">
+      <input type="hidden" id="pickClientId">
+      <div class="form-row">
+        <label>Поиск помещения</label>
+        <input type="text" id="pickUnitQuery" placeholder="№, корпус, этаж, площадь">
+      </div>
+      <div class="pick-unit-list" id="pickUnitList"></div>
+    </div>
   </div>
 </div>
 

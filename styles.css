@@ -779,8 +779,317 @@ table.tbl tr:hover td{ background:var(--sand); }
 }
 
 /* ============================================================
-   Адаптив
+   ВКЛАДКА «ПРОФИЛЬ КЛИЕНТА» — фильтры и список
    ============================================================ */
+.clients-filter{
+  display:grid; grid-template-columns: 1.4fr repeat(4, 1fr) auto; gap:10px;
+  margin-bottom:16px;
+  background:var(--bg-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  box-shadow:var(--shadow-sm);
+  align-items:center;
+}
+.cl-filter-search{ position:relative; display:flex; align-items:center; }
+.cl-filter-search svg{ position:absolute; left:11px; color:var(--brown-soft); }
+.cl-filter-search input{
+  width:100%;
+  border:1px solid var(--line); background:var(--bg);
+  padding:9px 12px 9px 32px;
+  border-radius:8px; font-size:13px; color:var(--brown); outline:none;
+  font-family:inherit;
+}
+.cl-filter-search input:focus{ border-color:var(--terra); }
+.clients-filter select{
+  border:1px solid var(--line); background:var(--bg);
+  padding:9px 11px; border-radius:8px;
+  font-size:13px; color:var(--brown); outline:none;
+  font-family:inherit;
+}
+.clients-filter select:focus{ border-color:var(--terra); }
+
+/* ============================================================
+   КАРТОЧКА КЛИЕНТА — расширенная
+   ============================================================ */
+.client-item .priority-dot{
+  width:7px; height:7px; border-radius:50%;
+  flex-shrink:0;
+}
+.client-list-empty{
+  padding:24px 18px;
+  text-align:center;
+  color:var(--brown-soft);
+  font-size:13px;
+}
+
+/* Шапка карточки клиента */
+.cc-head{
+  padding:22px 24px;
+  border-bottom:1px solid var(--line);
+  display:flex; gap:18px; align-items:center;
+}
+.cc-head .avatar{ width:56px; height:56px; font-size:18px; }
+.cc-head-main{ flex:1; min-width:0; }
+.cc-head h3{ font-size:21px; display:flex; align-items:center; gap:10px; }
+.cc-head .sub{ color:var(--brown-soft); font-size:13px; margin-top:2px; }
+.cc-head-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+.priority-tag{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:4px 9px; border-radius:6px;
+}
+.priority-tag .pdot{ width:7px; height:7px; border-radius:50%; }
+
+/* Внутренние вкладки карточки клиента */
+.cc-tabs{
+  display:flex; gap:2px;
+  padding:0 22px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+.cc-tab{
+  border:0; background:transparent;
+  padding:13px 14px; font-size:13px; font-weight:600;
+  color:var(--brown-soft);
+  position:relative; transition:.15s;
+  display:flex; align-items:center; gap:6px;
+}
+.cc-tab:hover{ color:var(--brown); }
+.cc-tab.active{ color:var(--terra); }
+.cc-tab.active::after{
+  content:''; position:absolute; left:10px; right:10px; bottom:-1px; height:3px;
+  background:var(--terra); border-radius:3px 3px 0 0;
+}
+.cc-tab-count{
+  font-size:10.5px; font-weight:700;
+  background:var(--sand); color:var(--brown);
+  padding:1px 6px; border-radius:10px;
+  min-width:18px; text-align:center;
+}
+.cc-tab.active .cc-tab-count{ background:var(--terra); color:#fff; }
+
+.cc-pane{ padding:20px 22px; }
+
+/* Сетка полей с inline-редактированием */
+.cc-fields{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px 18px; }
+.cc-field{ display:flex; flex-direction:column; gap:4px; }
+.cc-field .k{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--brown-soft); }
+.cc-field .v{
+  font-size:14px; color:var(--brown); font-family:inherit;
+  border:1px solid transparent; background:transparent;
+  padding:6px 8px; border-radius:7px;
+  transition:.12s;
+  min-height:30px;
+  cursor:text;
+}
+.cc-field .v:hover{ background:var(--sand); }
+.cc-field .v:focus{ outline:none; border-color:var(--terra); background:#fff; box-shadow:0 0 0 3px rgba(194,104,62,.1); }
+.cc-field select.v{ cursor:pointer; }
+.cc-field textarea.v{ resize:vertical; min-height:60px; font-family:inherit; line-height:1.45; }
+.cc-field-full{ grid-column:1 / -1; }
+.cc-field-2{ grid-column:span 2; }
+
+.cc-block-title{
+  font-family:'Fraunces',serif;
+  font-size:15px; font-weight:600;
+  margin:18px 0 11px;
+  display:flex; align-items:center; gap:8px;
+}
+.cc-block-title::before{
+  content:''; width:3px; height:14px; background:var(--terra); border-radius:2px;
+}
+
+/* Карточки помещений в избранном/показанном */
+.unit-card-mini{
+  display:flex; align-items:center; gap:11px;
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:11px; padding:11px 13px;
+  margin-bottom:8px;
+}
+.unit-card-mini:hover{ border-color:var(--terra); }
+.unit-card-mini .ucm-status{
+  width:8px; height:36px; border-radius:4px;
+  flex-shrink:0;
+}
+.unit-card-mini .ucm-num{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; min-width:60px; }
+.unit-card-mini .ucm-meta{ flex:1; min-width:0; font-size:12.5px; color:var(--brown-soft); }
+.unit-card-mini .ucm-meta b{ color:var(--brown); font-size:13.5px; display:block; font-family:inherit; font-weight:600; }
+.unit-card-mini .ucm-actions{ display:flex; gap:6px; flex-shrink:0; }
+.unit-empty{
+  padding:24px 16px; text-align:center;
+  color:var(--brown-soft); font-size:13px;
+  border:1px dashed var(--line); border-radius:11px;
+}
+
+/* Сегменты помещений (просмотрено / избранное / бронь / куплено) */
+.unit-segments{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:18px; }
+.unit-segment{
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:11px; padding:12px 14px;
+  cursor:pointer; transition:.15s;
+  text-align:left;
+}
+.unit-segment:hover{ border-color:var(--terra); }
+.unit-segment.active{ border-color:var(--terra); background:#FBE3D3; }
+.unit-segment .seg-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--brown-soft); }
+.unit-segment .seg-value{ font-family:'Fraunces',serif; font-size:24px; font-weight:600; margin-top:3px; line-height:1; color:var(--brown); }
+.unit-segment.active .seg-value{ color:var(--terra-dark); }
+
+/* Карточки задач */
+.task-card{
+  display:flex; align-items:center; gap:11px;
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:11px; padding:11px 14px;
+  margin-bottom:8px;
+}
+.task-card.done{ opacity:.6; }
+.task-card.overdue{ border-color:var(--terra); background:#FBE3D3; }
+.task-card input[type=checkbox]{ accent-color:var(--terra); width:18px; height:18px; cursor:pointer; }
+.task-card .tk-title{ flex:1; min-width:0; font-size:13.5px; }
+.task-card.done .tk-title{ text-decoration:line-through; }
+.task-card .tk-meta{ font-size:11.5px; color:var(--brown-soft); }
+.task-card .tk-meta.overdue{ color:var(--terra); font-weight:700; }
+.task-card .tk-actions{ display:flex; gap:4px; }
+.task-card .tk-actions button{
+  border:0; background:transparent; color:var(--brown-soft);
+  width:24px; height:24px; border-radius:6px;
+  cursor:pointer; font-size:13px;
+}
+.task-card .tk-actions button:hover{ background:var(--sand); color:var(--terra); }
+
+/* Документы */
+.doc-card{
+  display:flex; align-items:center; gap:11px;
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:11px; padding:11px 14px;
+  margin-bottom:8px;
+}
+.doc-card .doc-ic{
+  width:38px; height:46px;
+  background:linear-gradient(135deg, var(--sand), var(--beige));
+  border-radius:6px;
+  display:grid; place-items:center;
+  font-size:14px; color:var(--terra-dark);
+  font-weight:700;
+  flex-shrink:0;
+}
+.doc-card .doc-meta{ flex:1; min-width:0; }
+.doc-card .doc-name{ font-weight:600; font-size:13.5px; }
+.doc-card .doc-sub{ font-size:11.5px; color:var(--brown-soft); margin-top:2px; }
+.doc-card button{
+  border:1px solid var(--line); background:#fff; color:var(--brown-soft);
+  padding:5px 9px; border-radius:6px; font-size:11.5px; cursor:pointer;
+}
+.doc-card button:hover{ color:var(--terra); border-color:var(--terra); }
+
+/* Контактные лица */
+.contact-card{
+  display:flex; align-items:center; gap:11px;
+  background:var(--bg); border:1px solid var(--line);
+  border-radius:11px; padding:11px 14px;
+  margin-bottom:8px;
+}
+.contact-card .avatar{ width:34px; height:34px; font-size:12px; }
+.contact-card .ct-meta{ flex:1; min-width:0; }
+.contact-card .ct-name{ font-weight:600; font-size:13.5px; }
+.contact-card .ct-sub{ font-size:11.5px; color:var(--brown-soft); margin-top:2px; }
+
+/* История взаимодействия (timeline) */
+.timeline{
+  position:relative;
+  padding-left:24px;
+}
+.timeline::before{
+  content:''; position:absolute; left:9px; top:6px; bottom:6px;
+  width:2px; background:var(--line);
+}
+.tl-event{
+  position:relative;
+  padding:6px 0 14px 18px;
+}
+.tl-event::before{
+  content:''; position:absolute;
+  left:-23px; top:9px;
+  width:20px; height:20px; border-radius:50%;
+  background:#fff;
+  border:2px solid var(--terra);
+  display:grid; place-items:center;
+  font-size:10px;
+  z-index:1;
+}
+.tl-event .tl-time{ font-size:11px; color:var(--brown-soft); font-weight:600; }
+.tl-event .tl-text{ font-size:13px; margin-top:2px; }
+.tl-event .tl-type{
+  display:inline-block;
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:2px 7px; border-radius:5px;
+  background:var(--sand); color:var(--brown);
+  margin-right:6px;
+}
+
+/* История смены менеджеров */
+.mgr-history-row{
+  display:flex; gap:11px; align-items:center;
+  padding:8px 0;
+  border-bottom:1px dashed var(--line-soft);
+  font-size:13px;
+}
+.mgr-history-row:last-child{ border-bottom:0; }
+.mgr-history-row .avatar{ width:32px; height:32px; font-size:12px; }
+.mgr-history-row .mh-period{ font-size:11.5px; color:var(--brown-soft); margin-top:1px; }
+.mgr-history-row .mh-reason{ font-size:11.5px; color:var(--brown-soft); font-style:italic; }
+.mgr-history-row .mh-current{
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  background:var(--terra); color:#fff; padding:2px 7px; border-radius:5px;
+}
+
+/* Большая форма клиента — секции */
+.form-section{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:14px 16px 4px;
+  margin-bottom:14px;
+  background:var(--bg);
+}
+.form-section-title{
+  font-family:'Fraunces',serif;
+  font-size:14px; font-weight:600;
+  margin-bottom:10px;
+  color:var(--terra-dark);
+}
+
+/* Подбор помещения */
+.pick-unit-list{
+  max-height:320px; overflow-y:auto;
+  border:1px solid var(--line); border-radius:8px;
+  margin-top:8px;
+}
+.pick-unit-item{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px;
+  border-bottom:1px solid var(--line-soft);
+  cursor:pointer;
+  transition:.12s;
+}
+.pick-unit-item:hover{ background:var(--sand); }
+.pick-unit-item:last-child{ border-bottom:0; }
+.pick-unit-item .pu-st{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.pick-unit-item .pu-num{ font-family:'Fraunces',serif; font-weight:600; font-size:14px; min-width:54px; }
+.pick-unit-item .pu-meta{ flex:1; font-size:12.5px; color:var(--brown-soft); }
+.pick-unit-item .pu-meta b{ display:block; color:var(--brown); font-weight:600; font-size:13px; font-family:inherit; }
+
+@media (max-width:1100px){
+  .clients-filter{ grid-template-columns: 1fr 1fr; }
+  .cc-fields{ grid-template-columns:repeat(2,1fr); }
+  .unit-segments{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:680px){
+  .clients-filter{ grid-template-columns:1fr; }
+  .cc-fields{ grid-template-columns:1fr; }
+  .unit-segments{ grid-template-columns:1fr; }
+}
 @media (max-width:1200px){
   .cal-body{ grid-template-columns:1fr; }
   .cal-side{ border-right:0; border-bottom:1px solid var(--line); }
