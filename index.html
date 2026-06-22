@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terra — CRM для девелопера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ======================= ШАПКА ======================= -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">T</div>
+    <div>
+      <div class="brand-name">Terra</div>
+      <div class="brand-sub">CRM девелопера</div>
+    </div>
+  </div>
+
+  <div class="obj-switch" id="objSwitch"><!-- объекты подставляются JS --></div>
+
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="globalSearch" placeholder="Поиск: клиент, телефон, № квартиры…" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <button class="icon-btn" id="calBtn" title="Календарь показов">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+  </button>
+  <button class="icon-btn" id="notifBtn" title="Уведомления">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    <span class="badge" id="notifBadge">3</span>
+  </button>
+  <div class="avatar" title="Анна Соколова — РОП">АС</div>
+</header>
+
+<!-- ======================= ВКЛАДКИ ======================= -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-view="chess">Шахматка</button>
+  <button class="tab" data-view="clients">Цифровые профили клиентов</button>
+  <button class="tab" data-view="funnel">Воронка и статистика</button>
+  <button class="tab" data-view="dashboard">Дашборд РОП</button>
+</nav>
+
+<!-- ============ ВКЛАДКА 1: ШАХМАТКА ============ -->
+<main class="view active" id="view-chess">
+  <div class="view-head">
+    <div>
+      <h2 id="chessTitle">Шахматка</h2>
+      <p id="chessSub">Кликните на помещение, чтобы открыть карточку объекта</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="calBtn2">📅 Календарь показов</button>
+      <button class="btn btn-primary">＋ Добавить помещение</button>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="filters" id="chessFilters">
+    <div class="field"><label>Корпус</label><select id="fCorp"></select></div>
+    <div class="field"><label>Этаж</label><select id="fFloor"></select></div>
+    <div class="field"><label>Статус</label><select id="fStatus"></select></div>
+    <div class="field"><label>Менеджер</label><select id="fManager"></select></div>
+    <div class="field"><label>Цена, ₽/м² (тыс.)</label><div class="range"><input id="fPriceMin" type="number" placeholder="от"><input id="fPriceMax" type="number" placeholder="до"></div></div>
+    <div class="field"><label>Площадь, м²</label><div class="range"><input id="fAreaMin" type="number" placeholder="от"><input id="fAreaMax" type="number" placeholder="до"></div></div>
+    <button class="btn btn-sm reset" id="fReset">Сбросить фильтры</button>
+  </div>
+
+  <!-- Легенда -->
+  <div class="legend" id="legend"></div>
+
+  <!-- Сетка -->
+  <div class="chess-wrap">
+    <div class="chess-scroll" id="chessGrid"></div>
+    <aside class="chess-aside" id="chessAside"></aside>
+  </div>
+</main>
+
+<!-- ============ ВКЛАДКА 2: КЛИЕНТЫ ============ -->
+<main class="view" id="view-clients">
+  <div class="view-head">
+    <div><h2>Цифровые профили клиентов</h2><p>Единая карточка клиента: коммуникации, задачи, AI-подсказки</p></div>
+    <button class="btn btn-primary" id="newClientBtn">＋ Создать клиента</button>
+  </div>
+  <div class="clients-grid">
+    <div class="client-list">
+      <div class="client-list-head"><b style="font-family:'Fraunces',serif;font-size:16px;">Клиенты</b><span id="clientCount" style="font-size:12px;color:var(--brown-soft);"></span></div>
+      <div id="clientList"></div>
+    </div>
+    <div id="clientCard"></div>
+  </div>
+</main>
+
+<!-- ============ ВКЛАДКА 3: ВОРОНКА ============ -->
+<main class="view" id="view-funnel">
+  <div class="view-head"><div><h2>Воронка продаж и статистика</h2><p>Движение лидов по этапам и ключевые показатели отдела</p></div></div>
+
+  <div class="kpi-row" id="funnelKpi"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Воронка продаж</h3>
+      <div class="card-sub">Конверсия от лида до закрытой сделки</div>
+      <div class="funnel" id="funnelChart"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div class="card">
+        <h3>Источники лидов</h3>
+        <div class="card-sub">Откуда приходят клиенты</div>
+        <div class="line-list" id="sourcesList"></div>
+      </div>
+      <div class="card">
+        <h3>Причины отказов</h3>
+        <div class="card-sub">Где теряем сделки</div>
+        <div class="line-list" id="refusalsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <h3>Эффективность менеджеров</h3>
+      <div class="card-sub">Конверсия лид → сделка</div>
+      <div id="mgrEffChart"></div>
+    </div>
+    <div class="card">
+      <h3>Динамика сделок по неделям</h3>
+      <div class="card-sub">Брони и продажи, ₽ млн</div>
+      <div id="weeklyChart"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ ВКЛАДКА 4: ДАШБОРД РОП ============ -->
+<main class="view" id="view-dashboard">
+  <div class="view-head"><div><h2>Дашборд РОП</h2><p id="dashSub">Управленческая сводка по объекту · июнь 2026</p></div></div>
+
+  <div class="kpi-row" id="dashKpi"></div>
+
+  <div class="dash-grid">
+    <div class="card col-4">
+      <h3>Выполнение плана</h3>
+      <div class="card-sub">Месячный план продаж</div>
+      <div class="plan-ring">
+        <div class="ring" id="planRing"></div>
+        <div class="plan-meta" id="planMeta" style="flex:1;"></div>
+      </div>
+    </div>
+
+    <div class="card col-8">
+      <h3>Продажи по менеджерам</h3>
+      <div class="card-sub">Сумма закрытых сделок за месяц, ₽ млн</div>
+      <div id="dashMgrChart"></div>
+    </div>
+
+    <div class="card col-6">
+      <h3>🔥 Горячие клиенты</h3>
+      <div class="card-sub">Высокая вероятность сделки в ближайшие дни</div>
+      <div id="hotClients"></div>
+    </div>
+
+    <div class="card col-6">
+      <h3>⚠️ Проблемные сделки</h3>
+      <div class="card-sub">Требуют вмешательства РОП</div>
+      <div id="problemDeals"></div>
+    </div>
+
+    <div class="card col-8">
+      <h3>Рейтинг менеджеров</h3>
+      <div class="card-sub">План / факт, брони, конверсия, рейтинг</div>
+      <table class="tbl" id="mgrTable"></table>
+    </div>
+
+    <div class="card col-4">
+      <h3>Прогноз выручки</h3>
+      <div class="card-sub">На основе текущей воронки</div>
+      <div id="forecast"></div>
+    </div>
+
+    <div class="card col-7">
+      <h3>План-факт по объектам</h3>
+      <div class="card-sub">Сравнение целей и продаж, ₽ млн</div>
+      <div id="planFactObjects"></div>
+    </div>
+
+    <div class="card col-5">
+      <h3>Журнал действий менеджеров</h3>
+      <div class="card-sub">Последняя активность</div>
+      <div id="actionLog" style="max-height:300px; overflow-y:auto;"></div>
+    </div>
+
+    <div class="card col-12" style="background:linear-gradient(135deg,#FBEFE4,#F6E4D2); border-color:#E8CBAE;">
+      <h3 style="color:var(--terra-dark); display:flex; align-items:center; gap:9px;">
+        <span class="spark" style="width:26px;height:26px;border-radius:8px;background:var(--terra);display:grid;place-items:center;color:#fff;">✦</span>
+        Рекомендации AI для руководителя
+      </h3>
+      <div class="card-sub">Где проседает воронка, кого дожать, какие объекты зависают</div>
+      <div class="grid-3" id="aiRecs"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ======================= БОКОВАЯ ПАНЕЛЬ ОБЪЕКТА ======================= -->
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel"></aside>
+
+<!-- ======================= УВЕДОМЛЕНИЯ ======================= -->
+<div class="notif-pop" id="notifPop">
+  <div class="notif-head"><b style="font-family:'Fraunces',serif;font-size:16px;">Уведомления</b><span style="font-size:12px;color:var(--brown-soft);">Просроченные задачи</span></div>
+  <div id="notifList"></div>
+</div>
+
+<!-- ======================= КАЛЕНДАРЬ ПОКАЗОВ ======================= -->
+<div class="modal-scrim" id="calModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3 style="font-size:19px;">Календарь показов</h3><div style="font-size:12px;color:var(--brown-soft);">Июнь 2026</div></div>
+      <button class="icon-btn" id="calClose" style="width:34px;height:34px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ======================= СКРИПТЫ (порядок важен) ======================= -->
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/chess.js"></script>
+<script src="js/clients.js"></script>
+<script src="js/funnel.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
