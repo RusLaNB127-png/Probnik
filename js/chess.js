@@ -1,5 +1,7 @@
 /* ============================================================
-   ВКЛАДКА «ШАХМАТКА» + БОКОВАЯ ПАНЕЛЬ + АДМИН-РЕЖИМ
+   ВКЛАДКА «ШАХМАТКА» — три режима отображения:
+   grid (классическая шахматка), floor (интерактивный этаж), facade (вид корпуса)
+   + боковая панель помещения, админ-режим, лайтбокс, презентационный режим.
    ============================================================ */
 
 function buildLegend(){
@@ -44,9 +46,68 @@ function passFilter(u){
   return true;
 }
 
+/* ============================================================
+   ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ
+   ============================================================ */
+function setChessView(mode){
+  state.chessView = mode;
+  document.querySelectorAll('.view-switch-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.viewMode===mode);
+  });
+  // По умолчанию — первый корпус для floor/facade
+  const cfg = state.buildingConfig;
+  if(mode==='floor' && !state.floorViewCorp) state.floorViewCorp = cfg.corps[0];
+  if(mode==='floor' && !state.floorViewFloor){
+    const ccfg = corpCfg(cfg, state.floorViewCorp);
+    state.floorViewFloor = ccfg.floors;
+  }
+  if(mode==='facade' && !state.facadeCorp) state.facadeCorp = cfg.corps[0];
+  renderChess();
+}
+
+function bindViewSwitch(){
+  document.querySelectorAll('.view-switch-btn').forEach(b=>{
+    b.onclick = ()=>setChessView(b.dataset.viewMode);
+  });
+}
+
+/* ============================================================
+   ДИСПЕТЧЕР РЕНДЕРА (3 режима)
+   ============================================================ */
 function renderChess(){
   const b = state.buildingConfig;
-  document.getElementById('chessTitle').textContent = 'Шахматка · '+b.name;
+  document.getElementById('chessTitle').textContent = ({
+    grid:'Шахматка', floor:'Интерактивный этаж', facade:'Вид корпуса'
+  })[state.chessView]+' · '+b.name;
+
+  const grid    = document.getElementById('chessGrid');
+  const floor   = document.getElementById('floorView');
+  const facade  = document.getElementById('facadeView');
+  const toolbar = document.getElementById('modeToolbar');
+
+  grid.style.display    = state.chessView==='grid'   ? '' : 'none';
+  floor.style.display   = state.chessView==='floor'  ? '' : 'none';
+  facade.style.display  = state.chessView==='facade' ? '' : 'none';
+
+  if(state.chessView==='grid'){
+    toolbar.style.display = 'none';
+    renderGridView();
+  } else if(state.chessView==='floor'){
+    toolbar.style.display = '';
+    renderFloorToolbar();
+    renderFloorView();
+  } else {
+    toolbar.style.display = '';
+    renderFacadeToolbar();
+    renderFacadeView();
+  }
+}
+
+/* ============================================================
+   РЕЖИМ 1: КЛАССИЧЕСКАЯ ШАХМАТКА
+   ============================================================ */
+function renderGridView(){
+  const b = state.buildingConfig;
   const grid = document.getElementById('chessGrid');
   grid.classList.toggle('admin', state.adminMode);
 
@@ -89,6 +150,222 @@ function renderChess(){
   });
 }
 
+/* ============================================================
+   РЕЖИМ 2: ИНТЕРАКТИВНЫЙ ЭТАЖ
+   ============================================================ */
+function renderFloorToolbar(){
+  const cfg = state.buildingConfig;
+  const tb = document.getElementById('modeToolbar');
+  const corp = state.floorViewCorp || cfg.corps[0];
+  const ccfg = corpCfg(cfg, corp);
+  const floors = [];
+  for(let f=ccfg.floors; f>=1; f--) floors.push(f);
+
+  tb.innerHTML = `
+    <span class="mt-label">Корпус</span>
+    <select id="floorCorpSel">${cfg.corps.map(c=>`<option ${c===corp?'selected':''}>${c}</option>`).join('')}</select>
+    <span class="mt-label" style="margin-left:8px;">Этаж</span>
+    <div class="mt-floors" id="floorFloorBtns">
+      ${floors.map(f=>`<button class="mt-floor-btn ${f===state.floorViewFloor?'active':''}" data-f="${f}">${f}</button>`).join('')}
+    </div>
+  `;
+  document.getElementById('floorCorpSel').onchange = e=>{
+    state.floorViewCorp = e.target.value;
+    const cc = corpCfg(cfg, state.floorViewCorp);
+    if(state.floorViewFloor > cc.floors) state.floorViewFloor = cc.floors;
+    renderChess();
+  };
+  tb.querySelectorAll('.mt-floor-btn').forEach(b=>{
+    b.onclick = ()=>{ state.floorViewFloor = +b.dataset.f; renderChess(); };
+  });
+}
+
+function renderFloorView(){
+  const corp = state.floorViewCorp;
+  const floor = state.floorViewFloor;
+  const host = document.getElementById('floorView');
+  if(!corp || !floor){
+    host.innerHTML = `<div class="floor-view-empty">Выберите корпус и этаж для отображения интерактивного плана.</div>`;
+    return;
+  }
+  const rowUnits = units()
+    .filter(u=>u.corp===corp && u.floor===floor)
+    .sort((a,c)=>a.position-c.position);
+
+  if(!rowUnits.length){
+    host.innerHTML = `<div class="floor-view-empty">На выбранном этаже нет помещений.</div>`;
+    return;
+  }
+
+  const total   = rowUnits.length;
+  const free    = rowUnits.filter(u=>u.status==='free').length;
+  const sold    = rowUnits.filter(u=>u.status==='sold' || u.status==='contract').length;
+  const totalSum= rowUnits.reduce((s,u)=>s+u.total, 0);
+
+  // Разделим помещения на две полосы (имитация коридора)
+  const half = Math.ceil(rowUnits.length/2);
+  const top  = rowUnits.slice(0, half);
+  const bot  = rowUnits.slice(half);
+
+  const renderRoom = (u)=>{
+    const st = STATUSES[u.status];
+    const cat = VIEW_CATEGORIES.find(v=>v.id===(u.view && u.view.category));
+    const visible = passFilter(u);
+    return `<div class="floor-room ${u.id===state.selectedUnitId?'sel':''} ${visible?'':'dim'}"
+                 style="--st-color:${st.color}" data-id="${u.id}">
+      ${cat ? `<span class="fr-view-ic" title="${cat.label}">${cat.icon}</span>` : ''}
+      <div>
+        <div class="fr-num">${u.displayNum}</div>
+        <div class="fr-area">${u.area} м² · ${u.kind}</div>
+      </div>
+      <div>
+        <div class="fr-price">${fmtMoney(u.total)}</div>
+        <div class="fr-status" style="background:${st.color}">${st.label}</div>
+      </div>
+    </div>`;
+  };
+
+  host.innerHTML = `
+    <div class="floor-plan">
+      <div class="floor-plan-head">
+        <div>
+          <div class="floor-plan-title">${corp} · ${floor} этаж</div>
+          <div class="floor-plan-sub">Интерактивный план — наведите на помещение для деталей, кликните для открытия карточки</div>
+        </div>
+        <div class="floor-plan-stats">
+          <div>Всего <b>${total}</b></div>
+          <div>Свободно <b style="color:var(--st-free)">${free}</b></div>
+          <div>Продано <b style="color:var(--terra-dark)">${sold}</b></div>
+          <div>Сумма <b>${fmtMoney(totalSum)}</b></div>
+        </div>
+      </div>
+      <div class="floor-plan-rows">
+        <div class="floor-plan-row">${top.map(renderRoom).join('')}</div>
+        <div class="floor-plan-corridor">Лифтовый холл · коридор</div>
+        <div class="floor-plan-row">${bot.map(renderRoom).join('')}</div>
+      </div>
+    </div>
+  `;
+
+  // Клик — открыть карточку
+  host.querySelectorAll('.floor-room').forEach(r=>{
+    r.onclick = ()=>openPanel(r.dataset.id);
+    r.addEventListener('mouseenter', e=>showFloorTooltip(e, getUnit(r.dataset.id)));
+    r.addEventListener('mousemove',  moveFloorTooltip);
+    r.addEventListener('mouseleave', hideFloorTooltip);
+  });
+}
+
+let _ftEl;
+function ensureFloorTooltip(){
+  if(_ftEl) return _ftEl;
+  _ftEl = document.createElement('div');
+  _ftEl.className = 'floor-tooltip';
+  document.body.appendChild(_ftEl);
+  return _ftEl;
+}
+function showFloorTooltip(e, u){
+  if(!u) return;
+  const el = ensureFloorTooltip();
+  const st = STATUSES[u.status];
+  const cat = VIEW_CATEGORIES.find(v=>v.id===(u.view && u.view.category));
+  el.innerHTML = `
+    <div class="ft-num">${u.displayNum}</div>
+    <div class="ft-row"><span>Площадь</span><b>${u.area} м²</b></div>
+    <div class="ft-row"><span>Цена</span><b>${fmtMoney(u.total)}</b></div>
+    <div class="ft-row"><span>Этаж</span><b>${u.floor}</b></div>
+    ${cat ? `<div class="ft-row"><span>Вид</span><b>${cat.icon} ${cat.label}</b></div>` : ''}
+    <span class="ft-status" style="background:${st.color}">${st.label}</span>
+  `;
+  el.classList.add('show');
+  moveFloorTooltip(e);
+}
+function moveFloorTooltip(e){
+  if(!_ftEl || !_ftEl.classList.contains('show')) return;
+  const pad = 14;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  const w = _ftEl.offsetWidth, h = _ftEl.offsetHeight;
+  if(x + w > window.innerWidth - 8) x = e.clientX - w - pad;
+  if(y + h > window.innerHeight - 8) y = e.clientY - h - pad;
+  _ftEl.style.left = x+'px'; _ftEl.style.top = y+'px';
+}
+function hideFloorTooltip(){ if(_ftEl) _ftEl.classList.remove('show'); }
+
+/* ============================================================
+   РЕЖИМ 3: ВИД КОРПУСА (фасад)
+   ============================================================ */
+function renderFacadeToolbar(){
+  const cfg = state.buildingConfig;
+  const corp = state.facadeCorp || cfg.corps[0];
+  const tb = document.getElementById('modeToolbar');
+  tb.innerHTML = `
+    <span class="mt-label">Корпус</span>
+    <select id="facadeCorpSel">${cfg.corps.map(c=>`<option ${c===corp?'selected':''}>${c}</option>`).join('')}</select>
+    <span style="font-size:12px; color:var(--brown-soft); margin-left:auto;">
+      Наведите на окно — увидите номер. Клик — открыть карточку. Свободные помещения отмечены белой точкой.
+    </span>
+  `;
+  document.getElementById('facadeCorpSel').onchange = e=>{
+    state.facadeCorp = e.target.value; renderChess();
+  };
+}
+
+function renderFacadeView(){
+  const cfg = state.buildingConfig;
+  const corp = state.facadeCorp;
+  const host = document.getElementById('facadeView');
+  if(!corp){
+    host.innerHTML = `<div class="floor-view-empty">Выберите корпус.</div>`;
+    return;
+  }
+  const ccfg = corpCfg(cfg, corp);
+  const all = units().filter(u=>u.corp===corp);
+
+  // строки от верхнего к нижнему
+  const floors = [];
+  for(let f=ccfg.floors; f>=1; f--) floors.push(f);
+
+  const rows = floors.map(f=>{
+    const row = all
+      .filter(u=>u.floor===f)
+      .sort((a,c)=>a.position-c.position);
+    return `<div class="facade-floor">
+      <div class="facade-floor-lbl">${f}</div>
+      <div class="facade-floor-cells" style="--per-floor:${ccfg.perFloor}">
+        ${row.map(u=>{
+          const st = STATUSES[u.status];
+          const free = u.status==='free' ? 'is-free' : '';
+          const sel  = u.id===state.selectedUnitId ? 'sel' : '';
+          return `<button class="facade-window ${free} ${sel}"
+              style="--st-color:${st.color}"
+              data-id="${u.id}"
+              title="${u.displayNum} · ${st.label} · ${u.area} м² · ${fmtMoney(u.total)}"></button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="facade-sky"></div>
+    <div class="facade-ground"></div>
+    <div class="facade-building">
+      <div class="facade-roof"></div>
+      <div class="facade-name">${cfg.name} · ${corp}</div>
+      ${rows}
+    </div>
+    <div class="facade-legend">
+      ${STATUS_ORDER.map(s=>`<span class="item"><span class="dot" style="background:${STATUSES[s].color}"></span>${STATUSES[s].label}</span>`).join('')}
+    </div>
+  `;
+
+  host.querySelectorAll('.facade-window').forEach(w=>{
+    w.onclick = ()=>openPanel(w.dataset.id);
+  });
+}
+
+/* ============================================================
+   СВОДКА (правая колонка)
+   ============================================================ */
 function renderAside(){
   const all = units().filter(passFilter);
   const counts = {}; STATUS_ORDER.forEach(s=>counts[s]=0);
@@ -137,7 +414,7 @@ function bindFilters(){
 }
 
 /* ============================================================
-   БОКОВАЯ ПАНЕЛЬ ОБЪЕКТА
+   БОКОВАЯ ПАНЕЛЬ ОБЪЕКТА (с видом, планировками, презентацией)
    ============================================================ */
 function openPanel(id){
   const u = getUnit(id);
@@ -147,24 +424,50 @@ function openPanel(id){
   const st = STATUSES[u.status];
   const client = getClient(u.clientId);
   const isFav = state.favorites.has(id);
+  const pres = state.presentationMode;
+
+  const cat = u.view && u.view.category ? VIEW_CATEGORIES.find(v=>v.id===u.view.category) : null;
+  const mainPhoto = (u.view && u.view.photos || []).find(p=>p.isMain) || (u.view && u.view.photos || [])[0];
+  const restPhotos = (u.view && u.view.photos || []).filter(p=>!mainPhoto || p.id!==mainPhoto.id);
+
+  // Соседние помещения на том же этаже
+  const neighbors = units()
+    .filter(x=>x.corp===u.corp && x.floor===u.floor && x.id!==u.id)
+    .sort((a,b)=>a.position-b.position);
 
   const unitShows = state.shows
     .filter(s=>s.unitId===id && s.status!=='cancelled')
     .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
 
-  document.getElementById('panel').innerHTML = `
+  const panel = document.getElementById('panel');
+  panel.classList.toggle('presentation', pres);
+
+  panel.innerHTML = `
+    <div class="pres-banner">🎬 Презентационный режим · клиент видит только основное</div>
     <div class="panel-head">
       <div>
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--brown-soft);">${u.kind} · ${u.corp}</div>
         <h3 style="font-size:24px;margin-top:3px;">${u.displayNum}</h3>
         <div style="margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <span class="status-pill" style="background:${st.color}"><span class="dot"></span>${st.label}</span>
-          <button class="fav-toggle ${isFav?'on':''}" id="favBtn">${isFav?'★ В избранном':'☆ В избранное'}</button>
+          <button class="fav-toggle ${isFav?'on':''} pres-hide" id="favBtn">${isFav?'★ В избранном':'☆ В избранное'}</button>
+          <button class="pres-toggle ${pres?'on':''}" id="presBtn">${pres?'✓ Презентация':'🎬 Презентация'}</button>
         </div>
       </div>
       <button class="close" id="panelClose">✕</button>
     </div>
+
     <div class="panel-body">
+      <!-- Быстрые действия -->
+      <div class="panel-actions-row pres-hide">
+        <button class="panel-quick-btn" data-q="show">  <span class="ic">📅</span>Назначить показ</button>
+        <button class="panel-quick-btn" data-q="book">  <span class="ic">⌂</span>Создать бронь</button>
+        ${client ? `<button class="panel-quick-btn" data-q="client"><span class="ic">👤</span>Профиль клиента</button>` : ''}
+        ${u.plans && u.plans.length ? `<button class="panel-quick-btn" data-q="plan"><span class="ic">📐</span>Планировка</button>` : ''}
+        ${(u.view && u.view.photos && u.view.photos.length) ? `<button class="panel-quick-btn" data-q="view"><span class="ic">🌅</span>Вид из окна</button>` : ''}
+        <button class="panel-quick-btn" data-q="floor"><span class="ic">▦</span>Этаж целиком</button>
+      </div>
+
       <div class="kv">
         <div><div class="k">Этаж</div><div class="v">${u.floor}</div></div>
         <div><div class="k">Площадь</div><div class="v">${u.area} м²</div></div>
@@ -172,44 +475,88 @@ function openPanel(id){
         <div><div class="k">Общая стоимость</div><div class="v" style="color:var(--terra-dark)">${fmtMoney(u.total)}</div></div>
       </div>
 
-      <div class="panel-section-title">Закреплённый менеджер</div>
-      <div class="person-row">
-        <div class="avatar">${mgrShort(u.managerId)}</div>
-        <div class="meta"><b>${mgrName(u.managerId)}</b><span>Менеджер отдела продаж</span></div>
+      <!-- Планировка -->
+      <div class="panel-section-title">Планировка</div>
+      ${ (u.plans && u.plans.length)
+          ? `<div class="plans-block"><div class="plans-grid">
+              ${u.plans.map((p,i)=>`<div class="plan-card" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-plan-i="${i}">
+                <div class="plan-card-title">${p.title || ('Планировка '+(i+1))}</div>
+              </div>`).join('')}
+            </div></div>`
+          : `<div class="plans-empty">Планировка не загружена${state.adminMode?'. Откройте редактирование, чтобы добавить.':''}</div>` }
+
+      <!-- Вид из окна -->
+      <div class="panel-section-title">Вид из окна</div>
+      <div class="view-block">
+        <div class="view-block-head">
+          ${cat ? `<span class="view-cat-tag" style="background:${cat.color}">${cat.icon} ${cat.label}</span>` : ''}
+          ${u.view && u.view.direction ? `<span class="view-direction-tag">↗ ${u.view.direction}</span>` : ''}
+          ${!cat && !(u.view && u.view.direction) ? `<span style="color:var(--brown-soft); font-size:12px;">Не указан</span>` : ''}
+        </div>
+        ${u.view && u.view.description ? `<div style="font-size:13px; color:var(--brown); line-height:1.45;">${escapeHtml(u.view.description)}</div>` : ''}
+        ${(u.view && u.view.comment && !pres) ? `<div class="pres-hide" style="font-size:12px; color:var(--brown-soft); margin-top:6px; padding-left:9px; border-left:2px solid var(--terra-light, #E8CBAE);"><b>Комментарий менеджера:</b> ${escapeHtml(u.view.comment)}</div>` : ''}
+        <div class="view-photos">
+          ${ mainPhoto
+              ? `<div class="vp-main" style="background-image:url('${mainPhoto.url.replace(/'/g,"%27")}')" data-vp-id="${mainPhoto.id}"></div>`
+              : `<div class="vp-empty">Фотографии вида из окна не загружены</div>` }
+          ${restPhotos.map(p=>`<div class="vp-thumb" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-vp-id="${p.id}"></div>`).join('')}
+        </div>
       </div>
 
-      <div class="panel-section-title">Клиент</div>
-      ${ client ? `<div class="person-row">
-            <div class="avatar">${client.name.split(' ').map(w=>w[0]).join('')}</div>
-            <div class="meta"><b>${client.name}</b><span>${client.phone} · ${client.stage}</span></div>
-            <button class="go-link" data-go-client="${client.id}">→ Карточка</button>
-         </div>`
-        : `<div class="person-row" style="color:var(--brown-soft)"><div class="avatar" style="background:var(--line-soft)">—</div><div class="meta"><b>Клиент не закреплён</b><span>Помещение без активной сделки</span></div></div>` }
+      <!-- Соседние помещения (тот же этаж) -->
+      ${ neighbors.length ? `
+      <div class="panel-section-title">Соседние помещения · ${u.floor} этаж</div>
+      <div class="neighbors">
+        ${neighbors.map(n=>{
+          const ns = STATUSES[n.status];
+          return `<div class="neighbor-card" style="--st-color:${ns.color}" data-neighbor="${n.id}">
+            <div class="nc-num">${n.displayNum}</div>
+            <div class="nc-area">${n.area} м²</div>
+          </div>`;
+        }).join('')}
+      </div>` : '' }
 
-      <div class="panel-section-title">Назначенные показы (${unitShows.length})</div>
-      ${ unitShows.length
-          ? unitShows.map(s=>{
-              const c = getClient(s.clientId);
-              const ss = SHOW_STATUSES[s.status];
-              return `<div class="person-row" style="border-left:3px solid ${ss.color}">
-                <div style="font-family:'Fraunces',serif; font-size:15px; font-weight:600; min-width:74px;">${s.time}</div>
-                <div class="meta">
-                  <b>${c ? c.name : 'Клиент'}</b>
-                  <span>${fmtDateRu(s.date)} · ${mgrName(s.managerId)} · ${ss.label}</span>
-                </div>
-                <button class="go-link" data-go-show="${s.id}">→ В календарь</button>
-              </div>`;
-            }).join('')
-          : `<div style="color:var(--brown-soft); font-size:13px; padding:6px 2px;">Показы не назначены</div>` }
-      <button class="btn btn-sm" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">＋ Назначить показ</button>
+      <!-- Менеджер и клиент — скрыты в презентации -->
+      <div class="pres-hide">
+        <div class="panel-section-title">Закреплённый менеджер</div>
+        <div class="person-row">
+          <div class="avatar">${mgrShort(u.managerId)}</div>
+          <div class="meta"><b>${mgrName(u.managerId)}</b><span>Менеджер отдела продаж</span></div>
+        </div>
 
-      <div class="panel-section-title">Сменить статус</div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;" id="statusSwitcher">
-        ${STATUS_ORDER.map(s=>`<button class="btn btn-sm" data-st="${s}" style="${s===u.status?'border-color:var(--terra);color:var(--terra);':''}">
-            <span style="width:9px;height:9px;border-radius:3px;background:${STATUSES[s].color};display:inline-block;"></span>${STATUSES[s].label}</button>`).join('')}
+        <div class="panel-section-title">Клиент</div>
+        ${ client ? `<div class="person-row">
+              <div class="avatar">${client.name.split(' ').map(w=>w[0]).join('')}</div>
+              <div class="meta"><b>${client.name}</b><span>${client.phone} · ${client.stage}</span></div>
+              <button class="go-link" data-go-client="${client.id}">→ Карточка</button>
+           </div>`
+          : `<div class="person-row" style="color:var(--brown-soft)"><div class="avatar" style="background:var(--line-soft)">—</div><div class="meta"><b>Клиент не закреплён</b><span>Помещение без активной сделки</span></div></div>` }
+
+        <div class="panel-section-title">Назначенные показы (${unitShows.length})</div>
+        ${ unitShows.length
+            ? unitShows.map(s=>{
+                const c = getClient(s.clientId);
+                const ss = SHOW_STATUSES[s.status];
+                return `<div class="person-row" style="border-left:3px solid ${ss.color}">
+                  <div style="font-family:'Fraunces',serif; font-size:15px; font-weight:600; min-width:74px;">${s.time}</div>
+                  <div class="meta">
+                    <b>${c ? c.name : 'Клиент'}</b>
+                    <span>${fmtDateRu(s.date)} · ${mgrName(s.managerId)} · ${ss.label}</span>
+                  </div>
+                  <button class="go-link" data-go-show="${s.id}">→ В календарь</button>
+                </div>`;
+              }).join('')
+            : `<div style="color:var(--brown-soft); font-size:13px; padding:6px 2px;">Показы не назначены</div>` }
+        <button class="btn btn-sm" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">＋ Назначить показ</button>
+
+        <div class="panel-section-title">Сменить статус</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;" id="statusSwitcher">
+          ${STATUS_ORDER.map(s=>`<button class="btn btn-sm" data-st="${s}" style="${s===u.status?'border-color:var(--terra);color:var(--terra);':''}">
+              <span style="width:9px;height:9px;border-radius:3px;background:${STATUSES[s].color};display:inline-block;"></span>${STATUSES[s].label}</button>`).join('')}
+        </div>
       </div>
     </div>
-    <div class="panel-actions">
+    <div class="panel-actions pres-hide">
       <button class="btn btn-primary" data-act="book">Забронировать</button>
       <button class="btn" data-act="show">Назначить показ</button>
       <button class="btn" data-act="deal">Создать сделку</button>
@@ -218,7 +565,7 @@ function openPanel(id){
           : `<button class="btn" data-act="status">Изменить статус</button>` }
     </div>`;
 
-  document.getElementById('panel').classList.add('show');
+  panel.classList.add('show');
   document.getElementById('scrim').classList.add('show');
   document.getElementById('panelClose').onclick = closePanel;
 
@@ -227,28 +574,80 @@ function openPanel(id){
     openPanel(id); renderChess(); renderAside();
     toast(state.favorites.has(id) ? u.displayNum+' в избранном' : 'Удалено из избранного');
   };
+  document.getElementById('presBtn').onclick = ()=>{
+    state.presentationMode = !state.presentationMode;
+    openPanel(id);
+    toast(state.presentationMode ? 'Презентационный режим' : 'Рабочий режим');
+  };
 
-  document.getElementById('statusSwitcher').querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
-    updateUnit(id, { status: btn.dataset.st });
-    openPanel(id); renderAside(); renderChess();
-    toast(u.displayNum+' → '+STATUSES[btn.dataset.st].label);
+  // Лайтбокс — планировки
+  panel.querySelectorAll('[data-plan-i]').forEach(el=>{
+    el.onclick = ()=>{
+      const i = +el.dataset.planI;
+      openLightbox(u.plans.map(p=>({ url:p.url, caption:p.title })), i);
+    };
+  });
+  // Лайтбокс — фото вида
+  panel.querySelectorAll('[data-vp-id]').forEach(el=>{
+    el.onclick = ()=>{
+      const all = (u.view && u.view.photos) || [];
+      const i = all.findIndex(p=>p.id===el.dataset.vpId);
+      openLightbox(all.map(p=>({ url:p.url, caption:(cat?cat.label:'Вид из окна')+' · '+u.displayNum })), Math.max(0,i));
+    };
+  });
+  // Быстрые действия
+  panel.querySelectorAll('.panel-quick-btn').forEach(btn=>btn.onclick = ()=>{
+    const q = btn.dataset.q;
+    if(q==='show')   openShowFormForUnit(id);
+    else if(q==='book'){
+      updateUnit(id,{status:'booked'});
+      openPanel(id); renderAside(); renderChess();
+      toast(u.displayNum+' забронировано');
+    }
+    else if(q==='client' && client){ closePanel(); goClient(client.id); }
+    else if(q==='plan' && u.plans && u.plans.length){
+      openLightbox(u.plans.map(p=>({ url:p.url, caption:p.title })), 0);
+    }
+    else if(q==='view' && u.view && u.view.photos && u.view.photos.length){
+      openLightbox(u.view.photos.map(p=>({ url:p.url, caption:(cat?cat.label:'Вид')+' · '+u.displayNum })), 0);
+    }
+    else if(q==='floor'){
+      closePanel();
+      state.chessView = 'floor';
+      state.floorViewCorp = u.corp;
+      state.floorViewFloor = u.floor;
+      setChessView('floor');
+    }
   });
 
-  document.querySelectorAll('[data-go-client]').forEach(b=>b.onclick=()=>{
-    goClient(b.dataset.goClient);
-    closePanel();
-  });
-  document.querySelectorAll('[data-go-show]').forEach(b=>b.onclick=()=>{
-    closePanel();
-    openCalendarOnShow(b.dataset.goShow);
+  // Соседи
+  panel.querySelectorAll('[data-neighbor]').forEach(el=>{
+    el.onclick = ()=>openPanel(el.dataset.neighbor);
   });
 
-  document.querySelectorAll('.panel-actions [data-act]').forEach(btn=>btn.onclick=()=>{
+  // Старые блоки (видны только не в презентации)
+  const ss = document.getElementById('statusSwitcher');
+  if(ss){
+    ss.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
+      updateUnit(id, { status: btn.dataset.st });
+      openPanel(id); renderAside(); renderChess();
+      toast(u.displayNum+' → '+STATUSES[btn.dataset.st].label);
+    });
+  }
+
+  panel.querySelectorAll('[data-go-client]').forEach(b=>b.onclick=()=>{
+    goClient(b.dataset.goClient); closePanel();
+  });
+  panel.querySelectorAll('[data-go-show]').forEach(b=>b.onclick=()=>{
+    closePanel(); openCalendarOnShow(b.dataset.goShow);
+  });
+
+  panel.querySelectorAll('.panel-actions [data-act]').forEach(btn=>btn.onclick=()=>{
     const a = btn.dataset.act;
     if(a==='book'){ updateUnit(id,{status:'booked'}); openPanel(id); renderAside(); renderChess(); toast(u.displayNum+' забронировано'); }
     else if(a==='show'){ openShowFormForUnit(id); }
     else if(a==='deal'){ updateUnit(id,{status:'contract'}); openPanel(id); renderAside(); renderChess(); toast('Сделка создана по '+u.displayNum); }
-    else if(a==='status'){ document.getElementById('statusSwitcher').scrollIntoView({behavior:'smooth',block:'center'}); }
+    else if(a==='status'){ if(ss) ss.scrollIntoView({behavior:'smooth',block:'center'}); }
     else if(a==='edit'){ closePanel(); openUnitForm(id); }
   });
 }
@@ -259,15 +658,64 @@ function closePanel(){
   state.selectedUnitId = null; renderChess();
 }
 
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+}
+
 /* ============================================================
-   АДМИН-ПАНЕЛЬ
+   ЛАЙТБОКС
+   ============================================================ */
+let _lbState = { items:[], i:0 };
+function openLightbox(items, startIndex){
+  if(!items || !items.length) return;
+  _lbState = { items, i: startIndex||0 };
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('show');
+}
+function renderLightbox(){
+  const { items, i } = _lbState;
+  const cur = items[i];
+  if(!cur) return;
+  document.getElementById('lightboxImg').src = cur.url;
+  document.getElementById('lightboxCaption').textContent = cur.caption || '';
+  const thumbs = document.getElementById('lightboxThumbs');
+  thumbs.innerHTML = items.length>1 ? items.map((p,k)=>
+    `<div class="th ${k===i?'active':''}" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-i="${k}"></div>`
+  ).join('') : '';
+  thumbs.querySelectorAll('.th').forEach(t=>t.onclick = ()=>{ _lbState.i = +t.dataset.i; renderLightbox(); });
+  document.getElementById('lightboxPrev').style.visibility = items.length>1 ? '' : 'hidden';
+  document.getElementById('lightboxNext').style.visibility = items.length>1 ? '' : 'hidden';
+}
+function initLightbox(){
+  document.getElementById('lightboxClose').onclick = closeLightbox;
+  document.getElementById('lightboxPrev').onclick = ()=>{
+    _lbState.i = (_lbState.i - 1 + _lbState.items.length) % _lbState.items.length;
+    renderLightbox();
+  };
+  document.getElementById('lightboxNext').onclick = ()=>{
+    _lbState.i = (_lbState.i + 1) % _lbState.items.length;
+    renderLightbox();
+  };
+  document.getElementById('lightbox').onclick = e=>{
+    if(e.target.id==='lightbox') closeLightbox();
+  };
+  document.addEventListener('keydown', e=>{
+    if(!document.getElementById('lightbox').classList.contains('show')) return;
+    if(e.key==='Escape') closeLightbox();
+    else if(e.key==='ArrowLeft')  document.getElementById('lightboxPrev').click();
+    else if(e.key==='ArrowRight') document.getElementById('lightboxNext').click();
+  });
+}
+
+/* ============================================================
+   АДМИН-ПАНЕЛЬ — независимые floors/perFloor по каждому корпусу
    ============================================================ */
 function renderAdminPanel(){
   const panel = document.getElementById('adminPanel');
-  if(!state.adminMode){
-    panel.style.display = 'none';
-    return;
-  }
+  if(!state.adminMode){ panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   const cfg = state.buildingConfig;
   panel.innerHTML = `
@@ -277,14 +725,18 @@ function renderAdminPanel(){
     </div>
     <div class="admin-panel-corps">
       ${cfg.corps.map(corp=>{
+        const ccfg = corpCfg(cfg, corp);
         const corpUnits = units().filter(u=>u.corp===corp);
-        return `<div class="admin-corp">
-          <div class="admin-corp-name">${corp} · ${corpUnits.length} помещений</div>
+        return `<div class="admin-corp" data-corp-card="${corp}">
+          <div class="admin-corp-name" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${corp} · ${corpUnits.length} помещений</span>
+            ${cfg.corps.length>1 ? `<button class="btn btn-sm" data-corp-remove="${corp}" style="color:var(--terra-dark); border-color:var(--terra-dark);" title="Удалить корпус">✕</button>` : ''}
+          </div>
           <div class="admin-stepper">
-            <span class="lbl">Этажей</span>
+            <span class="lbl">Этажей в этом корпусе</span>
             <span class="ctrl">
               <button data-corp="${corp}" data-act="floor-dec">−</button>
-              <span class="val">${cfg.floors}</span>
+              <span class="val">${ccfg.floors}</span>
               <button data-corp="${corp}" data-act="floor-inc">＋</button>
             </span>
           </div>
@@ -292,7 +744,7 @@ function renderAdminPanel(){
             <span class="lbl">Помещений на этаже</span>
             <span class="ctrl">
               <button data-corp="${corp}" data-act="pf-dec">−</button>
-              <span class="val">${cfg.perFloor}</span>
+              <span class="val">${ccfg.perFloor}</span>
               <button data-corp="${corp}" data-act="pf-inc">＋</button>
             </span>
           </div>
@@ -302,27 +754,38 @@ function renderAdminPanel(){
     <div class="admin-panel-foot">
       <button class="btn btn-sm" id="adminResetData" style="color:var(--terra-dark);">Сбросить все данные к дефолту</button>
       <span style="font-size:12px; color:var(--brown-soft); align-self:center;">
-        Параметры этажности и количества помещений применяются ко всем корпусам объекта.
+        Этажность и количество помещений независимы для каждого корпуса. Изменения одного корпуса не влияют на другие.
       </span>
     </div>
   `;
 
   panel.querySelectorAll('[data-act]').forEach(btn=>btn.onclick = ()=>{
     const corp = btn.dataset.corp;
+    const ccfg = corpCfg(cfg, corp);
     const a = btn.dataset.act;
-    if(a==='floor-inc'){ setFloors(corp, cfg.floors+1); toast('Добавлен этаж'); }
+    if(a==='floor-inc'){ setFloors(corp, ccfg.floors+1); toast(corp+': добавлен этаж'); }
     else if(a==='floor-dec'){
-      if(cfg.floors<=1){ toast('Минимум 1 этаж'); return; }
-      if(!confirm('Удалить верхний этаж со всеми помещениями?')) return;
-      setFloors(corp, cfg.floors-1); toast('Этаж удалён');
+      if(ccfg.floors<=1){ toast('Минимум 1 этаж'); return; }
+      if(!confirm(corp+': удалить верхний этаж со всеми помещениями?')) return;
+      setFloors(corp, ccfg.floors-1); toast(corp+': этаж удалён');
     }
-    else if(a==='pf-inc'){ setPerFloor(corp, cfg.perFloor+1); toast('Добавлено помещение в ряд'); }
+    else if(a==='pf-inc'){ setPerFloor(corp, ccfg.perFloor+1); toast(corp+': +1 помещение в ряд'); }
     else if(a==='pf-dec'){
-      if(cfg.perFloor<=1){ toast('Минимум 1 помещение в ряду'); return; }
-      if(!confirm('Удалить крайнее помещение на каждом этаже?')) return;
-      setPerFloor(corp, cfg.perFloor-1); toast('Помещения удалены');
+      if(ccfg.perFloor<=1){ toast('Минимум 1 помещение в ряду'); return; }
+      if(!confirm(corp+': удалить крайнее помещение на каждом этаже?')) return;
+      setPerFloor(corp, ccfg.perFloor-1); toast(corp+': помещения удалены');
     }
     renderAdminPanel(); renderChess(); renderAside(); buildFilters();
+  });
+
+  panel.querySelectorAll('[data-corp-remove]').forEach(btn=>btn.onclick = ()=>{
+    const name = btn.dataset.corpRemove;
+    if(!confirm('Удалить корпус «'+name+'» со всеми помещениями?')) return;
+    removeCorp(name);
+    if(state.floorViewCorp===name) state.floorViewCorp = state.buildingConfig.corps[0];
+    if(state.facadeCorp===name)    state.facadeCorp    = state.buildingConfig.corps[0];
+    renderAdminPanel(); renderChess(); renderAside(); buildFilters();
+    toast('Корпус удалён');
   });
 
   document.getElementById('adminAddCorp').onclick = ()=>{
@@ -350,8 +813,41 @@ function toggleAdminMode(){
 }
 
 /* ============================================================
-   ФОРМА РЕДАКТИРОВАНИЯ ПОМЕЩЕНИЯ
+   ФОРМА РЕДАКТИРОВАНИЯ ПОМЕЩЕНИЯ — с видом, планировками, фото
    ============================================================ */
+// Буфер для фото/планировок текущего редактируемого помещения
+let _unitFormBuf = { view: [], plans: [], photos: [] };
+
+function renderPhotoPreview(host, arr, kind){
+  host.innerHTML = arr.map((p,i)=>{
+    const isMain = kind==='view' && p.isMain;
+    return `<div class="pp-thumb ${isMain?'is-main':''}" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-i="${i}" title="${kind==='view' ? (isMain?'Основная фотография':'Кликните, чтобы сделать основной') : (p.title||'')}">
+      <button type="button" class="pp-del" data-i="${i}">✕</button>
+    </div>`;
+  }).join('');
+  host.querySelectorAll('.pp-del').forEach(b=>b.onclick = e=>{
+    e.stopPropagation();
+    arr.splice(+b.dataset.i, 1);
+    if(kind==='view' && arr.length && !arr.some(p=>p.isMain)) arr[0].isMain = true;
+    renderPhotoPreview(host, arr, kind);
+  });
+  if(kind==='view'){
+    host.querySelectorAll('.pp-thumb').forEach(t=>t.onclick = ()=>{
+      const i = +t.dataset.i;
+      arr.forEach((p,k)=>p.isMain = (k===i));
+      renderPhotoPreview(host, arr, kind);
+    });
+  }
+}
+
+function readFilesToDataUrls(fileList){
+  return Promise.all([...fileList].map(file=>new Promise(res=>{
+    const reader = new FileReader();
+    reader.onload = e=>res({ url: e.target.result });
+    reader.readAsDataURL(file);
+  })));
+}
+
 function openUnitForm(id){
   const u = getUnit(id);
   if(!u) return;
@@ -365,8 +861,32 @@ function openUnitForm(id){
   document.getElementById('unitFormFloor').value = u.floor;
   document.getElementById('unitFormArea').value  = u.area;
   document.getElementById('unitFormPrice').value = u.pricePerM;
-  document.getElementById('unitFormStatus').innerHTML = STATUS_ORDER.map(s=>`<option value="${s}" ${s===u.status?'selected':''}>${STATUSES[s].label}</option>`).join('');
+  document.getElementById('unitFormStatus').innerHTML  = STATUS_ORDER.map(s=>`<option value="${s}" ${s===u.status?'selected':''}>${STATUSES[s].label}</option>`).join('');
   document.getElementById('unitFormManager').innerHTML = MANAGERS.map(m=>`<option value="${m.id}" ${m.id===u.managerId?'selected':''}>${m.name}</option>`).join('');
+
+  // Вид из окна
+  const v = u.view || { direction:'', category:'', description:'', comment:'', photos:[] };
+  document.getElementById('unitFormViewDir').innerHTML = `<option value="">— не указано —</option>`+
+    VIEW_DIRECTIONS.map(d=>`<option ${d===v.direction?'selected':''}>${d}</option>`).join('');
+  document.getElementById('unitFormViewCat').innerHTML = `<option value="">— не указана —</option>`+
+    VIEW_CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===v.category?'selected':''}>${c.icon} ${c.label}</option>`).join('');
+  document.getElementById('unitFormViewDesc').value    = v.description || '';
+  document.getElementById('unitFormViewComment').value = v.comment || '';
+  document.getElementById('unitFormViewPhotos').value  = '';
+
+  // Буфер фото/планировок (копия, чтобы отмена не портила оригинал)
+  _unitFormBuf = {
+    view:   JSON.parse(JSON.stringify(v.photos || [])),
+    plans:  JSON.parse(JSON.stringify(u.plans || [])),
+    photos: JSON.parse(JSON.stringify(u.photos || [])),
+  };
+  renderPhotoPreview(document.getElementById('unitFormViewPreview'),  _unitFormBuf.view,   'view');
+  renderPhotoPreview(document.getElementById('unitFormPlanPreview'),  _unitFormBuf.plans,  'plan');
+  renderPhotoPreview(document.getElementById('unitFormPhotoPreview'), _unitFormBuf.photos, 'photo');
+
+  document.getElementById('unitFormPlans').value  = '';
+  document.getElementById('unitFormPhotos').value = '';
+
   document.getElementById('unitFormModal').classList.add('show');
 }
 
@@ -384,11 +904,64 @@ function initUnitForm(){
     closeUnitForm(); renderChess(); renderAside();
     toast('Помещение удалено');
   };
+
+  // Загрузка файлов
+  document.getElementById('unitFormViewFilesBtn').onclick  = ()=>document.getElementById('unitFormViewFiles').click();
+  document.getElementById('unitFormPlanFilesBtn').onclick  = ()=>document.getElementById('unitFormPlanFiles').click();
+  document.getElementById('unitFormPhotoFilesBtn').onclick = ()=>document.getElementById('unitFormPhotoFiles').click();
+
+  document.getElementById('unitFormViewFiles').onchange = async e=>{
+    const items = await readFilesToDataUrls(e.target.files);
+    items.forEach(it=>{
+      _unitFormBuf.view.push({ id: uid('vp'), url: it.url, isMain: !_unitFormBuf.view.some(p=>p.isMain) });
+    });
+    renderPhotoPreview(document.getElementById('unitFormViewPreview'), _unitFormBuf.view, 'view');
+    e.target.value = '';
+  };
+  document.getElementById('unitFormPlanFiles').onchange = async e=>{
+    const items = await readFilesToDataUrls(e.target.files);
+    items.forEach((it,i)=>{
+      _unitFormBuf.plans.push({ id: uid('pl'), url: it.url, title: 'Планировка '+(_unitFormBuf.plans.length+1) });
+    });
+    renderPhotoPreview(document.getElementById('unitFormPlanPreview'), _unitFormBuf.plans, 'plan');
+    e.target.value = '';
+  };
+  document.getElementById('unitFormPhotoFiles').onchange = async e=>{
+    const items = await readFilesToDataUrls(e.target.files);
+    items.forEach(it=>_unitFormBuf.photos.push({ id: uid('ph'), url: it.url }));
+    renderPhotoPreview(document.getElementById('unitFormPhotoPreview'), _unitFormBuf.photos, 'photo');
+    e.target.value = '';
+  };
+
   document.getElementById('unitForm').onsubmit = e=>{
     e.preventDefault();
     const id = document.getElementById('unitFormId').value;
+    const u  = getUnit(id);
+    if(!u) return;
     const area  = parseFloat(document.getElementById('unitFormArea').value);
     const price = parseFloat(document.getElementById('unitFormPrice').value);
+
+    // URL-поля → добавляем в буферы. data:URL содержит запятые, поэтому
+    // если ввод начинается с data: — берём как единый URL, иначе разделяем по запятым/переносам.
+    const parseUrls = s => {
+      const v = (s||'').trim();
+      if(!v) return [];
+      if(v.startsWith('data:')) return [v];
+      return v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);
+    };
+    parseUrls(document.getElementById('unitFormViewPhotos').value).forEach(url=>{
+      _unitFormBuf.view.push({ id: uid('vp'), url, isMain: !_unitFormBuf.view.some(p=>p.isMain) });
+    });
+    parseUrls(document.getElementById('unitFormPlans').value).forEach(url=>{
+      _unitFormBuf.plans.push({ id: uid('pl'), url, title: 'Планировка '+(_unitFormBuf.plans.length+1) });
+    });
+    parseUrls(document.getElementById('unitFormPhotos').value).forEach(url=>{
+      _unitFormBuf.photos.push({ id: uid('ph'), url });
+    });
+
+    // Гарантируем, что main у view-фото проставлен
+    if(_unitFormBuf.view.length && !_unitFormBuf.view.some(p=>p.isMain)) _unitFormBuf.view[0].isMain = true;
+
     updateUnit(id, {
       displayNum: document.getElementById('unitFormNum').value.trim(),
       kind:       document.getElementById('unitFormKind').value.trim(),
@@ -398,6 +971,15 @@ function initUnitForm(){
       total:      Math.round(area*price/1000*10)/10,
       status:     document.getElementById('unitFormStatus').value,
       managerId:  document.getElementById('unitFormManager').value,
+      view: {
+        direction:   document.getElementById('unitFormViewDir').value,
+        category:    document.getElementById('unitFormViewCat').value,
+        description: document.getElementById('unitFormViewDesc').value.trim(),
+        comment:     document.getElementById('unitFormViewComment').value.trim(),
+        photos:      _unitFormBuf.view,
+      },
+      plans:  _unitFormBuf.plans,
+      photos: _unitFormBuf.photos,
     });
     closeUnitForm(); renderChess(); renderAside();
     toast('Изменения сохранены');

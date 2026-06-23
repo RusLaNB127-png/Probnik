@@ -40,18 +40,34 @@ const MANAGERS = [
 
 // ---------- Конфигурация объекта ----------
 // Дефолт; в рантайме копируется в state.buildingConfig и может редактироваться.
+// Каждый корпус хранит собственную этажность и количество помещений на этаже.
 const DEFAULT_BUILDING = {
   id:      'italika',
   name:    'ЖК «Италика»',
   short:   'Италика',
   seed:    101,
   corps:   ['Корпус A','Корпус B'],
-  floors:  16,
-  perFloor:6,
+  corpsConfig: {
+    'Корпус A': { floors: 16, perFloor: 6 },
+    'Корпус B': { floors: 14, perFloor: 5 },
+  },
   basePrice:285,
   kind:    'Квартира',
   startNum:1,
 };
+
+// ---------- Виды из окна ----------
+const VIEW_DIRECTIONS = ['Север','Северо-восток','Восток','Юго-восток','Юг','Юго-запад','Запад','Северо-запад'];
+const VIEW_CATEGORIES = [
+  { id:'sea',     label:'Море',           icon:'🌊', color:'#6B92BC' },
+  { id:'mount',   label:'Горы',           icon:'⛰', color:'#7A6354' },
+  { id:'pool',    label:'Бассейн',        icon:'💧', color:'#7CB4C9' },
+  { id:'park',    label:'Парковая зона',  icon:'🌳', color:'#7C9B6E' },
+  { id:'court',   label:'Двор',           icon:'🏡', color:'#B7AB9B' },
+  { id:'city',    label:'Город',          icon:'🏙', color:'#A89485' },
+  { id:'inner',   label:'Внутренний двор',icon:'◇', color:'#C8B89A' },
+  { id:'corp',    label:'Соседний корпус',icon:'⊟', color:'#9C8E80' },
+];
 
 // ---------- Источники лидов ----------
 const SOURCE_OPTIONS = ['Сайт','Звонок','Авито','Я.Директ','Рекомендация','Соцсети','Агентство','Реклама','Другое'];

@@ -36,14 +36,43 @@ function fmtDateRu(iso){
   return d+' '+months[m-1]+' '+y;
 }
 
+// ---------- Корпус: его собственная конфигурация ----------
+function corpCfg(buildingConfig, corp){
+  if(!buildingConfig.corpsConfig) buildingConfig.corpsConfig = {};
+  if(!buildingConfig.corpsConfig[corp]){
+    buildingConfig.corpsConfig[corp] = {
+      floors:   buildingConfig.floors   || 16,
+      perFloor: buildingConfig.perFloor || 6,
+    };
+  }
+  return buildingConfig.corpsConfig[corp];
+}
+
+// ---------- Дефолтный «вид из окна» для генерации ----------
+function defaultViewForUnit(corp, floor, pos, perFloor, rng){
+  // Чтобы окна имели разные виды — берём по позиции
+  const dirs = VIEW_DIRECTIONS;
+  const cats = VIEW_CATEGORIES;
+  const dir  = dirs[(pos + Math.floor(floor/2)) % dirs.length];
+  const cat  = cats[Math.floor(rng()*cats.length)];
+  return {
+    direction:   dir,
+    category:    cat.id,
+    description: '',
+    comment:     '',
+    photos:      [],   // [{ id, url, isMain }]
+  };
+}
+
 // ---------- Генерация помещений ----------
 function genUnits(buildingConfig){
   const b = buildingConfig;
   const rng = makeRng(b.seed);
   const units = [];
   b.corps.forEach((corp, ci)=>{
-    for(let f=b.floors; f>=1; f--){
-      for(let pos=0; pos<b.perFloor; pos++){
+    const ccfg = corpCfg(b, corp);
+    for(let f=ccfg.floors; f>=1; f--){
+      for(let pos=0; pos<ccfg.perFloor; pos++){
         const area = +(34 + Math.round(rng()*78)).toFixed(0);
         const pricePerM = Math.round((b.basePrice + (f*1.4) + rng()*40));
         const status = STATUS_WEIGHT[Math.floor(rng()*STATUS_WEIGHT.length)];
@@ -64,6 +93,9 @@ function genUnits(buildingConfig){
           clientId:     hasClient ? CLIENTS[Math.floor(rng()*CLIENTS.length)].id : null,
           kind:         b.kind,
           favorite:     false,
+          view:         defaultViewForUnit(corp, f, pos, ccfg.perFloor, rng),
+          plans:        [],     // [{ id, url, title }]
+          photos:       [],     // [{ id, url, isMain }]
           createdAt:    Date.now(),
           updatedAt:    Date.now(),
         });
@@ -71,6 +103,17 @@ function genUnits(buildingConfig){
     }
   });
   return units;
+}
+
+// ---------- Миграция помещения (для старых сохранений) ----------
+function migrateUnit(u){
+  if(!u.view){
+    u.view = { direction:'', category:'', description:'', comment:'', photos:[] };
+  }
+  if(!Array.isArray(u.view.photos)) u.view.photos = [];
+  if(!Array.isArray(u.plans))  u.plans  = [];
+  if(!Array.isArray(u.photos)) u.photos = [];
+  return u;
 }
 
 // ---------- Генерация показов (на основе DEFAULT_SHOWS_SEED + сегодняшней даты) ----------
@@ -106,6 +149,12 @@ const state = {
   clientFilters:   { query:'', mgr:'', stage:'', source:'', priority:'' },
   clientCardTab:   'overview',        // overview | units | shows | tasks | docs | timeline
   adminMode:       false,
+  // Шахматка: режим отображения
+  chessView:       'grid',            // grid | floor | facade
+  floorViewCorp:   '',                // выбранный корпус для режима «Интерактивный этаж»
+  floorViewFloor:  null,              // выбранный этаж
+  facadeCorp:      '',                // выбранный корпус для режима «Вид корпуса»
+  presentationMode:false,             // презентационный режим карточки
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
   // совместимость со старым кодом других вкладок
@@ -168,7 +217,12 @@ function loadState(){
     const data = JSON.parse(raw);
     if(!data.buildingConfig || !data.unitsList) return false;
     state.buildingConfig = data.buildingConfig;
-    state.unitsList      = data.unitsList;
+    // Миграция корпусной конфигурации (если её ещё нет — собираем из верхнеуровневых floors/perFloor)
+    if(!state.buildingConfig.corpsConfig){
+      state.buildingConfig.corpsConfig = {};
+    }
+    state.buildingConfig.corps.forEach(c=>corpCfg(state.buildingConfig, c));
+    state.unitsList      = (data.unitsList || []).map(migrateUnit);
     state.shows          = data.shows || [];
     state.clients        = (data.clients && data.clients.length ? data.clients : JSON.parse(JSON.stringify(DEFAULT_CLIENTS))).map(migrateClient);
     state.favorites      = new Set(data.favorites || []);
@@ -445,63 +499,62 @@ function toggleFavorite(id){
   saveState();
 }
 
-// Изменение этажности корпуса
+// Внутренний помощник: создать одно помещение с правильным дефолтом вида
+function makeUnit(cfg, corp, floor, pos, rng){
+  const area = +(34 + Math.round(rng()*78)).toFixed(0);
+  const pricePerM = Math.round((cfg.basePrice + (floor*1.4) + rng()*40));
+  const ccfg = corpCfg(cfg, corp);
+  return {
+    id: uid('u'), buildingId: cfg.id, corp, floor, position:pos,
+    displayNum: '№'+(state.unitsList.length+1),
+    area, pricePerM, total: Math.round(area*pricePerM/1000*10)/10,
+    status:'free', managerId: MANAGERS[0].id, clientId: null,
+    kind: cfg.kind, favorite:false,
+    view:   defaultViewForUnit(corp, floor, pos, ccfg.perFloor, rng),
+    plans:  [], photos: [],
+    createdAt: Date.now(), updatedAt: Date.now(),
+  };
+}
+
+// Изменение этажности конкретного корпуса (не затрагивает остальные).
 function setFloors(corp, newFloors){
   const cfg = state.buildingConfig;
-  const oldFloors = cfg.floors;
+  const ccfg = corpCfg(cfg, corp);
+  const oldFloors = ccfg.floors;
   if(newFloors === oldFloors) return;
 
   if(newFloors > oldFloors){
-    // Добавляем новые верхние этажи
-    const rng = makeRng(cfg.seed + Date.now()%1000);
+    const rng = makeRng(cfg.seed + Date.now()%1000 + corp.length);
     for(let f = oldFloors+1; f<=newFloors; f++){
-      for(let pos=0; pos<cfg.perFloor; pos++){
-        const area = +(34 + Math.round(rng()*78)).toFixed(0);
-        const pricePerM = Math.round((cfg.basePrice + (f*1.4) + rng()*40));
-        state.unitsList.push({
-          id: uid('u'), buildingId: cfg.id, corp, floor:f, position:pos,
-          displayNum: '№'+(state.unitsList.length+1),
-          area, pricePerM, total: Math.round(area*pricePerM/1000*10)/10,
-          status:'free', managerId: MANAGERS[0].id, clientId: null,
-          kind: cfg.kind, favorite:false,
-          createdAt: Date.now(), updatedAt: Date.now(),
-        });
+      for(let pos=0; pos<ccfg.perFloor; pos++){
+        state.unitsList.push(makeUnit(cfg, corp, f, pos, rng));
       }
     }
   } else {
-    // Удаляем верхние этажи (только в этом корпусе)
     state.unitsList = state.unitsList.filter(u => !(u.corp===corp && u.floor>newFloors));
   }
-  cfg.floors = newFloors;
+  ccfg.floors = newFloors;
   saveState();
 }
 
-// Изменение количества помещений на этаже
+// Изменение количества помещений на этаже — только в выбранном корпусе.
 function setPerFloor(corp, newPerFloor){
   const cfg = state.buildingConfig;
-  const oldPerFloor = cfg.perFloor;
+  const ccfg = corpCfg(cfg, corp);
+  const oldPerFloor = ccfg.perFloor;
   if(newPerFloor === oldPerFloor) return;
 
   if(newPerFloor > oldPerFloor){
-    const rng = makeRng(cfg.seed + Date.now()%1000);
-    for(let f=1; f<=cfg.floors; f++){
+    const rng = makeRng(cfg.seed + Date.now()%1000 + corp.length);
+    for(let f=1; f<=ccfg.floors; f++){
       for(let pos=oldPerFloor; pos<newPerFloor; pos++){
-        const area = +(34 + Math.round(rng()*78)).toFixed(0);
-        const pricePerM = Math.round((cfg.basePrice + (f*1.4) + rng()*40));
-        state.unitsList.push({
-          id: uid('u'), buildingId: cfg.id, corp, floor:f, position:pos,
-          displayNum: '№'+(state.unitsList.length+1),
-          area, pricePerM, total: Math.round(area*pricePerM/1000*10)/10,
-          status:'free', managerId: MANAGERS[0].id, clientId: null,
-          kind: cfg.kind, favorite:false,
-          createdAt: Date.now(), updatedAt: Date.now(),
-        });
+        state.unitsList.push(makeUnit(cfg, corp, f, pos, rng));
       }
     }
   } else {
     state.unitsList = state.unitsList.filter(u => !(u.corp===corp && u.position>=newPerFloor));
   }
-  cfg.perFloor = newPerFloor;
+  ccfg.perFloor = newPerFloor;
   saveState();
 }
 
@@ -509,21 +562,67 @@ function addCorp(name){
   const cfg = state.buildingConfig;
   if(cfg.corps.includes(name)) return;
   cfg.corps.push(name);
-  const rng = makeRng(cfg.seed + Date.now()%1000);
-  for(let f=cfg.floors; f>=1; f--){
-    for(let pos=0; pos<cfg.perFloor; pos++){
-      const area = +(34 + Math.round(rng()*78)).toFixed(0);
-      const pricePerM = Math.round((cfg.basePrice + (f*1.4) + rng()*40));
-      state.unitsList.push({
-        id: uid('u'), buildingId: cfg.id, corp:name, floor:f, position:pos,
-        displayNum: '№'+(state.unitsList.length+1),
-        area, pricePerM, total: Math.round(area*pricePerM/1000*10)/10,
-        status:'free', managerId: MANAGERS[0].id, clientId: null,
-        kind: cfg.kind, favorite:false,
-        createdAt: Date.now(), updatedAt: Date.now(),
-      });
+  // Новый корпус получает дефолтную конфигурацию, независимую от других
+  cfg.corpsConfig[name] = { floors: 12, perFloor: 6 };
+  const ccfg = cfg.corpsConfig[name];
+  const rng = makeRng(cfg.seed + Date.now()%1000 + name.length);
+  for(let f=ccfg.floors; f>=1; f--){
+    for(let pos=0; pos<ccfg.perFloor; pos++){
+      state.unitsList.push(makeUnit(cfg, name, f, pos, rng));
     }
   }
+  saveState();
+}
+
+// Удалить корпус целиком (со всеми помещениями)
+function removeCorp(name){
+  const cfg = state.buildingConfig;
+  const i = cfg.corps.indexOf(name);
+  if(i<0) return;
+  cfg.corps.splice(i,1);
+  delete cfg.corpsConfig[name];
+  state.unitsList = state.unitsList.filter(u => u.corp!==name);
+  saveState();
+}
+
+// ---------- Фотографии: добавление/удаление/назначение основной ----------
+function addUnitViewPhoto(unitId, url){
+  const u = getUnit(unitId); if(!u || !url) return;
+  if(!u.view) u.view = { direction:'', category:'', description:'', comment:'', photos:[] };
+  const isMain = !u.view.photos.some(p=>p.isMain);
+  u.view.photos.push({ id: uid('vp'), url, isMain });
+  u.updatedAt = Date.now();
+  saveState();
+}
+function removeUnitViewPhoto(unitId, photoId){
+  const u = getUnit(unitId); if(!u || !u.view) return;
+  const removed = u.view.photos.find(p=>p.id===photoId);
+  u.view.photos = u.view.photos.filter(p=>p.id!==photoId);
+  if(removed && removed.isMain && u.view.photos.length){
+    u.view.photos[0].isMain = true;
+  }
+  saveState();
+}
+function setMainViewPhoto(unitId, photoId){
+  const u = getUnit(unitId); if(!u || !u.view) return;
+  u.view.photos.forEach(p=>p.isMain = (p.id===photoId));
+  saveState();
+}
+function addUnitPlan(unitId, url, title){
+  const u = getUnit(unitId); if(!u || !url) return;
+  u.plans.push({ id: uid('pl'), url, title: title || ('Планировка '+(u.plans.length+1)) });
+  saveState();
+}
+function removeUnitPlan(unitId, planId){
+  const u = getUnit(unitId); if(!u) return;
+  u.plans = u.plans.filter(p=>p.id!==planId);
+  saveState();
+}
+function updateUnitView(unitId, patch){
+  const u = getUnit(unitId); if(!u) return;
+  if(!u.view) u.view = { direction:'', category:'', description:'', comment:'', photos:[] };
+  Object.assign(u.view, patch);
+  u.updatedAt = Date.now();
   saveState();
 }
 

@@ -116,6 +116,7 @@ function init(){
   buildLegend();
   buildFilters();
   bindFilters();
+  bindViewSwitch();
   renderAdminPanel();
   renderChess();
   renderAside();
@@ -127,6 +128,7 @@ function init(){
   renderNotifs();
   initCalendar();
   initUnitForm();
+  initLightbox();
   renderCalLauncher();
 }
 init();

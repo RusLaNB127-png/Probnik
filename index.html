@@ -73,7 +73,21 @@
       <h2 id="chessTitle">Шахматка</h2>
       <p id="chessSub">Кликните на помещение, чтобы открыть карточку объекта. Включите режим администратора для управления структурой здания.</p>
     </div>
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Режим отображения">
+        <button class="view-switch-btn active" data-view-mode="grid" title="Классическая шахматка">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Шахматка</span>
+        </button>
+        <button class="view-switch-btn" data-view-mode="floor" title="Интерактивный этаж">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M9 6v12M15 6v12M3 12h18"/></svg>
+          <span>Интерактивный этаж</span>
+        </button>
+        <button class="view-switch-btn" data-view-mode="facade" title="Вид корпуса">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M7 11h2M11 11h2M15 11h2M7 15h2M15 15h2"/></svg>
+          <span>Вид корпуса</span>
+        </button>
+      </div>
       <button class="btn" id="calBtn2">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
         Календарь показов
@@ -105,12 +119,29 @@
   <!-- Легенда -->
   <div class="legend" id="legend"></div>
 
-  <!-- Сетка -->
+  <!-- Тулбар режимов «Интерактивный этаж» и «Вид корпуса» -->
+  <div class="mode-toolbar" id="modeToolbar" style="display:none;"></div>
+
+  <!-- Контейнеры под разные режимы -->
   <div class="chess-wrap">
     <div class="chess-scroll" id="chessGrid"></div>
+    <div class="floor-view" id="floorView" style="display:none;"></div>
+    <div class="facade-view" id="facadeView" style="display:none;"></div>
     <aside class="chess-aside" id="chessAside"></aside>
   </div>
 </main>
+
+<!-- ======================= ЛАЙТБОКС (планировки и виды) ======================= -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">✕</button>
+  <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Назад">‹</button>
+  <button class="lightbox-nav next" id="lightboxNext" aria-label="Вперёд">›</button>
+  <figure class="lightbox-stage">
+    <img id="lightboxImg" alt="">
+    <figcaption id="lightboxCaption"></figcaption>
+  </figure>
+  <div class="lightbox-thumbs" id="lightboxThumbs"></div>
+</div>
 
 <!-- ============ ВКЛАДКА 2: ПРОФИЛЬ КЛИЕНТА ============ -->
 <main class="view" id="view-clients">
@@ -432,6 +463,48 @@
           <select id="unitFormManager"></select>
         </div>
       </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Вид из окна</div>
+        <div class="form-row form-row-2">
+          <div><label>Направление</label><select id="unitFormViewDir"></select></div>
+          <div><label>Категория вида</label><select id="unitFormViewCat"></select></div>
+        </div>
+        <div class="form-row"><label>Описание вида</label><textarea id="unitFormViewDesc" rows="2" placeholder="Из окон открывается панорама на парк, на дальнем плане — горы…"></textarea></div>
+        <div class="form-row"><label>Комментарий менеджера по виду</label><textarea id="unitFormViewComment" rows="2" placeholder="Внутренний комментарий для отдела продаж (не показывается клиенту)"></textarea></div>
+        <div class="form-row">
+          <label>Фотографии вида (URL через запятую или загрузите файлы)</label>
+          <div class="photo-input-row">
+            <input type="text" id="unitFormViewPhotos" placeholder="https://...,https://...">
+            <input type="file" id="unitFormViewFiles" accept="image/*" multiple style="display:none;">
+            <button type="button" class="btn btn-sm" id="unitFormViewFilesBtn">📷 Загрузить</button>
+          </div>
+          <div class="photo-preview" id="unitFormViewPreview"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Планировки и фотографии помещения</div>
+        <div class="form-row">
+          <label>Планировки (URL через запятую или загрузка)</label>
+          <div class="photo-input-row">
+            <input type="text" id="unitFormPlans" placeholder="https://...,https://...">
+            <input type="file" id="unitFormPlanFiles" accept="image/*" multiple style="display:none;">
+            <button type="button" class="btn btn-sm" id="unitFormPlanFilesBtn">📐 Загрузить</button>
+          </div>
+          <div class="photo-preview" id="unitFormPlanPreview"></div>
+        </div>
+        <div class="form-row">
+          <label>Фотографии помещения (URL через запятую или загрузка)</label>
+          <div class="photo-input-row">
+            <input type="text" id="unitFormPhotos" placeholder="https://...,https://...">
+            <input type="file" id="unitFormPhotoFiles" accept="image/*" multiple style="display:none;">
+            <button type="button" class="btn btn-sm" id="unitFormPhotoFilesBtn">📷 Загрузить</button>
+          </div>
+          <div class="photo-preview" id="unitFormPhotoPreview"></div>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="button" class="btn" id="unitDelete" style="color:var(--terra-dark); border-color:var(--terra-dark);">Удалить помещение</button>
         <div style="margin-left:auto; display:flex; gap:10px;">
