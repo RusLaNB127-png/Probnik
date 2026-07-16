@@ -4,17 +4,18 @@
    ============================================================ */
 
 :root{
-  /* Базовая палитра */
-  --bg:          #F7F2E9;   /* светлый фон */
-  --bg-2:        #FBF8F2;   /* карточки/панели */
+  /* Базовая палитра — «бутик»: кремовая бумага, глубокая терракота */
+  --bg:          #F4ECDC;   /* кремовая бумага */
+  --bg-2:        #FDFAF3;   /* карточки/панели — тёплый белёсый */
   --sand:        #EADFCB;   /* песочный */
   --beige:       #DFD0B6;   /* бежевый */
   --terra:       #C2683E;   /* терракота / кирпичный */
   --terra-dark:  #A8512C;
-  --brown:       #4A352A;   /* глубокий коричневый — текст */
-  --brown-soft:  #7A6354;   /* вторичный текст */
-  --line:        #E2D6C0;   /* линии/границы */
-  --line-soft:   #EFE7D6;
+  --terra-ink:   #8E3F1F;   /* самый тёмный акцент для serif-заголовков */
+  --brown:       #3B2A20;   /* глубокий коричневый — текст */
+  --brown-soft:  #82705F;   /* вторичный текст */
+  --line:        #E4D8C1;   /* линии/границы */
+  --line-soft:   #F0E8D6;
 
   /* Статусы помещений */
   --st-free:     #7C9B6E;
@@ -24,10 +25,10 @@
   --st-sold:     #7A4A36;
   --st-unavail:  #B7AB9B;
 
-  --shadow-sm: 0 1px 2px rgba(74,53,42,.06), 0 2px 6px rgba(74,53,42,.05);
-  --shadow-md: 0 4px 14px rgba(74,53,42,.10), 0 2px 4px rgba(74,53,42,.06);
-  --shadow-lg: 0 18px 50px rgba(74,53,42,.22);
-  --radius: 14px;
+  --shadow-sm: 0 1px 2px rgba(120,80,50,.05), 0 3px 10px rgba(120,80,50,.055);
+  --shadow-md: 0 6px 22px rgba(120,80,50,.11), 0 2px 6px rgba(120,80,50,.06);
+  --shadow-lg: 0 28px 64px rgba(80,52,34,.24);
+  --radius: 12px;
   --radius-sm: 9px;
 }
 
@@ -35,13 +36,17 @@
 html,body{ margin:0; padding:0; }
 body{
   font-family:'Inter',system-ui,sans-serif;
-  background:var(--bg);
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(194,104,62,.07), transparent 60%),
+    radial-gradient(900px 500px at 0% 0%, rgba(222,208,182,.35), transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
   color:var(--brown);
   font-size:14px;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,h4{ font-family:'Fraunces',Georgia,serif; font-weight:600; margin:0; color:var(--brown); letter-spacing:-.01em; }
+h1,h2,h3,h4{ font-family:'Fraunces',Georgia,serif; font-weight:600; margin:0; color:var(--brown); letter-spacing:-.015em; }
 button{ font-family:inherit; cursor:pointer; }
 input,select{ font-family:inherit; }
 ::selection{ background:var(--terra); color:#fff; }
@@ -1574,3 +1579,131 @@ table.tbl tr:hover td{ background:var(--sand); }
 .neighbor-card:hover{ border-color:var(--terra); }
 .neighbor-card .nc-num{ font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:var(--brown-dark); }
 .neighbor-card .nc-area{ font-size:11px; color:var(--brown-soft); margin-top:2px; }
+
+/* ============================================================
+   ТЕМА «БУТИК» / EDITORIAL — фирменный слой поверх базовых стилей.
+   Тёплая бумага, крупная серифная типографика, тонкие
+   терракотовые линии-акценты, тактильные карточки-образцы.
+   ============================================================ */
+
+/* — Фирменная терракотовая полоса над всем приложением — */
+.topbar{
+  border-top:3px solid transparent;
+  border-image:linear-gradient(90deg, var(--terra-dark), var(--terra) 45%, #E0A458 90%) 1;
+  background:rgba(253,250,243,.86);
+}
+.brand-mark{
+  border-radius:11px;
+  box-shadow:0 4px 12px rgba(168,81,44,.28), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.brand-name{ font-size:20px; letter-spacing:-.02em; }
+.brand-sub{ letter-spacing:.14em; }
+
+/* — Вкладки: серифная надпись активной, мягкая подложка — */
+.tabs{
+  background:rgba(253,250,243,.7);
+  gap:4px;
+}
+.tab{ font-size:13.5px; letter-spacing:.01em; padding:16px 18px; }
+.tab.active{ font-family:'Fraunces',serif; font-weight:600; letter-spacing:0; }
+.tab.active::after{ height:3px; left:16px; right:16px;
+  background:linear-gradient(90deg, var(--terra), var(--terra-dark)); }
+
+/* — Заголовок раздела: журнальная «шапка» с кикером — */
+.view-head h2{
+  font-size:34px; line-height:1.05; letter-spacing:-.025em;
+  color:var(--terra-ink);
+}
+.view-head h2::before{
+  content:''; display:block;
+  width:44px; height:3px; margin-bottom:12px; border-radius:2px;
+  background:linear-gradient(90deg, var(--terra), #E0A458);
+}
+.view-head p{ font-size:13.5px; max-width:70ch; }
+
+/* — Карточки и панели: тёплая бумага, тонкая тень, серифные акценты — */
+.card, .kpi, .mini-card, .client-list, .client-card, .filters, .clients-filter, .admin-panel{
+  border-color:var(--line);
+}
+.card{ padding:22px; position:relative; }
+.card h3{ font-size:18px; letter-spacing:-.01em; }
+.card h3::before{
+  content:''; display:inline-block; vertical-align:middle;
+  width:8px; height:8px; margin-right:9px; border-radius:2px;
+  background:var(--terra); transform:rotate(45deg) translateY(-1px);
+}
+.card .card-sub{ padding-left:17px; }
+
+/* — KPI: крупные серифные числа с терракотовым акцентом — */
+.kpi{ position:relative; overflow:hidden; }
+.kpi::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--terra), transparent 70%);
+  opacity:.65;
+}
+.kpi .label{ letter-spacing:.08em; }
+.kpi .val{ font-size:32px; letter-spacing:-.02em; color:var(--terra-ink); }
+
+/* — Шахматка: карточки-образцы с бликом и серифным номером — */
+.chess-scroll{ padding:20px; }
+.chess-corp-title{
+  font-family:'Fraunces',serif; font-weight:600; font-size:15px;
+  text-transform:none; letter-spacing:0; color:var(--terra-ink);
+  padding-bottom:6px; border-bottom:1px solid var(--line-soft);
+}
+.cell{
+  border-radius:9px; border:1px solid rgba(59,42,32,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 1px 2px rgba(74,53,42,.08);
+}
+.cell .num{ font-family:'Fraunces',serif; font-size:14px; font-weight:600; letter-spacing:-.01em; }
+.cell:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(74,53,42,.2), inset 0 1px 0 rgba(255,255,255,.3); filter:brightness(1.04) saturate(1.05); }
+.cell.sel{ outline:2.5px solid var(--terra-ink); outline-offset:2px; }
+.floor-label{ font-family:'Fraunces',serif; font-size:12.5px; color:var(--brown-soft); }
+
+/* — Сводка справа: серифные числа — */
+.mini-card h4{ font-family:'Fraunces',serif; font-size:14px; letter-spacing:-.01em; }
+.mini-card h4::before{
+  content:''; display:inline-block; width:6px; height:6px; margin-right:8px;
+  border-radius:1.5px; background:var(--terra); transform:rotate(45deg) translateY(-1px);
+}
+
+/* — Кнопки: чуть теплее и мягче — */
+.btn{ border-radius:9px; }
+.btn-primary{
+  background:linear-gradient(135deg, var(--terra), var(--terra-dark));
+  box-shadow:0 2px 8px rgba(168,81,44,.24);
+}
+.btn-primary:hover{ background:linear-gradient(135deg, var(--terra-dark), var(--terra-ink)); }
+
+/* — Секционные заголовки в панели: терракотовый штрих — */
+.panel-section-title{ letter-spacing:.1em; }
+.panel-section-title::before{
+  content:''; display:inline-block; width:14px; height:2px; margin-right:8px;
+  vertical-align:middle; background:var(--terra); border-radius:2px;
+}
+.panel-head h3{ color:var(--terra-ink); letter-spacing:-.02em; }
+
+/* — Легенда: капсулы вместо голых точек — */
+.legend{ gap:10px 18px; padding:2px 2px 0; }
+.legend .item{
+  background:var(--bg-2); border:1px solid var(--line);
+  padding:5px 11px 5px 9px; border-radius:20px; box-shadow:var(--shadow-sm);
+  color:var(--brown);
+}
+
+/* — Фильтры: тёплая бумага и мягкая рамка — */
+.filters{ background:var(--bg-2); }
+.filters label{ letter-spacing:.08em; }
+
+/* — Профиль клиента: серифные подзаголовки блоков — */
+.cc-head h3, .client-card-head h3{ color:var(--terra-ink); letter-spacing:-.02em; }
+
+/* — Тонкая настройка воронки/дашборда — */
+.funnel-bar{ border-radius:10px; }
+.funnel-bar .count{ font-size:18px; }
+.plan-meta .row b, .cal-stat-value, .ring .pct b{ letter-spacing:-.01em; }
+
+/* Уважение к тем, кто просит меньше движения */
+@media (prefers-reduced-motion: reduce){
+  .cell:hover, .btn-primary, .view.active{ transition:none; animation:none; transform:none; }
+}
