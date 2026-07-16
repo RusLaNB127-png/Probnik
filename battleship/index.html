@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Морской бой — онлайн на двоих</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <style>
   :root{
     --bg:#0b1d33; --panel:#122a47; --panel2:#0e2340;
@@ -223,29 +223,21 @@ const N = 10;
 const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
 const COLS = ['А','Б','В','Г','Д','Е','Ж','З','И','К'];
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const ID_PREFIX = 'mboy-2026-';
-// STUN — чтобы узнать свой внешний адрес, TURN — запасной ретранслятор,
-// если прямое соединение между компьютерами не проходит из-за NAT.
-const PEER_CONFIG = {
-  debug: 2,
-  config: {
-    iceServers: [
-      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-      {
-        urls: [
-          'turn:openrelay.metered.ca:80',
-          'turn:openrelay.metered.ca:443',
-          'turn:openrelay.metered.ca:443?transport=tcp'
-        ],
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ]
-  }
-};
+const TOPIC_PREFIX = 'mboy2026v2/';
+// Публичные MQTT-брокеры по WebSocket: ходы идут через общий сервер
+// сообщений, поэтому прямое соединение между компьютерами не нужно —
+// работает почти через любой роутер и Wi-Fi. Пробуем по очереди.
+const BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://test.mosquitto.org:8081/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt'
+];
 
 /* ================= Состояние ================= */
-let peer = null, conn = null, isHost = false;
+let mqClient = null;          // MQTT-клиент (транспорт)
+let myId = null, peerId = null, roomTopic = null, paired = false;
+let joinTimer = null, connectTimer = null, brokerIdx = 0;
+let isHost = false;
 let phase = 'menu';           // menu | wait | connecting | placement | battle | over
 let myBoard = null;           // {grid, ships:[{cells:[[x,y]],hits:Set}]}
 let myShots = {};             // "x,y" -> 'miss'|'hit'|'sunk'
@@ -363,13 +355,24 @@ function renderFleets(){
     `<span class="hint">кораблей осталось: <b style="color:var(--text)">${enemyShipsLeft}</b> из ${SHIP_SIZES.length}</span>`;
 }
 
-/* ================= Сетевое взаимодействие ================= */
+/* ================= Сетевое взаимодействие (через MQTT) ================= */
+const randId = () => Math.random().toString(36).slice(2, 10);
+
+// Игровое сообщение сопернику
 function send(msg){
-  if(conn && conn.open) conn.send(msg);
+  if(mqClient && mqClient.connected && peerId)
+    mqClient.publish(roomTopic, JSON.stringify({from:myId, to:peerId, kind:'game', data:msg}));
+}
+// Служебное сообщение (рукопожатие)
+function publishRaw(obj){
+  if(mqClient && mqClient.connected)
+    mqClient.publish(roomTopic, JSON.stringify(Object.assign({from:myId}, obj)));
 }
 function cleanupPeer(){
-  if(conn){ conn.close(); conn = null; }
-  if(peer){ peer.destroy(); peer = null; }
+  clearTimeout(joinTimer); clearTimeout(connectTimer);
+  joinTimer = connectTimer = null;
+  peerId = null; paired = false;
+  if(mqClient){ try{ mqClient.end(true); }catch(e){} mqClient = null; }
 }
 function fatal(title, text){
   cleanupPeer();
@@ -381,6 +384,63 @@ function fatal(title, text){
   $('overlay').classList.add('active');
 }
 
+// Подключение к брокеру с перебором адресов. onReady — когда подписаны на комнату.
+function connectBroker(code, onReady, onFail){
+  myId = randId();
+  roomTopic = TOPIC_PREFIX + code.toLowerCase();
+  brokerIdx = 0;
+  attempt();
+
+  function attempt(){
+    if(brokerIdx >= BROKERS.length){ onFail && onFail(); return; }
+    const client = mqtt.connect(BROKERS[brokerIdx], {
+      clientId: 'mb_' + myId + '_' + brokerIdx,
+      clean: true, connectTimeout: 8000, reconnectPeriod: 2000, keepalive: 30
+    });
+    mqClient = client;
+    let ready = false;
+    connectTimer = setTimeout(() => {                 // брокер не ответил — следующий
+      if(!ready){ try{ client.end(true); }catch(e){} brokerIdx++; attempt(); }
+    }, 9000);
+    client.on('connect', () => {
+      client.subscribe(roomTopic, {qos:0}, err => {
+        if(ready) return;                             // это переподключение — просто переподписались
+        if(err){ clearTimeout(connectTimer); try{client.end(true);}catch(e){} brokerIdx++; attempt(); return; }
+        ready = true; clearTimeout(connectTimer);
+        onReady && onReady();
+      });
+    });
+    client.on('message', (t, payload) => onBrokerMessage(payload));
+    client.on('error', () => {});                     // ошибки транспорта гасим, полагаемся на таймаут/reconnect
+  }
+}
+
+function onBrokerMessage(payload){
+  let m;
+  try { m = JSON.parse(payload.toString()); } catch(e){ return; }
+  if(!m || m.from === myId) return;                   // свои сообщения игнорируем
+
+  if(m.kind === 'join'){                              // гость стучится к хосту
+    if(isHost && (!peerId || peerId === m.from)){
+      peerId = m.from;
+      publishRaw({kind:'welcome', to:m.from});
+      if(!paired){ paired = true; startPlacement(); }
+    }
+    return;
+  }
+  if(m.kind === 'welcome'){                           // хост принял гостя
+    if(!isHost && m.to === myId){
+      peerId = m.from;
+      clearTimeout(joinTimer); joinTimer = null;
+      if(!paired){ paired = true; startPlacement(); }
+    }
+    return;
+  }
+  if(m.kind === 'game'){
+    if(m.from === peerId && m.to === myId) onMessage(m.data);
+  }
+}
+
 function hostGame(){
   isHost = true;
   phase = 'wait';
@@ -388,23 +448,16 @@ function hostGame(){
   $('my-code').textContent = '····';
   $('wait-hint').textContent = 'Подключаемся к серверу…';
   showScreen('wait');
-  peer = new Peer(ID_PREFIX + code.toLowerCase(), PEER_CONFIG);
-  peer.on('open', () => {
-    if(phase !== 'wait') return;
-    $('my-code').textContent = code;
-    $('wait-hint').innerHTML = 'Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка кораблей.';
-  });
-  peer.on('disconnected', () => { if(phase === 'wait' && peer) peer.reconnect(); });
-  peer.on('error', err => {
-    if(err.type === 'unavailable-id'){ cleanupPeer(); hostGame(); } // код занят — генерируем новый
-    else if(phase === 'wait')
-      fatal('Ошибка сети', 'Не удалось создать игру (' + err.type + '). Проверьте интернет и попробуйте снова. Если вы в рабочей/учебной сети — попробуйте с телефона через мобильный интернет.');
-  });
-  peer.on('connection', c => {
-    if(conn){ c.close(); return; } // уже играем
-    conn = c;
-    wireConnection();
-  });
+  connectBroker(code,
+    () => {
+      if(phase !== 'wait') return;
+      $('my-code').textContent = code;
+      $('wait-hint').innerHTML = 'Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка кораблей.';
+    },
+    () => {
+      if(phase === 'wait')
+        fatal('Не удалось подключиться', 'Ни один игровой сервер не отвечает. Проверьте интернет и попробуйте снова. Если вы в рабочей или учебной сети — она может блокировать соединение, тогда зайдите с телефона через мобильный интернет.');
+    });
 }
 
 function joinGame(code){
@@ -412,38 +465,25 @@ function joinGame(code){
   phase = 'connecting';
   showScreen('connecting');
   $('connecting-hint').textContent = 'Подключаемся к серверу…';
-  peer = new Peer(PEER_CONFIG);
-  peer.on('open', () => {
-    if(phase !== 'connecting') return;
-    $('connecting-hint').textContent = 'Сервер найден. Ищем игру ' + code + '…';
-    conn = peer.connect(ID_PREFIX + code.toLowerCase(), {reliable:true});
-    wireConnection();
-    conn.on('iceStateChanged', st => {
-      if(phase === 'connecting' && st === 'checking')
-        $('connecting-hint').textContent = 'Игра найдена! Устанавливаем соединение с компьютером друга…';
-      if(phase === 'connecting' && st === 'failed')
-        fatal('Соединение не установилось', 'Игра с кодом ' + code + ' найдена, но компьютеры не смогли соединиться напрямую. Попробуйте ещё раз; если не поможет — зайдите с другой сети (например, раздайте интернет с телефона).');
-    });
-    setTimeout(() => {
+  connectBroker(code,
+    () => {
+      if(phase !== 'connecting') return;
+      $('connecting-hint').textContent = 'Сервер найден. Ищем игру ' + code + '…';
+      let tries = 0;
+      (function ping(){
+        if(phase !== 'connecting') return;
+        publishRaw({kind:'join'});                    // зовём хоста, пока не ответит
+        if(++tries >= 20){
+          fatal('Игра не найдена', 'Никто не отвечает на код ' + code + '. Проверьте код: возможно, друг ещё не создал игру, отменил её или уже начал другую. Попросите создать игру заново и пришлите новый код.');
+          return;
+        }
+        joinTimer = setTimeout(ping, 1000);
+      })();
+    },
+    () => {
       if(phase === 'connecting')
-        fatal('Не получилось подключиться', 'Соединение не установилось за 25 секунд. Проверьте код (возможно, друг уже пересоздал игру) и попробуйте ещё раз.');
-    }, 25000);
-  });
-  peer.on('error', err => {
-    if(err.type === 'peer-unavailable')
-      fatal('Игра не найдена', 'Игры с кодом ' + code + ' нет. Проверьте код: возможно, друг ещё не создал игру, отменил её или уже начал другую.');
-    else if(phase === 'connecting')
-      fatal('Ошибка сети', 'Не удалось подключиться к серверу (' + err.type + '). Проверьте интернет и попробуйте снова.');
-  });
-}
-
-function wireConnection(){
-  conn.on('open', startPlacement);
-  conn.on('data', onMessage);
-  conn.on('close', () => {
-    if(phase !== 'menu' && phase !== 'over')
-      fatal('Соперник отключился', 'Соединение разорвано. Создайте новую игру.');
-  });
+        fatal('Не удалось подключиться', 'Ни один игровой сервер не отвечает. Проверьте интернет и попробуйте снова. Если вы в рабочей или учебной сети — она может блокировать соединение, тогда зайдите с телефона через мобильный интернет.');
+    });
 }
 
 /* ================= Фазы игры ================= */
