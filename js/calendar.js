@@ -262,7 +262,6 @@ function calShiftDay(delta){
 // ---------- Инициализация ----------
 function initCalendar(){
   document.getElementById('calBtn').onclick      = openCalendar;
-  document.getElementById('calBtn2').onclick     = openCalendar;
   document.getElementById('calClose').onclick    = closeCalendar;
   document.getElementById('calModal').onclick    = e=>{ if(e.target.id==='calModal') closeCalendar(); };
   document.getElementById('calPrevMonth').onclick= ()=>calShiftMonth(-1);

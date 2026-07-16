@@ -1524,14 +1524,15 @@ table.tbl tr:hover td{ background:var(--sand); }
 .panel.presentation .panel-head h3{ font-size:30px; }
 .panel.presentation .panel-section-title{ color:var(--terra-dark); letter-spacing:.04em; }
 .pres-toggle{
+  margin-top:9px;
   display:inline-flex; align-items:center; gap:7px;
-  padding:7px 12px; font-size:12px; font-weight:600;
-  border:1px solid var(--terra-dark); background:#fff;
-  color:var(--terra-dark); border-radius:8px; cursor:pointer;
-  font-family:inherit;
+  padding:6px 12px; font-size:12.5px; font-weight:600;
+  border:1px solid var(--line); background:var(--bg-2);
+  color:var(--brown); border-radius:20px; cursor:pointer;
+  font-family:inherit; transition:.15s;
 }
-.pres-toggle:hover{ background:var(--sand); }
-.pres-toggle.on{ background:var(--terra); color:#fff; border-color:var(--terra); }
+.pres-toggle:hover{ border-color:var(--terra); }
+.pres-toggle.on{ background:#FBE3D3; border-color:var(--terra); color:var(--terra-dark); }
 .pres-banner{
   display:none; padding:10px 14px;
   background:linear-gradient(135deg,#FBEFE4,#F6E4D2);
@@ -1660,15 +1661,7 @@ table.tbl tr:hover td{ background:var(--sand); }
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M9 6v12M15 6v12M3 12h18"/></svg>
           <span>Интерактивный этаж</span>
         </button>
-        <button class="view-switch-btn" data-view-mode="facade" title="Вид корпуса">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M7 11h2M11 11h2M15 11h2M7 15h2M15 15h2"/></svg>
-          <span>Вид корпуса</span>
-        </button>
       </div>
-      <button class="btn" id="calBtn2">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
-        Календарь показов
-      </button>
     </div>
   </div>
 
@@ -1682,6 +1675,7 @@ table.tbl tr:hover td{ background:var(--sand); }
     <div class="field"><label>Этаж</label><select id="fFloor"></select></div>
     <div class="field"><label>Статус</label><select id="fStatus"></select></div>
     <div class="field"><label>Менеджер</label><select id="fManager"></select></div>
+    <div class="field"><label>Вид из окна</label><select id="fView"></select></div>
     <div class="field"><label>Цена, ₽/м² (тыс.)</label><div class="range"><input id="fPriceMin" type="number" placeholder="от"><input id="fPriceMax" type="number" placeholder="до"></div></div>
     <div class="field"><label>Площадь, м²</label><div class="range"><input id="fAreaMin" type="number" placeholder="от"><input id="fAreaMax" type="number" placeholder="до"></div></div>
     <div class="filters-actions">
@@ -2764,7 +2758,7 @@ const state = {
   favorites:       new Set(),         // id избранных помещений (общий чек)
   selectedUnitId:  null,
   activeClientId:  'c1',
-  filters:         { corp:'', floor:'', status:'', manager:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'', favoritesOnly:false, query:'' },
+  filters:         { corp:'', floor:'', status:'', manager:'', view:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'', favoritesOnly:false, query:'' },
   clientFilters:   { query:'', mgr:'', stage:'', source:'', priority:'' },
   clientCardTab:   'overview',        // overview | units | shows | tasks | docs | timeline
   adminMode:       false,
@@ -3324,6 +3318,7 @@ function buildFilters(){
   document.getElementById('fFloor').innerHTML = `<option value="">Все этажи</option>`+floors.map(f=>`<option value="${f}">${f} этаж</option>`).join('');
   document.getElementById('fStatus').innerHTML = `<option value="">Все статусы</option>`+STATUS_ORDER.map(s=>`<option value="${s}">${STATUSES[s].label}</option>`).join('');
   document.getElementById('fManager').innerHTML = `<option value="">Все менеджеры</option>`+MANAGERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.icon} ${v.label}</option>`).join('');
   ['fCorp','fFloor','fStatus','fManager','fPriceMin','fPriceMax','fAreaMin','fAreaMax','fQuery'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && el.tagName==='INPUT') el.value='';
@@ -3337,6 +3332,7 @@ function passFilter(u){
   if(f.floor && u.floor!=f.floor) return false;
   if(f.status && u.status!==f.status) return false;
   if(f.manager && u.managerId!==f.manager) return false;
+  if(f.view && (!u.view || u.view.category!==f.view)) return false;
   if(f.priceMin && u.pricePerM < +f.priceMin) return false;
   if(f.priceMax && u.pricePerM > +f.priceMax) return false;
   if(f.areaMin && u.area < +f.areaMin) return false;
@@ -3383,8 +3379,13 @@ function bindViewSwitch(){
    ============================================================ */
 function renderChess(){
   const b = state.buildingConfig;
+  // Режим «Вид корпуса» выведен из интерфейса — на всякий случай откатываем к сетке
+  if(state.chessView==='facade'){
+    state.chessView='grid';
+    document.querySelectorAll('.view-switch-btn').forEach(x=>x.classList.toggle('active', x.dataset.viewMode==='grid'));
+  }
   document.getElementById('chessTitle').textContent = ({
-    grid:'Шахматка', floor:'Интерактивный этаж', facade:'Вид корпуса'
+    grid:'Шахматка', floor:'Интерактивный этаж'
   })[state.chessView]+' · '+b.name;
 
   const grid    = document.getElementById('chessGrid');
@@ -3702,7 +3703,7 @@ function renderAside(){
 }
 
 function bindFilters(){
-  const map = {fCorp:'corp',fFloor:'floor',fStatus:'status',fManager:'manager',fPriceMin:'priceMin',fPriceMax:'priceMax',fAreaMin:'areaMin',fAreaMax:'areaMax',fQuery:'query'};
+  const map = {fCorp:'corp',fFloor:'floor',fStatus:'status',fManager:'manager',fView:'view',fPriceMin:'priceMin',fPriceMax:'priceMax',fAreaMin:'areaMin',fAreaMax:'areaMax',fQuery:'query'};
   Object.entries(map).forEach(([id,key])=>{
     const el = document.getElementById(id);
     if(!el) return;
@@ -3715,7 +3716,7 @@ function bindFilters(){
     renderChess(); renderAside();
   });
   document.getElementById('fReset').onclick=()=>{
-    state.filters = {corp:'',floor:'',status:'',manager:'',priceMin:'',priceMax:'',areaMin:'',areaMax:'',favoritesOnly:false,query:''};
+    state.filters = {corp:'',floor:'',status:'',manager:'',view:'',priceMin:'',priceMax:'',areaMin:'',areaMax:'',favoritesOnly:false,query:''};
     buildFilters(); renderChess(); renderAside();
   };
 }
@@ -5611,7 +5612,6 @@ function calShiftDay(delta){
 // ---------- Инициализация ----------
 function initCalendar(){
   document.getElementById('calBtn').onclick      = openCalendar;
-  document.getElementById('calBtn2').onclick     = openCalendar;
   document.getElementById('calClose').onclick    = closeCalendar;
   document.getElementById('calModal').onclick    = e=>{ if(e.target.id==='calModal') closeCalendar(); };
   document.getElementById('calPrevMonth').onclick= ()=>calShiftMonth(-1);

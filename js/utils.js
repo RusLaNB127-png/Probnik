@@ -145,7 +145,7 @@ const state = {
   favorites:       new Set(),         // id избранных помещений (общий чек)
   selectedUnitId:  null,
   activeClientId:  'c1',
-  filters:         { corp:'', floor:'', status:'', manager:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'', favoritesOnly:false, query:'' },
+  filters:         { corp:'', floor:'', status:'', manager:'', view:'', priceMin:'', priceMax:'', areaMin:'', areaMax:'', favoritesOnly:false, query:'' },
   clientFilters:   { query:'', mgr:'', stage:'', source:'', priority:'' },
   clientCardTab:   'overview',        // overview | units | shows | tasks | docs | timeline
   adminMode:       false,

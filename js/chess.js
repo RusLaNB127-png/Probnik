@@ -17,6 +17,7 @@ function buildFilters(){
   document.getElementById('fFloor').innerHTML = `<option value="">Все этажи</option>`+floors.map(f=>`<option value="${f}">${f} этаж</option>`).join('');
   document.getElementById('fStatus').innerHTML = `<option value="">Все статусы</option>`+STATUS_ORDER.map(s=>`<option value="${s}">${STATUSES[s].label}</option>`).join('');
   document.getElementById('fManager').innerHTML = `<option value="">Все менеджеры</option>`+MANAGERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.icon} ${v.label}</option>`).join('');
   ['fCorp','fFloor','fStatus','fManager','fPriceMin','fPriceMax','fAreaMin','fAreaMax','fQuery'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && el.tagName==='INPUT') el.value='';
@@ -30,6 +31,7 @@ function passFilter(u){
   if(f.floor && u.floor!=f.floor) return false;
   if(f.status && u.status!==f.status) return false;
   if(f.manager && u.managerId!==f.manager) return false;
+  if(f.view && (!u.view || u.view.category!==f.view)) return false;
   if(f.priceMin && u.pricePerM < +f.priceMin) return false;
   if(f.priceMax && u.pricePerM > +f.priceMax) return false;
   if(f.areaMin && u.area < +f.areaMin) return false;
@@ -76,8 +78,13 @@ function bindViewSwitch(){
    ============================================================ */
 function renderChess(){
   const b = state.buildingConfig;
+  // Режим «Вид корпуса» выведен из интерфейса — на всякий случай откатываем к сетке
+  if(state.chessView==='facade'){
+    state.chessView='grid';
+    document.querySelectorAll('.view-switch-btn').forEach(x=>x.classList.toggle('active', x.dataset.viewMode==='grid'));
+  }
   document.getElementById('chessTitle').textContent = ({
-    grid:'Шахматка', floor:'Интерактивный этаж', facade:'Вид корпуса'
+    grid:'Шахматка', floor:'Интерактивный этаж'
   })[state.chessView]+' · '+b.name;
 
   const grid    = document.getElementById('chessGrid');
@@ -395,7 +402,7 @@ function renderAside(){
 }
 
 function bindFilters(){
-  const map = {fCorp:'corp',fFloor:'floor',fStatus:'status',fManager:'manager',fPriceMin:'priceMin',fPriceMax:'priceMax',fAreaMin:'areaMin',fAreaMax:'areaMax',fQuery:'query'};
+  const map = {fCorp:'corp',fFloor:'floor',fStatus:'status',fManager:'manager',fView:'view',fPriceMin:'priceMin',fPriceMax:'priceMax',fAreaMin:'areaMin',fAreaMax:'areaMax',fQuery:'query'};
   Object.entries(map).forEach(([id,key])=>{
     const el = document.getElementById(id);
     if(!el) return;
@@ -408,7 +415,7 @@ function bindFilters(){
     renderChess(); renderAside();
   });
   document.getElementById('fReset').onclick=()=>{
-    state.filters = {corp:'',floor:'',status:'',manager:'',priceMin:'',priceMax:'',areaMin:'',areaMax:'',favoritesOnly:false,query:''};
+    state.filters = {corp:'',floor:'',status:'',manager:'',view:'',priceMin:'',priceMax:'',areaMin:'',areaMax:'',favoritesOnly:false,query:''};
     buildFilters(); renderChess(); renderAside();
   };
 }

@@ -1514,14 +1514,15 @@ table.tbl tr:hover td{ background:var(--sand); }
 .panel.presentation .panel-head h3{ font-size:30px; }
 .panel.presentation .panel-section-title{ color:var(--terra-dark); letter-spacing:.04em; }
 .pres-toggle{
+  margin-top:9px;
   display:inline-flex; align-items:center; gap:7px;
-  padding:7px 12px; font-size:12px; font-weight:600;
-  border:1px solid var(--terra-dark); background:#fff;
-  color:var(--terra-dark); border-radius:8px; cursor:pointer;
-  font-family:inherit;
+  padding:6px 12px; font-size:12.5px; font-weight:600;
+  border:1px solid var(--line); background:var(--bg-2);
+  color:var(--brown); border-radius:20px; cursor:pointer;
+  font-family:inherit; transition:.15s;
 }
-.pres-toggle:hover{ background:var(--sand); }
-.pres-toggle.on{ background:var(--terra); color:#fff; border-color:var(--terra); }
+.pres-toggle:hover{ border-color:var(--terra); }
+.pres-toggle.on{ background:#FBE3D3; border-color:var(--terra); color:var(--terra-dark); }
 .pres-banner{
   display:none; padding:10px 14px;
   background:linear-gradient(135deg,#FBEFE4,#F6E4D2);
