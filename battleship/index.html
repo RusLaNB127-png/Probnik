@@ -160,7 +160,7 @@
     <h2>Код вашей игры</h2>
     <div class="code-box" id="my-code">····</div>
     <div class="spinner"></div>
-    <div class="hint">Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка кораблей.</div>
+    <div class="hint" id="wait-hint">Подключаемся к серверу…</div>
     <button class="secondary" id="btn-cancel-wait">Отмена</button>
   </div>
 </div>
@@ -224,6 +224,25 @@ const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
 const COLS = ['А','Б','В','Г','Д','Е','Ж','З','И','К'];
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const ID_PREFIX = 'mboy-2026-';
+// STUN — чтобы узнать свой внешний адрес, TURN — запасной ретранслятор,
+// если прямое соединение между компьютерами не проходит из-за NAT.
+const PEER_CONFIG = {
+  debug: 2,
+  config: {
+    iceServers: [
+      { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+      {
+        urls: [
+          'turn:openrelay.metered.ca:80',
+          'turn:openrelay.metered.ca:443',
+          'turn:openrelay.metered.ca:443?transport=tcp'
+        ],
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ]
+  }
+};
 
 /* ================= Состояние ================= */
 let peer = null, conn = null, isHost = false;
@@ -364,14 +383,22 @@ function fatal(title, text){
 
 function hostGame(){
   isHost = true;
+  phase = 'wait';
   const code = makeCode();
-  peer = new Peer(ID_PREFIX + code.toLowerCase(), {debug:1});
-  $('my-code').textContent = code;
+  $('my-code').textContent = '····';
+  $('wait-hint').textContent = 'Подключаемся к серверу…';
   showScreen('wait');
-  peer.on('open', () => { /* ждём подключения */ });
+  peer = new Peer(ID_PREFIX + code.toLowerCase(), PEER_CONFIG);
+  peer.on('open', () => {
+    if(phase !== 'wait') return;
+    $('my-code').textContent = code;
+    $('wait-hint').innerHTML = 'Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка кораблей.';
+  });
+  peer.on('disconnected', () => { if(phase === 'wait' && peer) peer.reconnect(); });
   peer.on('error', err => {
-    if(err.type === 'unavailable-id'){ cleanupPeer(); hostGame(); } // код занят — новый
-    else fatal('Ошибка сети', 'Не удалось создать игру: ' + err.type + '. Проверьте интернет и попробуйте снова.');
+    if(err.type === 'unavailable-id'){ cleanupPeer(); hostGame(); } // код занят — генерируем новый
+    else if(phase === 'wait')
+      fatal('Ошибка сети', 'Не удалось создать игру (' + err.type + '). Проверьте интернет и попробуйте снова. Если вы в рабочей/учебной сети — попробуйте с телефона через мобильный интернет.');
   });
   peer.on('connection', c => {
     if(conn){ c.close(); return; } // уже играем
@@ -382,21 +409,31 @@ function hostGame(){
 
 function joinGame(code){
   isHost = false;
-  peer = new Peer({debug:1});
+  phase = 'connecting';
   showScreen('connecting');
-  $('connecting-hint').textContent = 'Ищем игру ' + code + '…';
+  $('connecting-hint').textContent = 'Подключаемся к серверу…';
+  peer = new Peer(PEER_CONFIG);
   peer.on('open', () => {
+    if(phase !== 'connecting') return;
+    $('connecting-hint').textContent = 'Сервер найден. Ищем игру ' + code + '…';
     conn = peer.connect(ID_PREFIX + code.toLowerCase(), {reliable:true});
     wireConnection();
+    conn.on('iceStateChanged', st => {
+      if(phase === 'connecting' && st === 'checking')
+        $('connecting-hint').textContent = 'Игра найдена! Устанавливаем соединение с компьютером друга…';
+      if(phase === 'connecting' && st === 'failed')
+        fatal('Соединение не установилось', 'Игра с кодом ' + code + ' найдена, но компьютеры не смогли соединиться напрямую. Попробуйте ещё раз; если не поможет — зайдите с другой сети (например, раздайте интернет с телефона).');
+    });
     setTimeout(() => {
-      if(phase === 'connecting' && (!conn || !conn.open))
-        fatal('Игра не найдена', 'Проверьте код — возможно, друг ещё не создал игру или уже начал другую.');
-    }, 12000);
+      if(phase === 'connecting')
+        fatal('Не получилось подключиться', 'Соединение не установилось за 25 секунд. Проверьте код (возможно, друг уже пересоздал игру) и попробуйте ещё раз.');
+    }, 25000);
   });
   peer.on('error', err => {
     if(err.type === 'peer-unavailable')
-      fatal('Игра не найдена', 'Игры с кодом ' + code + ' нет. Проверьте код и попробуйте ещё раз.');
-    else fatal('Ошибка сети', 'Не удалось подключиться: ' + err.type + '.');
+      fatal('Игра не найдена', 'Игры с кодом ' + code + ' нет. Проверьте код: возможно, друг ещё не создал игру, отменил её или уже начал другую.');
+    else if(phase === 'connecting')
+      fatal('Ошибка сети', 'Не удалось подключиться к серверу (' + err.type + '). Проверьте интернет и попробуйте снова.');
   });
 }
 
