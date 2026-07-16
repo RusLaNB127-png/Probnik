@@ -781,6 +781,32 @@ table.tbl tr:hover td{ background:var(--sand); }
 .form-row textarea{ resize:vertical; font-family:inherit; }
 .form-row-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .form-row-2 > div label{ margin-bottom:5px; }
+
+/* Поля с единицами измерения (млн ₽, м², этаж) */
+.unit-input{ position:relative; display:flex; align-items:center; }
+.unit-input input{ padding-right:62px; }
+.unit-input .unit{
+  position:absolute; right:11px;
+  font-size:12px; font-weight:600; color:var(--brown-soft);
+  pointer-events:none; user-select:none;
+}
+.range-unit{
+  display:flex; align-items:center; gap:7px;
+  border:1px solid var(--line); background:var(--bg);
+  border-radius:8px; padding:0 11px 0 0;
+  transition:.12s;
+}
+.range-unit:focus-within{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(46,94,115,.1); }
+.range-unit input{
+  border:0 !important; background:transparent !important;
+  box-shadow:none !important; border-radius:8px;
+  min-width:0; flex:1;
+}
+.range-unit .dash{ color:var(--brown-soft); flex-shrink:0; }
+.range-unit .unit{
+  font-size:12px; font-weight:600; color:var(--brown-soft);
+  flex-shrink:0; user-select:none;
+}
 .form-actions{
   display:flex; gap:10px; align-items:center;
   padding-top:8px;

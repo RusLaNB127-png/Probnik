@@ -556,7 +556,25 @@ function renderTabTimeline(pane, c){
 
 /* ============================================================
    ФОРМА: СОЗДАНИЕ / РЕДАКТИРОВАНИЕ КЛИЕНТА
+   Вспомогательные поля: бюджет в млн ₽, площадь в м²,
+   этажи диапазоном, вид/тип/гражданство — селектами.
    ============================================================ */
+const CITIZENSHIP_OPTIONS = ['РФ','Республика Беларусь','Казахстан','Армения','Узбекистан','Киргизия','Другое'];
+const PROPKIND_OPTIONS    = ['Квартира','Апартамент','Пентхаус','Коммерческое помещение'];
+
+// Достаём числа из сохранённой строки: «до 14 млн ₽» → [14], «50–70 м²» → [50,70]
+function numsFrom(s){
+  return (String(s||'').match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>parseFloat(x.replace(',','.')));
+}
+// Заполняет селект; если текущее значение нестандартное — добавляет его, чтобы не потерять
+function fillSelect(el, options, current, emptyLabel){
+  const opts = [...options];
+  if(current && !opts.includes(current)) opts.unshift(current);
+  el.innerHTML = (emptyLabel ? `<option value="">${emptyLabel}</option>` : '')
+    + opts.map(o=>`<option>${o}</option>`).join('');
+  el.value = current || (emptyLabel ? '' : opts[0]);
+}
+
 function openClientForm(clientId){
   const isEdit = !!clientId;
   document.getElementById('clientFormTitle').textContent = isEdit ? 'Редактирование клиента' : 'Добавление клиента';
@@ -569,31 +587,45 @@ function openClientForm(clientId){
   document.getElementById('clStage').innerHTML    = STAGES.map(s=>`<option>${s}</option>`).join('');
   document.getElementById('clPriority').innerHTML = PRIORITY_ORDER.map(p=>`<option value="${p}">${PRIORITIES[p].label}</option>`).join('');
 
-  const fields = ['name','dob','phone','phone2','email','city','citizenship','budget','goal','targetObject','propertyKind','areaPref','floorPref','viewPref','source','mgr','stage','priority','nextContact','note','wishes','objections','refusalReason'];
+  // Простые текстовые поля (структурные — ниже отдельно)
+  const fields = ['name','dob','phone','phone2','email','city','goal','source','mgr','stage','priority','note','wishes','objections'];
+  const c = isEdit ? getClient(clientId) : null;
 
-  if(isEdit){
-    const c = getClient(clientId);
-    fields.forEach(f=>{
-      const el = document.getElementById('cl'+f.charAt(0).toUpperCase()+f.slice(1));
-      if(el) el.value = c[f] || '';
-    });
-    // Поля с другими ID
-    document.getElementById('clName').value         = c.name || '';
-    document.getElementById('clPropKind').value     = c.propertyKind || '';
-    document.getElementById('clTarget').value       = c.targetObject || '';
-    document.getElementById('clRefusal').value      = c.refusalReason || '';
-    document.getElementById('clNextContact').value  = c.nextContact || '';
-  } else {
-    fields.forEach(f=>{
-      const el = document.getElementById('cl'+f.charAt(0).toUpperCase()+f.slice(1));
-      if(el) el.value = '';
-    });
-    document.getElementById('clCitizenship').value = 'РФ';
-    document.getElementById('clGoal').value        = 'Проживание';
-    document.getElementById('clSource').value      = 'Сайт';
-    document.getElementById('clMgr').value         = MANAGERS[0].id;
-    document.getElementById('clStage').value       = 'Новый лид';
-    document.getElementById('clPriority').value    = 'medium';
+  fields.forEach(f=>{
+    const el = document.getElementById('cl'+f.charAt(0).toUpperCase()+f.slice(1));
+    if(el) el.value = c ? (c[f] || '') : '';
+  });
+  document.getElementById('clTarget').value      = c ? (c.targetObject || '')  : '';
+  document.getElementById('clRefusal').value     = c ? (c.refusalReason || '') : '';
+  document.getElementById('clNextContact').value = c ? (c.nextContact || '')   : '';
+
+  // — Вспомогательные поля с единицами —
+  // Бюджет: число в млн ₽
+  const [budgetM] = numsFrom(c && c.budget);
+  document.getElementById('clBudget').value = budgetM != null ? budgetM : '';
+  // Площадь: диапазон в м²
+  const areaN = numsFrom(c && c.areaPref);
+  document.getElementById('clAreaMin').value = areaN[0] != null ? areaN[0] : '';
+  document.getElementById('clAreaMax').value = areaN[1] != null ? areaN[1] : (areaN.length===1 && /до/.test((c&&c.areaPref)||'') ? areaN[0] : '');
+  if(areaN.length===1 && /до/.test((c&&c.areaPref)||'')) document.getElementById('clAreaMin').value = '';
+  // Этажи: диапазон
+  const flN = numsFrom(c && c.floorPref);
+  document.getElementById('clFloorMin').value = flN[0] != null ? flN[0] : '';
+  document.getElementById('clFloorMax').value = flN[1] != null ? flN[1] : '';
+  // Селекты: гражданство, тип помещения, предпочтительный вид
+  fillSelect(document.getElementById('clCitizenship'), CITIZENSHIP_OPTIONS, (c && c.citizenship) || 'РФ');
+  fillSelect(document.getElementById('clPropKind'),    PROPKIND_OPTIONS,    (c && c.propertyKind) || '', '— не выбран —');
+  fillSelect(document.getElementById('clViewPref'),
+    VIEW_CATEGORIES.map(v=>v.label).concat('Не принципиально'),
+    (c && c.viewPref) || '', '— не выбран —');
+
+  if(!isEdit){
+    document.getElementById('clGoal').value     = 'Проживание';
+    document.getElementById('clSource').value   = 'Сайт';
+    document.getElementById('clMgr').value      = MANAGERS[0].id;
+    document.getElementById('clStage').value    = 'Новый лид';
+    document.getElementById('clPriority').value = 'medium';
+    document.getElementById('clTarget').value   = state.buildingConfig.name || '';
   }
 
   document.getElementById('clientFormModal').classList.add('show');
@@ -615,23 +647,53 @@ function initClientForm(){
     toast('Клиент удалён');
   };
 
+  // Телефон: при фокусе на пустом поле подставляем «+7 »,
+  // задвоенный префикс (автозаполнение поверх подстановки) схлопываем
+  const normPhone = v=>{
+    v = v.trim();
+    while(/^\+7\s*\+7/.test(v)) v = v.replace(/^\+7\s*/, '');
+    return v;
+  };
+  ['clPhone','clPhone2'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('focus', ()=>{ if(!el.value.trim()) el.value = '+7 '; });
+    el.addEventListener('blur',  ()=>{
+      if(el.value.trim()==='+7') el.value = '';
+      else el.value = normPhone(el.value);
+    });
+  });
+
   document.getElementById('clientForm').onsubmit = e=>{
     e.preventDefault();
+
+    // Собираем читаемые строки из структурных полей
+    const budgetM  = document.getElementById('clBudget').value;
+    const areaMin  = document.getElementById('clAreaMin').value;
+    const areaMax  = document.getElementById('clAreaMax').value;
+    const floorMin = document.getElementById('clFloorMin').value;
+    const floorMax = document.getElementById('clFloorMax').value;
+    const range = (min, max, unit)=>{
+      if(min && max) return `${min}–${max}${unit}`;
+      if(min) return `от ${min}${unit}`;
+      if(max) return `до ${max}${unit}`;
+      return '';
+    };
+
     const data = {
       name:         document.getElementById('clName').value.trim(),
       dob:          document.getElementById('clDob').value,
-      phone:        document.getElementById('clPhone').value.trim(),
-      phone2:       document.getElementById('clPhone2').value.trim(),
+      phone:        normPhone(document.getElementById('clPhone').value),
+      phone2:       normPhone(document.getElementById('clPhone2').value),
       email:        document.getElementById('clEmail').value.trim(),
       city:         document.getElementById('clCity').value.trim(),
-      citizenship:  document.getElementById('clCitizenship').value.trim(),
-      budget:       document.getElementById('clBudget').value.trim(),
+      citizenship:  document.getElementById('clCitizenship').value,
+      budget:       budgetM ? `до ${budgetM} млн ₽` : '',
       goal:         document.getElementById('clGoal').value,
       targetObject: document.getElementById('clTarget').value.trim(),
-      propertyKind: document.getElementById('clPropKind').value.trim(),
-      areaPref:     document.getElementById('clAreaPref').value.trim(),
-      floorPref:    document.getElementById('clFloorPref').value.trim(),
-      viewPref:     document.getElementById('clViewPref').value.trim(),
+      propertyKind: document.getElementById('clPropKind').value,
+      areaPref:     range(areaMin, areaMax, ' м²'),
+      floorPref:    range(floorMin, floorMax, ''),
+      viewPref:     document.getElementById('clViewPref').value,
       source:       document.getElementById('clSource').value,
       mgr:          document.getElementById('clMgr').value,
       stage:        document.getElementById('clStage').value,

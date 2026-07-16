@@ -537,7 +537,7 @@
           <div><label>Город проживания</label><input type="text" id="clCity"></div>
         </div>
         <div class="form-row form-row-2">
-          <div><label>Гражданство</label><input type="text" id="clCitizenship" placeholder="РФ"></div>
+          <div><label>Гражданство</label><select id="clCitizenship"></select></div>
           <div></div>
         </div>
       </div>
@@ -545,19 +545,38 @@
       <div class="form-section">
         <div class="form-section-title">Информация о покупке</div>
         <div class="form-row form-row-2">
-          <div><label>Бюджет</label><input type="text" id="clBudget" placeholder="до 15 млн ₽"></div>
+          <div>
+            <label>Бюджет, до</label>
+            <div class="unit-input"><input type="number" id="clBudget" min="0" step="0.1" placeholder="15"><span class="unit">млн ₽</span></div>
+          </div>
           <div><label>Цель покупки</label><select id="clGoal"></select></div>
         </div>
         <div class="form-row form-row-2">
           <div><label>Интересующий объект</label><input type="text" id="clTarget" placeholder="ЖК «Италика», 2-комн."></div>
-          <div><label>Тип помещения</label><input type="text" id="clPropKind" placeholder="Квартира / Апартамент"></div>
+          <div><label>Тип помещения</label><select id="clPropKind"></select></div>
         </div>
         <div class="form-row form-row-2">
-          <div><label>Желаемая площадь</label><input type="text" id="clAreaPref" placeholder="50–70 м²"></div>
-          <div><label>Предпочтительный этаж</label><input type="text" id="clFloorPref" placeholder="4–10"></div>
+          <div>
+            <label>Желаемая площадь</label>
+            <div class="range-unit">
+              <input type="number" id="clAreaMin" min="0" placeholder="от">
+              <span class="dash">–</span>
+              <input type="number" id="clAreaMax" min="0" placeholder="до">
+              <span class="unit">м²</span>
+            </div>
+          </div>
+          <div>
+            <label>Предпочтительный этаж</label>
+            <div class="range-unit">
+              <input type="number" id="clFloorMin" min="1" placeholder="от">
+              <span class="dash">–</span>
+              <input type="number" id="clFloorMax" min="1" placeholder="до">
+              <span class="unit">этаж</span>
+            </div>
+          </div>
         </div>
         <div class="form-row">
-          <label>Предпочтительный вид</label><input type="text" id="clViewPref" placeholder="Парк / Море / Не принципиально">
+          <label>Предпочтительный вид</label><select id="clViewPref"></select>
         </div>
       </div>
 
