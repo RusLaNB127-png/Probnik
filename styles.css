@@ -1181,18 +1181,18 @@ table.tbl tr:hover td{ background:var(--sand); }
   position:relative;
   background:#fff;
   border-radius:14px;
-  padding:30px 22px;
+  padding:26px 22px 20px;
   box-shadow:inset 0 0 0 1px var(--line), 0 10px 30px rgba(122,74,54,.06);
   overflow:hidden;
 }
 .floor-plan-head{
   display:flex; justify-content:space-between; align-items:flex-end;
-  margin-bottom:18px; padding-bottom:14px;
+  margin-bottom:16px; padding-bottom:14px;
   border-bottom:1px dashed var(--line);
 }
 .floor-plan-title{
   font-family:'Fraunces',serif; font-size:22px; font-weight:600;
-  color:var(--brown-dark);
+  color:var(--terra-ink); letter-spacing:-.01em;
 }
 .floor-plan-sub{
   font-size:12px; color:var(--brown-soft); margin-top:2px;
@@ -1200,73 +1200,54 @@ table.tbl tr:hover td{ background:var(--sand); }
 .floor-plan-stats{
   display:flex; gap:14px; font-size:12px; color:var(--brown-soft);
 }
-.floor-plan-stats b{ color:var(--brown); font-size:14px; }
-.floor-plan-corridor{
-  position:relative;
-  background:repeating-linear-gradient(45deg, #F3E4CC 0 8px, #F0DCBF 8px 16px);
-  border-radius:6px;
-  padding:6px 0;
-  margin:8px 0;
-  font-size:10.5px;
-  color:rgba(122,74,54,.55);
-  text-align:center;
-  letter-spacing:.18em;
-  text-transform:uppercase;
+.floor-plan-stats b{ color:var(--brown); font-size:14px; font-family:'Fraunces',serif; }
+
+/* — SVG-план этажа — */
+.floor-plan-canvas{ width:100%; overflow-x:auto; }
+.fp-svg{ width:100%; height:auto; min-width:720px; display:block; }
+.fp-bg{ fill:#FCF8F0; }
+.fp-outer{ fill:none; stroke:var(--brown); stroke-width:3; }
+.fp-outer-inner{ fill:none; stroke:var(--line); stroke-width:1; }
+.fp-corridor{ fill:url(#fpHatch); opacity:.5; }
+.fp-hatch-line{ stroke:#C9B79A; stroke-width:1; }
+
+/* оси-кружки как на чертеже */
+.fp-axis-tick{ stroke:var(--line); stroke-width:1; }
+.fp-axis-bubble{ fill:#fff; stroke:var(--brown-soft); stroke-width:1; }
+.fp-axis-num{ font-family:'Inter',sans-serif; font-size:9px; fill:var(--brown-soft); text-anchor:middle; font-weight:600; }
+
+/* квартиры */
+.apt{ cursor:pointer; }
+.fp-apt-fill{ fill-opacity:.16; transition:fill-opacity .15s; }
+.fp-apt-wall{ fill:none; stroke:var(--brown); stroke-width:1.6; }
+.fp-part{ stroke:var(--brown-soft); stroke-width:1; stroke-dasharray:3 3; opacity:.55; }
+.fp-window{ stroke:#6B92BC; stroke-width:3.4; stroke-linecap:round; }
+.fp-apt-num{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; fill:var(--brown); }
+.fp-apt-area{ font-family:'Inter',sans-serif; font-size:12px; fill:var(--brown-soft); font-weight:600; }
+.fp-apt-kind{ font-family:'Inter',sans-serif; font-size:10px; fill:var(--brown-soft); text-transform:uppercase; letter-spacing:.04em; }
+.fp-apt-view{ font-size:15px; }
+.fp-apt-status{ font-family:'Inter',sans-serif; font-size:8.5px; font-weight:700; fill:#fff; text-anchor:middle; text-transform:uppercase; letter-spacing:.03em; }
+.apt:hover .fp-apt-fill{ fill-opacity:.34; }
+.apt:hover .fp-apt-wall{ stroke:var(--terra); stroke-width:2.4; }
+.apt.sel .fp-apt-fill{ fill-opacity:.3; }
+.apt.sel .fp-apt-wall{ stroke:var(--terra-dark); stroke-width:3; }
+.apt.dim{ opacity:.22; pointer-events:none; }
+
+/* центральное ядро */
+.fp-core-box{ fill:#F1E7D4; stroke:var(--brown); stroke-width:1.6; }
+.fp-core-cell{ fill:#FBF6EC; stroke:var(--brown-soft); stroke-width:1.2; }
+.fp-core-line{ stroke:var(--brown-soft); stroke-width:1; }
+.fp-core-line.strong{ stroke:var(--brown); stroke-width:1.4; }
+.fp-core-cap{ font-family:'Inter',sans-serif; font-size:9px; font-weight:700; fill:var(--brown-soft); letter-spacing:.08em; }
+.fp-core-cap.wide{ letter-spacing:.14em; }
+
+/* легенда под планом */
+.floor-plan-legend{
+  display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:16px; padding-top:14px;
+  border-top:1px dashed var(--line);
 }
-.floor-plan-rows{
-  display:grid; gap:14px;
-}
-.floor-plan-row{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
-  gap:12px;
-}
-.floor-room{
-  position:relative;
-  background:#fff;
-  border:2px solid var(--line);
-  border-radius:13px;
-  padding:14px 12px;
-  cursor:pointer;
-  transition:.18s;
-  overflow:hidden;
-  min-height:104px;
-  display:flex; flex-direction:column; justify-content:space-between;
-}
-.floor-room::before{
-  content:''; position:absolute; inset:0;
-  background:var(--st-color); opacity:.18; pointer-events:none;
-}
-.floor-room::after{
-  content:''; position:absolute; top:0; left:0; right:0; height:5px;
-  background:var(--st-color);
-}
-.floor-room:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 22px rgba(122,74,54,.18);
-  border-color:var(--terra);
-}
-.floor-room.sel{ border-color:var(--terra-dark); box-shadow:0 0 0 3px rgba(194,104,62,.18); }
-.floor-room .fr-num{
-  font-family:'Fraunces',serif; font-size:18px; font-weight:600;
-  color:var(--brown-dark); position:relative; z-index:1;
-}
-.floor-room .fr-area{ font-size:12px; color:var(--brown-soft); position:relative; z-index:1; }
-.floor-room .fr-price{
-  font-size:13px; font-weight:600; color:var(--terra-dark);
-  margin-top:5px; position:relative; z-index:1;
-}
-.floor-room .fr-status{
-  position:relative; z-index:1;
-  font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
-  color:#fff; background:var(--st-color);
-  padding:3px 7px; border-radius:5px; align-self:flex-start;
-  margin-top:6px;
-}
-.floor-room .fr-view-ic{
-  position:absolute; top:9px; right:9px; z-index:1;
-  font-size:14px; opacity:.75;
-}
+.floor-plan-legend .item{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--brown-soft); }
+.floor-plan-legend .dot{ width:12px; height:12px; border-radius:3px; }
 /* Тултип на ховере — наполняется JS-ом */
 .floor-tooltip{
   position:fixed; z-index:200; pointer-events:none;

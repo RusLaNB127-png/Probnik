@@ -1191,18 +1191,18 @@ table.tbl tr:hover td{ background:var(--sand); }
   position:relative;
   background:#fff;
   border-radius:14px;
-  padding:30px 22px;
+  padding:26px 22px 20px;
   box-shadow:inset 0 0 0 1px var(--line), 0 10px 30px rgba(122,74,54,.06);
   overflow:hidden;
 }
 .floor-plan-head{
   display:flex; justify-content:space-between; align-items:flex-end;
-  margin-bottom:18px; padding-bottom:14px;
+  margin-bottom:16px; padding-bottom:14px;
   border-bottom:1px dashed var(--line);
 }
 .floor-plan-title{
   font-family:'Fraunces',serif; font-size:22px; font-weight:600;
-  color:var(--brown-dark);
+  color:var(--terra-ink); letter-spacing:-.01em;
 }
 .floor-plan-sub{
   font-size:12px; color:var(--brown-soft); margin-top:2px;
@@ -1210,73 +1210,54 @@ table.tbl tr:hover td{ background:var(--sand); }
 .floor-plan-stats{
   display:flex; gap:14px; font-size:12px; color:var(--brown-soft);
 }
-.floor-plan-stats b{ color:var(--brown); font-size:14px; }
-.floor-plan-corridor{
-  position:relative;
-  background:repeating-linear-gradient(45deg, #F3E4CC 0 8px, #F0DCBF 8px 16px);
-  border-radius:6px;
-  padding:6px 0;
-  margin:8px 0;
-  font-size:10.5px;
-  color:rgba(122,74,54,.55);
-  text-align:center;
-  letter-spacing:.18em;
-  text-transform:uppercase;
+.floor-plan-stats b{ color:var(--brown); font-size:14px; font-family:'Fraunces',serif; }
+
+/* — SVG-план этажа — */
+.floor-plan-canvas{ width:100%; overflow-x:auto; }
+.fp-svg{ width:100%; height:auto; min-width:720px; display:block; }
+.fp-bg{ fill:#FCF8F0; }
+.fp-outer{ fill:none; stroke:var(--brown); stroke-width:3; }
+.fp-outer-inner{ fill:none; stroke:var(--line); stroke-width:1; }
+.fp-corridor{ fill:url(#fpHatch); opacity:.5; }
+.fp-hatch-line{ stroke:#C9B79A; stroke-width:1; }
+
+/* оси-кружки как на чертеже */
+.fp-axis-tick{ stroke:var(--line); stroke-width:1; }
+.fp-axis-bubble{ fill:#fff; stroke:var(--brown-soft); stroke-width:1; }
+.fp-axis-num{ font-family:'Inter',sans-serif; font-size:9px; fill:var(--brown-soft); text-anchor:middle; font-weight:600; }
+
+/* квартиры */
+.apt{ cursor:pointer; }
+.fp-apt-fill{ fill-opacity:.16; transition:fill-opacity .15s; }
+.fp-apt-wall{ fill:none; stroke:var(--brown); stroke-width:1.6; }
+.fp-part{ stroke:var(--brown-soft); stroke-width:1; stroke-dasharray:3 3; opacity:.55; }
+.fp-window{ stroke:#6B92BC; stroke-width:3.4; stroke-linecap:round; }
+.fp-apt-num{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; fill:var(--brown); }
+.fp-apt-area{ font-family:'Inter',sans-serif; font-size:12px; fill:var(--brown-soft); font-weight:600; }
+.fp-apt-kind{ font-family:'Inter',sans-serif; font-size:10px; fill:var(--brown-soft); text-transform:uppercase; letter-spacing:.04em; }
+.fp-apt-view{ font-size:15px; }
+.fp-apt-status{ font-family:'Inter',sans-serif; font-size:8.5px; font-weight:700; fill:#fff; text-anchor:middle; text-transform:uppercase; letter-spacing:.03em; }
+.apt:hover .fp-apt-fill{ fill-opacity:.34; }
+.apt:hover .fp-apt-wall{ stroke:var(--terra); stroke-width:2.4; }
+.apt.sel .fp-apt-fill{ fill-opacity:.3; }
+.apt.sel .fp-apt-wall{ stroke:var(--terra-dark); stroke-width:3; }
+.apt.dim{ opacity:.22; pointer-events:none; }
+
+/* центральное ядро */
+.fp-core-box{ fill:#F1E7D4; stroke:var(--brown); stroke-width:1.6; }
+.fp-core-cell{ fill:#FBF6EC; stroke:var(--brown-soft); stroke-width:1.2; }
+.fp-core-line{ stroke:var(--brown-soft); stroke-width:1; }
+.fp-core-line.strong{ stroke:var(--brown); stroke-width:1.4; }
+.fp-core-cap{ font-family:'Inter',sans-serif; font-size:9px; font-weight:700; fill:var(--brown-soft); letter-spacing:.08em; }
+.fp-core-cap.wide{ letter-spacing:.14em; }
+
+/* легенда под планом */
+.floor-plan-legend{
+  display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:16px; padding-top:14px;
+  border-top:1px dashed var(--line);
 }
-.floor-plan-rows{
-  display:grid; gap:14px;
-}
-.floor-plan-row{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
-  gap:12px;
-}
-.floor-room{
-  position:relative;
-  background:#fff;
-  border:2px solid var(--line);
-  border-radius:13px;
-  padding:14px 12px;
-  cursor:pointer;
-  transition:.18s;
-  overflow:hidden;
-  min-height:104px;
-  display:flex; flex-direction:column; justify-content:space-between;
-}
-.floor-room::before{
-  content:''; position:absolute; inset:0;
-  background:var(--st-color); opacity:.18; pointer-events:none;
-}
-.floor-room::after{
-  content:''; position:absolute; top:0; left:0; right:0; height:5px;
-  background:var(--st-color);
-}
-.floor-room:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 22px rgba(122,74,54,.18);
-  border-color:var(--terra);
-}
-.floor-room.sel{ border-color:var(--terra-dark); box-shadow:0 0 0 3px rgba(194,104,62,.18); }
-.floor-room .fr-num{
-  font-family:'Fraunces',serif; font-size:18px; font-weight:600;
-  color:var(--brown-dark); position:relative; z-index:1;
-}
-.floor-room .fr-area{ font-size:12px; color:var(--brown-soft); position:relative; z-index:1; }
-.floor-room .fr-price{
-  font-size:13px; font-weight:600; color:var(--terra-dark);
-  margin-top:5px; position:relative; z-index:1;
-}
-.floor-room .fr-status{
-  position:relative; z-index:1;
-  font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
-  color:#fff; background:var(--st-color);
-  padding:3px 7px; border-radius:5px; align-self:flex-start;
-  margin-top:6px;
-}
-.floor-room .fr-view-ic{
-  position:absolute; top:9px; right:9px; z-index:1;
-  font-size:14px; opacity:.75;
-}
+.floor-plan-legend .item{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--brown-soft); }
+.floor-plan-legend .dot{ width:12px; height:12px; border-radius:3px; }
 /* Тултип на ховере — наполняется JS-ом */
 .floor-tooltip{
   position:fixed; z-index:200; pointer-events:none;
@@ -3643,35 +3624,12 @@ function renderFloorView(){
   const sold    = rowUnits.filter(u=>u.status==='sold' || u.status==='contract').length;
   const totalSum= rowUnits.reduce((s,u)=>s+u.total, 0);
 
-  // Разделим помещения на две полосы (имитация коридора)
-  const half = Math.ceil(rowUnits.length/2);
-  const top  = rowUnits.slice(0, half);
-  const bot  = rowUnits.slice(half);
-
-  const renderRoom = (u)=>{
-    const st = STATUSES[u.status];
-    const cat = VIEW_CATEGORIES.find(v=>v.id===(u.view && u.view.category));
-    const visible = passFilter(u);
-    return `<div class="floor-room ${u.id===state.selectedUnitId?'sel':''} ${visible?'':'dim'}"
-                 style="--st-color:${st.color}" data-id="${u.id}">
-      ${cat ? `<span class="fr-view-ic" title="${cat.label}">${cat.icon}</span>` : ''}
-      <div>
-        <div class="fr-num">${u.displayNum}</div>
-        <div class="fr-area">${u.area} м² · ${u.kind}</div>
-      </div>
-      <div>
-        <div class="fr-price">${fmtMoney(u.total)}</div>
-        <div class="fr-status" style="background:${st.color}">${st.label}</div>
-      </div>
-    </div>`;
-  };
-
   host.innerHTML = `
     <div class="floor-plan">
       <div class="floor-plan-head">
         <div>
           <div class="floor-plan-title">${corp} · ${floor} этаж</div>
-          <div class="floor-plan-sub">Интерактивный план — наведите на помещение для деталей, кликните для открытия карточки</div>
+          <div class="floor-plan-sub">Архитектурный план этажа — наведите на квартиру для деталей, кликните, чтобы открыть карточку</div>
         </div>
         <div class="floor-plan-stats">
           <div>Всего <b>${total}</b></div>
@@ -3680,21 +3638,178 @@ function renderFloorView(){
           <div>Сумма <b>${fmtMoney(totalSum)}</b></div>
         </div>
       </div>
-      <div class="floor-plan-rows">
-        <div class="floor-plan-row">${top.map(renderRoom).join('')}</div>
-        <div class="floor-plan-corridor">Лифтовый холл · коридор</div>
-        <div class="floor-plan-row">${bot.map(renderRoom).join('')}</div>
+      <div class="floor-plan-canvas">${buildFloorPlanSVG(rowUnits)}</div>
+      <div class="floor-plan-legend">
+        ${STATUS_ORDER.map(s=>`<span class="item"><span class="dot" style="background:${STATUSES[s].color}"></span>${STATUSES[s].label}</span>`).join('')}
       </div>
     </div>
   `;
 
-  // Клик — открыть карточку
-  host.querySelectorAll('.floor-room').forEach(r=>{
-    r.onclick = ()=>openPanel(r.dataset.id);
-    r.addEventListener('mouseenter', e=>showFloorTooltip(e, getUnit(r.dataset.id)));
-    r.addEventListener('mousemove',  moveFloorTooltip);
-    r.addEventListener('mouseleave', hideFloorTooltip);
+  // Клик — открыть карточку, ховер — тултип
+  host.querySelectorAll('.apt').forEach(g=>{
+    if(g.classList.contains('dim')) return;
+    g.addEventListener('click', ()=>openPanel(g.dataset.id));
+    g.addEventListener('mouseenter', e=>showFloorTooltip(e, getUnit(g.dataset.id)));
+    g.addEventListener('mousemove',  moveFloorTooltip);
+    g.addEventListener('mouseleave', hideFloorTooltip);
   });
+}
+
+/* ============================================================
+   ГЕНЕРАТОР СХЕМАТИЧЕСКОГО ПЛАНА ЭТАЖА (SVG)
+   Планировка мирового «дома-пластины»: центральное ядро
+   (лестница + лифт + коридор), квартиры двумя полосами по бокам.
+   ============================================================ */
+function buildFloorPlanSVG(rowUnits){
+  const W = 1240, H = 600;
+  // Наружный контур здания
+  const bx0 = 16, by0 = 16, bx1 = W-16, by1 = H-16;
+  // Внутренняя рабочая зона (после наружных стен)
+  const ix0 = bx0+16, iy0 = by0+16, ix1 = bx1-16, iy1 = by1-16;
+  // Центральное ядро
+  const coreW = 200, coreX0 = W/2 - coreW/2, coreX1 = W/2 + coreW/2;
+  const gap = 12;
+  const leftZ  = [ix0, coreX0 - gap];
+  const rightZ = [coreX1 + gap, ix1];
+  const midY = (iy0+iy1)/2, corr = 6;
+  const topB = [iy0, midY - corr];
+  const botB = [midY + corr, iy1];
+
+  // Раскладка квартир: верхняя и нижняя полосы, слева/справа от ядра
+  const n = rowUnits.length;
+  const topUnits = rowUnits.slice(0, Math.ceil(n/2));
+  const botUnits = rowUnits.slice(Math.ceil(n/2));
+  const splitZone = (arr)=>{
+    const l = arr.slice(0, Math.ceil(arr.length/2));
+    const r = arr.slice(Math.ceil(arr.length/2));
+    return [l, r];
+  };
+  const [topL, topR] = splitZone(topUnits);
+  const [botL, botR] = splitZone(botUnits);
+
+  // Раскладка ячеек в зоне
+  const cellsInZone = (arr, zone, band, outerSide)=>{
+    if(!arr.length) return [];
+    const cw = (zone[1]-zone[0]) / arr.length;
+    return arr.map((u,i)=>({
+      u, x: zone[0] + i*cw, y: band[0], w: cw, h: band[1]-band[0], outerSide
+    }));
+  };
+  const cells = [
+    ...cellsInZone(topL, leftZ,  topB, 'top'),
+    ...cellsInZone(topR, rightZ, topB, 'top'),
+    ...cellsInZone(botL, leftZ,  botB, 'bottom'),
+    ...cellsInZone(botR, rightZ, botB, 'bottom'),
+  ];
+
+  const apts = cells.map(c=>aptSVG(c)).join('');
+
+  // Оси-«кружки» сверху (как на чертеже) — по границам ячеек верхней полосы
+  const boundXs = new Set([ix0, coreX0, coreX1, ix1]);
+  cells.filter(c=>c.outerSide==='top').forEach(c=>{ boundXs.add(c.x); boundXs.add(c.x+c.w); });
+  const axisMarks = [...boundXs].sort((a,b)=>a-b).map((x,i)=>`
+    <line x1="${x.toFixed(1)}" y1="${by0-14}" x2="${x.toFixed(1)}" y2="${by0}" class="fp-axis-tick"/>
+    <circle cx="${x.toFixed(1)}" cy="${by0-22}" r="9" class="fp-axis-bubble"/>
+    <text x="${x.toFixed(1)}" y="${by0-18.5}" class="fp-axis-num">${i+1}</text>
+  `).join('');
+
+  return `
+  <svg class="fp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="План этажа">
+    <defs>
+      <pattern id="fpHatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="7" class="fp-hatch-line"/>
+      </pattern>
+    </defs>
+
+    <!-- фон-подложка -->
+    <rect x="0" y="0" width="${W}" height="${H}" class="fp-bg"/>
+
+    <!-- оси-кружки -->
+    ${axisMarks}
+
+    <!-- наружные стены (двойной контур) -->
+    <rect x="${bx0}" y="${by0}" width="${bx1-bx0}" height="${by1-by0}" rx="8" class="fp-outer"/>
+    <rect x="${bx0+6}" y="${by0+6}" width="${bx1-bx0-12}" height="${by1-by0-12}" rx="5" class="fp-outer-inner"/>
+
+    <!-- коридор (тонкая полоса между полосами) -->
+    <rect x="${ix0}" y="${midY-corr}" width="${ix1-ix0}" height="${corr*2}" class="fp-corridor"/>
+
+    <!-- квартиры -->
+    ${apts}
+
+    <!-- центральное ядро -->
+    ${coreSVG(coreX0, iy0, coreW, iy1-iy0)}
+  </svg>`;
+}
+
+/* Одна квартира */
+function aptSVG(c){
+  const { u, x, y, w, h, outerSide } = c;
+  const st  = STATUSES[u.status];
+  const cat = VIEW_CATEGORIES.find(v=>v.id===(u.view && u.view.category));
+  const sel = u.id===state.selectedUnitId;
+  const visible = passFilter(u);
+  const g = 4;                                   // внутренний зазор между квартирами
+  const rx = x+g, ry = y+g, rw = w-g*2, rh = h-g*2;
+  const pad = 13;
+  // Окна на наружной стене
+  const winY = outerSide==='top' ? ry+1.5 : ry+rh-1.5;
+  const win = `<line x1="${rx+14}" y1="${winY}" x2="${rx+rw-14}" y2="${winY}" class="fp-window"/>`;
+  // Внутренняя перегородка (жилая / кухня)
+  const px = rx + rw*0.42;
+  const part = `<line x1="${px.toFixed(1)}" y1="${ry+pad}" x2="${px.toFixed(1)}" y2="${ry+rh-pad}" class="fp-part"/>`;
+  // Статус-плашка
+  const label = st.label;
+  const plW = Math.min(rw-pad*2, label.length*6.0 + 14);
+  const plX = rx+pad, plY = ry+rh-pad-15;
+  const statusPill = `
+    <rect x="${plX}" y="${plY}" width="${plW}" height="15" rx="4" fill="${st.color}"/>
+    <text x="${plX+plW/2}" y="${plY+10.5}" class="fp-apt-status">${escapeHtml(label)}</text>`;
+  // Иконка вида
+  const viewIc = cat ? `<text x="${rx+rw-pad}" y="${ry+pad+11}" class="fp-apt-view" text-anchor="end">${cat.icon}</text>` : '';
+
+  return `
+  <g class="apt ${sel?'sel':''} ${visible?'':'dim'}" data-id="${u.id}" style="--st:${st.color}">
+    <rect class="fp-apt-fill" x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="4" fill="${st.color}"/>
+    <rect class="fp-apt-wall" x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="4"/>
+    ${part}
+    ${win}
+    <text x="${rx+pad}" y="${ry+pad+15}" class="fp-apt-num">${escapeHtml(u.displayNum)}</text>
+    <text x="${rx+pad}" y="${ry+pad+32}" class="fp-apt-area">${u.area} м²</text>
+    <text x="${rx+pad}" y="${ry+pad+47}" class="fp-apt-kind">${escapeHtml(u.kind||'')}</text>
+    ${viewIc}
+    ${statusPill}
+  </g>`;
+}
+
+/* Центральное ядро: лестница + лифт + коридор */
+function coreSVG(x, y, w, h){
+  const cx = x + w/2;
+  // Лестница — верхняя часть
+  const stTop = y+18, stH = 132, stX = x+22, stW = w-44;
+  let steps = '';
+  const nSteps = 9, sh = stH/nSteps;
+  for(let i=1;i<nSteps;i++){
+    steps += `<line x1="${stX}" y1="${(stTop+i*sh).toFixed(1)}" x2="${stX+stW}" y2="${(stTop+i*sh).toFixed(1)}" class="fp-core-line"/>`;
+  }
+  // Лифт — под лестницей
+  const elY = stTop+stH+22, elS = 74, elX = cx-elS/2;
+  const elevator = `
+    <rect x="${elX}" y="${elY}" width="${elS}" height="${elS}" rx="5" class="fp-core-cell"/>
+    <line x1="${elX}" y1="${elY}" x2="${elX+elS}" y2="${elY+elS}" class="fp-core-line"/>
+    <line x1="${elX+elS}" y1="${elY}" x2="${elX}" y2="${elY+elS}" class="fp-core-line"/>
+    <text x="${cx}" y="${elY+elS+16}" class="fp-core-cap" text-anchor="middle">ЛИФТ</text>`;
+
+  return `
+  <g class="fp-core">
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="fp-core-box"/>
+    <rect x="${stX}" y="${stTop}" width="${stW}" height="${stH}" rx="4" class="fp-core-cell"/>
+    ${steps}
+    <line x1="${x+w/2}" y1="${stTop}" x2="${x+w/2}" y2="${stTop+stH}" class="fp-core-line strong"/>
+    <text x="${x+w/2}" y="${stTop-5}" class="fp-core-cap" text-anchor="middle">ЛЕСТНИЦА</text>
+    ${elevator}
+    <text x="${x+w/2}" y="${y+h-16}" class="fp-core-cap wide" text-anchor="middle">КОРИДОР · ХОЛЛ</text>
+  </g>`;
 }
 
 let _ftEl;
