@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Морской бой — онлайн на двоих</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1d33; --panel:#122a47; --panel2:#0e2340;
+    --line:#2b4a73; --water:#16345c; --water-h:#1d4275;
+    --ship:#7fa8d9; --ship-line:#a9c8ec;
+    --accent:#ffb454; --accent2:#ff7a45;
+    --ok:#4cd97b; --bad:#ff5d5d;
+    --text:#e8f1fb; --muted:#8fa9c7;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Segoe UI', system-ui, sans-serif;
+    background:radial-gradient(1200px 800px at 70% -10%, #16385f 0%, var(--bg) 55%);
+    color:var(--text); min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px;
+  }
+  h1{font-size:28px; letter-spacing:2px; margin-bottom:4px;}
+  h1 .wave{color:var(--accent);}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:24px;}
+
+  .screen{display:none; width:100%; max-width:960px; flex-direction:column; align-items:center;}
+  .screen.active{display:flex;}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:28px 32px; width:100%; max-width:420px;
+    display:flex; flex-direction:column; gap:14px; align-items:stretch;
+    box-shadow:0 10px 40px rgba(0,0,0,.35);
+  }
+  .card h2{font-size:18px; text-align:center;}
+  button{
+    font:inherit; font-weight:600; cursor:pointer; border:none; border-radius:10px;
+    padding:12px 18px; background:var(--accent); color:#2b1a05;
+    transition:transform .08s, filter .15s;
+  }
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:scale(.97);}
+  button.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--line);}
+  button:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+  input[type=text]{
+    font:inherit; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); text-align:center;
+    font-size:20px; letter-spacing:6px; text-transform:uppercase; outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  .divider{display:flex; align-items:center; gap:12px; color:var(--muted); font-size:13px;}
+  .divider::before,.divider::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .code-box{
+    font-size:34px; letter-spacing:10px; text-align:center; font-weight:700;
+    background:var(--panel2); border:1px dashed var(--accent); border-radius:12px;
+    padding:16px; color:var(--accent); user-select:all;
+  }
+  .hint{color:var(--muted); font-size:13px; text-align:center; line-height:1.5;}
+  .spinner{
+    width:26px; height:26px; margin:0 auto;
+    border:3px solid var(--line); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  #status{
+    font-size:17px; font-weight:600; text-align:center; margin-bottom:18px;
+    padding:10px 22px; border-radius:12px; background:var(--panel); border:1px solid var(--line);
+    min-height:44px; display:flex; align-items:center; justify-content:center;
+  }
+  #status.my-turn{border-color:var(--ok); color:var(--ok);}
+  #status.enemy-turn{border-color:var(--muted); color:var(--muted);}
+
+  .boards{display:flex; gap:48px; flex-wrap:wrap; justify-content:center;}
+  .board-wrap{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .board-title{font-size:15px; font-weight:600; color:var(--muted);}
+  .board-title b{color:var(--text);}
+
+  .grid-outer{display:grid; grid-template-columns:24px auto; grid-template-rows:24px auto;}
+  .col-labels{grid-column:2; display:grid; grid-template-columns:repeat(10,34px);}
+  .row-labels{grid-row:2; display:grid; grid-template-rows:repeat(10,34px);}
+  .col-labels span,.row-labels span{
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--muted);
+  }
+  .grid{
+    grid-column:2; grid-row:2;
+    display:grid; grid-template-columns:repeat(10,34px); grid-template-rows:repeat(10,34px);
+    border:2px solid var(--line); border-radius:6px; overflow:hidden;
+  }
+  .cell{
+    background:var(--water); border:1px solid rgba(43,74,115,.55);
+    position:relative; display:flex; align-items:center; justify-content:center;
+    font-size:18px; user-select:none;
+  }
+  .grid.clickable .cell:not(.shot):hover{background:var(--water-h); cursor:crosshair;}
+  .cell.ship{background:var(--ship); border-color:var(--ship-line);}
+  .cell.miss::after{
+    content:''; width:8px; height:8px; border-radius:50%; background:var(--muted);
+  }
+  .cell.hit{background:#7a2d2d;}
+  .cell.hit::after,.cell.hit::before{
+    content:''; position:absolute; width:70%; height:3px; background:var(--bad); border-radius:2px;
+  }
+  .cell.hit::after{transform:rotate(45deg);}
+  .cell.hit::before{transform:rotate(-45deg);}
+  .cell.sunk{background:#5c1f1f;}
+  .cell.last-shot{outline:2px solid var(--accent); outline-offset:-2px; z-index:1;}
+
+  .fleet-info{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; min-height:22px;}
+  .fleet-ship{display:flex; gap:2px;}
+  .fleet-ship i{width:12px; height:12px; background:var(--ship); border-radius:2px; display:block;}
+  .fleet-ship.dead i{background:#5c1f1f;}
+
+  .placement-controls,.battle-controls{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; justify-content:center;}
+
+  #overlay{
+    position:fixed; inset:0; background:rgba(5,12,22,.82); display:none;
+    align-items:center; justify-content:center; z-index:50;
+  }
+  #overlay.active{display:flex;}
+  #overlay .card{max-width:380px; text-align:center; gap:18px;}
+  #overlay h2{font-size:26px;}
+  #overlay h2.win{color:var(--ok);}
+  #overlay h2.lose{color:var(--bad);}
+  .rematch-note{color:var(--muted); font-size:13px; min-height:18px;}
+
+  @media (max-width:820px){
+    .col-labels{grid-template-columns:repeat(10,30px);}
+    .row-labels{grid-template-rows:repeat(10,30px);}
+    .grid{grid-template-columns:repeat(10,30px); grid-template-rows:repeat(10,30px);}
+    .boards{gap:28px;}
+  }
+</style>
+</head>
+<body>
+
+<h1>⚓ МОРСКОЙ БОЙ <span class="wave">~</span></h1>
+<div class="sub">онлайн-игра на двоих • поле 10×10 • попал — ходи ещё</div>
+
+<!-- ===== Меню ===== -->
+<div class="screen active" id="screen-menu">
+  <div class="card">
+    <h2>Играть с другом по сети</h2>
+    <button id="btn-create">Создать игру</button>
+    <div class="divider">или</div>
+    <input type="text" id="join-code" maxlength="4" placeholder="КОД" autocomplete="off">
+    <button class="secondary" id="btn-join">Присоединиться по коду</button>
+    <div class="hint">Один из вас создаёт игру и говорит другу код из 4 символов. Второй вводит код — и бой начинается.</div>
+  </div>
+</div>
+
+<!-- ===== Ожидание соперника ===== -->
+<div class="screen" id="screen-wait">
+  <div class="card">
+    <h2>Код вашей игры</h2>
+    <div class="code-box" id="my-code">····</div>
+    <div class="spinner"></div>
+    <div class="hint">Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка кораблей.</div>
+    <button class="secondary" id="btn-cancel-wait">Отмена</button>
+  </div>
+</div>
+
+<!-- ===== Подключение ===== -->
+<div class="screen" id="screen-connecting">
+  <div class="card">
+    <h2>Подключение…</h2>
+    <div class="spinner"></div>
+    <div class="hint" id="connecting-hint">Ищем игру…</div>
+    <button class="secondary" id="btn-cancel-connect">Отмена</button>
+  </div>
+</div>
+
+<!-- ===== Игра ===== -->
+<div class="screen" id="screen-game">
+  <div id="status">Расставьте корабли</div>
+  <div class="boards">
+    <div class="board-wrap">
+      <div class="board-title">Ваш флот — <b id="my-name">вы</b></div>
+      <div class="grid-outer">
+        <div class="col-labels" id="my-cols"></div>
+        <div class="row-labels" id="my-rows"></div>
+        <div class="grid" id="my-grid"></div>
+      </div>
+      <div class="fleet-info" id="my-fleet"></div>
+    </div>
+    <div class="board-wrap" id="enemy-wrap" style="display:none;">
+      <div class="board-title">Флот противника</div>
+      <div class="grid-outer">
+        <div class="col-labels" id="enemy-cols"></div>
+        <div class="row-labels" id="enemy-rows"></div>
+        <div class="grid" id="enemy-grid"></div>
+      </div>
+      <div class="fleet-info" id="enemy-fleet"></div>
+    </div>
+  </div>
+  <div class="placement-controls" id="placement-controls">
+    <button class="secondary" id="btn-reroll">🎲 Расставить заново</button>
+    <button id="btn-ready">⚔️ Готов к бою!</button>
+  </div>
+</div>
+
+<!-- ===== Оверлей конца игры / ошибок ===== -->
+<div id="overlay">
+  <div class="card">
+    <h2 id="overlay-title"></h2>
+    <div class="hint" id="overlay-text"></div>
+    <button id="btn-rematch" style="display:none;">Ещё раз!</button>
+    <div class="rematch-note" id="rematch-note"></div>
+    <button class="secondary" id="btn-to-menu">В меню</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ================= Константы ================= */
+const N = 10;
+const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
+const COLS = ['А','Б','В','Г','Д','Е','Ж','З','И','К'];
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const ID_PREFIX = 'mboy-2026-';
+
+/* ================= Состояние ================= */
+let peer = null, conn = null, isHost = false;
+let phase = 'menu';           // menu | wait | connecting | placement | battle | over
+let myBoard = null;           // {grid, ships:[{cells:[[x,y]],hits:Set}]}
+let myShots = {};             // "x,y" -> 'miss'|'hit'|'sunk'
+let enemyShots = {};          // выстрелы соперника по моему полю
+let myTurn = false;
+let iAmReady = false, enemyReady = false;
+let iWantRematch = false, enemyWantsRematch = false;
+let enemyShipsLeft = SHIP_SIZES.length;
+let myLastShotCell = null, enemyLastShotCell = null;
+
+/* ================= Утилиты ================= */
+const $ = id => document.getElementById(id);
+const key = (x,y) => x + ',' + y;
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + name).classList.add('active');
+}
+function setStatus(text, cls){
+  const el = $('status');
+  el.textContent = text;
+  el.className = cls || '';
+}
+function makeCode(){
+  let c = '';
+  for(let i = 0; i < 4; i++) c += CODE_ALPHABET[Math.floor(Math.random()*CODE_ALPHABET.length)];
+  return c;
+}
+
+/* ================= Генерация расстановки ================= */
+function genBoard(){
+  const grid = Array.from({length:N}, () => Array(N).fill(0));
+  const ships = [];
+  for(const size of SHIP_SIZES){
+    let placed = false;
+    for(let tries = 0; tries < 500 && !placed; tries++){
+      const horiz = Math.random() < 0.5;
+      const x = Math.floor(Math.random() * (horiz ? N - size + 1 : N));
+      const y = Math.floor(Math.random() * (horiz ? N : N - size + 1));
+      const cells = [];
+      let ok = true;
+      for(let i = 0; i < size && ok; i++){
+        const cx = horiz ? x + i : x, cy = horiz ? y : y + i;
+        cells.push([cx, cy]);
+        for(let dx = -1; dx <= 1; dx++)
+          for(let dy = -1; dy <= 1; dy++){
+            const nx = cx + dx, ny = cy + dy;
+            if(nx >= 0 && nx < N && ny >= 0 && ny < N && grid[ny][nx]) ok = false;
+          }
+      }
+      if(ok){
+        const id = ships.length + 1;
+        cells.forEach(([cx,cy]) => grid[cy][cx] = id);
+        ships.push({cells, hits:new Set()});
+        placed = true;
+      }
+    }
+    if(!placed) return genBoard(); // редкий тупик — пробуем целиком заново
+  }
+  return {grid, ships};
+}
+
+/* ================= Отрисовка ================= */
+function buildLabels(colsId, rowsId){
+  $(colsId).innerHTML = COLS.map(c => `<span>${c}</span>`).join('');
+  $(rowsId).innerHTML = Array.from({length:N}, (_,i) => `<span>${i+1}</span>`).join('');
+}
+function buildGrid(gridId){
+  const g = $(gridId);
+  g.innerHTML = '';
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const c = document.createElement('div');
+      c.className = 'cell';
+      c.dataset.x = x; c.dataset.y = y;
+      g.appendChild(c);
+    }
+}
+function cellEl(gridId, x, y){
+  return $(gridId).children[y * N + x];
+}
+function renderMyBoard(){
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      const shot = enemyShots[key(x,y)];
+      if(myBoard.grid[y][x]) el.classList.add('ship');
+      if(shot === 'miss') el.classList.add('miss');
+      if(shot === 'hit') el.classList.add('hit');
+      if(shot === 'sunk') el.classList.add('hit','sunk');
+      if(enemyLastShotCell === key(x,y)) el.classList.add('last-shot');
+    }
+}
+function renderEnemyBoard(){
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('enemy-grid', x, y);
+      el.className = 'cell';
+      const shot = myShots[key(x,y)];
+      if(shot) el.classList.add('shot');
+      if(shot === 'miss') el.classList.add('miss');
+      if(shot === 'hit') el.classList.add('hit');
+      if(shot === 'sunk') el.classList.add('hit','sunk');
+      if(myLastShotCell === key(x,y)) el.classList.add('last-shot');
+    }
+  $('enemy-grid').classList.toggle('clickable', phase === 'battle' && myTurn);
+}
+function renderFleets(){
+  const myAlive = myBoard.ships.map(s => s.hits.size < s.cells.length);
+  $('my-fleet').innerHTML = SHIP_SIZES.map((size, i) =>
+    `<span class="fleet-ship ${myAlive[i] ? '' : 'dead'}">${'<i></i>'.repeat(size)}</span>`).join('');
+  // у противника знаем только число оставшихся, показываем счёт
+  $('enemy-fleet').innerHTML =
+    `<span class="hint">кораблей осталось: <b style="color:var(--text)">${enemyShipsLeft}</b> из ${SHIP_SIZES.length}</span>`;
+}
+
+/* ================= Сетевое взаимодействие ================= */
+function send(msg){
+  if(conn && conn.open) conn.send(msg);
+}
+function cleanupPeer(){
+  if(conn){ conn.close(); conn = null; }
+  if(peer){ peer.destroy(); peer = null; }
+}
+function fatal(title, text){
+  cleanupPeer();
+  $('overlay-title').textContent = title;
+  $('overlay-title').className = 'lose';
+  $('overlay-text').textContent = text;
+  $('btn-rematch').style.display = 'none';
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+
+function hostGame(){
+  isHost = true;
+  const code = makeCode();
+  peer = new Peer(ID_PREFIX + code.toLowerCase(), {debug:1});
+  $('my-code').textContent = code;
+  showScreen('wait');
+  peer.on('open', () => { /* ждём подключения */ });
+  peer.on('error', err => {
+    if(err.type === 'unavailable-id'){ cleanupPeer(); hostGame(); } // код занят — новый
+    else fatal('Ошибка сети', 'Не удалось создать игру: ' + err.type + '. Проверьте интернет и попробуйте снова.');
+  });
+  peer.on('connection', c => {
+    if(conn){ c.close(); return; } // уже играем
+    conn = c;
+    wireConnection();
+  });
+}
+
+function joinGame(code){
+  isHost = false;
+  peer = new Peer({debug:1});
+  showScreen('connecting');
+  $('connecting-hint').textContent = 'Ищем игру ' + code + '…';
+  peer.on('open', () => {
+    conn = peer.connect(ID_PREFIX + code.toLowerCase(), {reliable:true});
+    wireConnection();
+    setTimeout(() => {
+      if(phase === 'connecting' && (!conn || !conn.open))
+        fatal('Игра не найдена', 'Проверьте код — возможно, друг ещё не создал игру или уже начал другую.');
+    }, 12000);
+  });
+  peer.on('error', err => {
+    if(err.type === 'peer-unavailable')
+      fatal('Игра не найдена', 'Игры с кодом ' + code + ' нет. Проверьте код и попробуйте ещё раз.');
+    else fatal('Ошибка сети', 'Не удалось подключиться: ' + err.type + '.');
+  });
+}
+
+function wireConnection(){
+  conn.on('open', startPlacement);
+  conn.on('data', onMessage);
+  conn.on('close', () => {
+    if(phase !== 'menu' && phase !== 'over')
+      fatal('Соперник отключился', 'Соединение разорвано. Создайте новую игру.');
+  });
+}
+
+/* ================= Фазы игры ================= */
+function startPlacement(){
+  phase = 'placement';
+  iAmReady = enemyReady = false;
+  iWantRematch = enemyWantsRematch = false;
+  myShots = {}; enemyShots = {};
+  myLastShotCell = enemyLastShotCell = null;
+  enemyShipsLeft = SHIP_SIZES.length;
+  myBoard = genBoard();
+  $('overlay').classList.remove('active');
+  $('enemy-wrap').style.display = 'none';
+  $('placement-controls').style.display = 'flex';
+  $('btn-reroll').disabled = false;
+  $('btn-ready').disabled = false;
+  showScreen('game');
+  setStatus('Расставьте корабли и нажмите «Готов к бою!»');
+  renderMyBoard();
+  renderFleets();
+}
+
+function tryStartBattle(){
+  if(!(iAmReady && enemyReady)) return;
+  if(isHost){
+    const hostFirst = Math.random() < 0.5;
+    send({type:'start', youFirst:!hostFirst});
+    beginBattle(hostFirst);
+  }
+}
+
+function beginBattle(iGoFirst){
+  phase = 'battle';
+  myTurn = iGoFirst;
+  $('placement-controls').style.display = 'none';
+  $('enemy-wrap').style.display = '';
+  renderMyBoard();
+  renderEnemyBoard();
+  renderFleets();
+  updateTurnStatus();
+}
+
+function updateTurnStatus(){
+  if(phase !== 'battle') return;
+  if(myTurn) setStatus('🎯 Ваш ход — стреляйте по полю противника!', 'my-turn');
+  else setStatus('⏳ Ход противника…', 'enemy-turn');
+}
+
+/* ---- стрельба (я стреляю) ---- */
+function shoot(x, y){
+  if(phase !== 'battle' || !myTurn || myShots[key(x,y)]) return;
+  myTurn = false; // блокируем до ответа
+  send({type:'shot', x, y});
+}
+function onShotResult(m){
+  const k = key(m.x, m.y);
+  myShots[k] = m.result;
+  myLastShotCell = k;
+  if(m.result === 'sunk'){
+    m.shipCells.forEach(([cx,cy]) => { myShots[key(cx,cy)] = 'sunk'; });
+    // обводка вокруг потопленного — там кораблей быть не может
+    m.shipCells.forEach(([cx,cy]) => {
+      for(let dx = -1; dx <= 1; dx++)
+        for(let dy = -1; dy <= 1; dy++){
+          const nx = cx + dx, ny = cy + dy;
+          if(nx >= 0 && nx < N && ny >= 0 && ny < N && !myShots[key(nx,ny)])
+            myShots[key(nx,ny)] = 'miss';
+        }
+    });
+    enemyShipsLeft--;
+  }
+  if(m.gameOver){
+    renderEnemyBoard(); renderFleets();
+    endGame(true);
+    return;
+  }
+  myTurn = (m.result !== 'miss'); // попал — ходишь ещё
+  renderEnemyBoard();
+  renderFleets();
+  updateTurnStatus();
+}
+
+/* ---- приём выстрела (стреляют по мне) ---- */
+function onIncomingShot(m){
+  const {x, y} = m;
+  const id = myBoard.grid[y][x];
+  enemyLastShotCell = key(x,y);
+  let result = 'miss', shipCells = null, gameOver = false;
+  if(id){
+    const ship = myBoard.ships[id - 1];
+    ship.hits.add(key(x,y));
+    if(ship.hits.size === ship.cells.length){
+      result = 'sunk';
+      shipCells = ship.cells;
+      ship.cells.forEach(([cx,cy]) => { enemyShots[key(cx,cy)] = 'sunk'; });
+      gameOver = myBoard.ships.every(s => s.hits.size === s.cells.length);
+    } else {
+      result = 'hit';
+      enemyShots[key(x,y)] = 'hit';
+    }
+  } else {
+    enemyShots[key(x,y)] = 'miss';
+  }
+  send({type:'result', x, y, result, shipCells, gameOver});
+  if(gameOver){
+    renderMyBoard(); renderFleets();
+    endGame(false);
+    return;
+  }
+  myTurn = (result === 'miss');
+  renderMyBoard();
+  renderFleets();
+  updateTurnStatus();
+}
+
+/* ---- конец игры ---- */
+function endGame(iWon){
+  phase = 'over';
+  $('overlay-title').textContent = iWon ? '🏆 Победа!' : '💥 Поражение';
+  $('overlay-title').className = iWon ? 'win' : 'lose';
+  $('overlay-text').textContent = iWon
+    ? 'Весь флот противника отправлен на дно!'
+    : 'Ваш флот потоплен. В следующий раз повезёт!';
+  $('btn-rematch').style.display = '';
+  $('btn-rematch').disabled = false;
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+
+/* ================= Обработка сообщений ================= */
+function onMessage(m){
+  if(!m || typeof m !== 'object') return;
+  switch(m.type){
+    case 'ready':
+      enemyReady = true;
+      if(phase === 'placement' && !iAmReady)
+        setStatus('Соперник готов! Жмите «Готов к бою!»');
+      tryStartBattle();
+      break;
+    case 'start':
+      if(!isHost) beginBattle(m.youFirst);
+      break;
+    case 'shot':
+      if(phase === 'battle' && !myTurn) onIncomingShot(m);
+      break;
+    case 'result':
+      if(phase === 'battle') onShotResult(m);
+      break;
+    case 'rematch':
+      enemyWantsRematch = true;
+      if(iWantRematch) startPlacement();
+      else $('rematch-note').textContent = 'Соперник хочет реванш!';
+      break;
+  }
+}
+
+/* ================= UI: события ================= */
+buildLabels('my-cols','my-rows');
+buildLabels('enemy-cols','enemy-rows');
+buildGrid('my-grid');
+buildGrid('enemy-grid');
+
+$('btn-create').onclick = hostGame;
+
+$('btn-join').onclick = () => {
+  const code = $('join-code').value.trim().toUpperCase();
+  if(code.length !== 4){ $('join-code').focus(); return; }
+  joinGame(code);
+};
+$('join-code').addEventListener('keydown', e => { if(e.key === 'Enter') $('btn-join').click(); });
+
+$('btn-cancel-wait').onclick = $('btn-cancel-connect').onclick = () => {
+  cleanupPeer();
+  phase = 'menu';
+  showScreen('menu');
+};
+
+$('btn-reroll').onclick = () => {
+  if(iAmReady) return;
+  myBoard = genBoard();
+  renderMyBoard();
+};
+
+$('btn-ready').onclick = () => {
+  if(iAmReady) return;
+  iAmReady = true;
+  $('btn-ready').disabled = true;
+  $('btn-reroll').disabled = true;
+  send({type:'ready'});
+  setStatus(enemyReady ? 'Начинаем!' : 'Ждём, пока соперник расставит корабли…');
+  tryStartBattle();
+};
+
+$('enemy-grid').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if(cell) shoot(+cell.dataset.x, +cell.dataset.y);
+});
+
+$('btn-rematch').onclick = () => {
+  iWantRematch = true;
+  $('btn-rematch').disabled = true;
+  send({type:'rematch'});
+  if(enemyWantsRematch) startPlacement();
+  else $('rematch-note').textContent = 'Ждём согласия соперника…';
+};
+
+$('btn-to-menu').onclick = () => {
+  cleanupPeer();
+  phase = 'menu';
+  $('overlay').classList.remove('active');
+  showScreen('menu');
+};
+</script>
+</body>
+</html>
