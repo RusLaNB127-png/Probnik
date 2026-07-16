@@ -118,11 +118,14 @@
 
   .placement-controls,.battle-controls{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; justify-content:center;}
 
-  #overlay{
+  #overlay,#pass-screen{
     position:fixed; inset:0; background:rgba(5,12,22,.82); display:none;
     align-items:center; justify-content:center; z-index:50;
   }
-  #overlay.active{display:flex;}
+  #pass-screen{background:var(--bg); z-index:60;}
+  #pass-screen .card{max-width:420px; text-align:center; gap:18px;}
+  #pass-screen h2{font-size:22px; color:var(--accent);}
+  #overlay.active,#pass-screen.active{display:flex;}
   #overlay .card{max-width:380px; text-align:center; gap:18px;}
   #overlay h2{font-size:26px;}
   #overlay h2.win{color:var(--ok);}
@@ -151,6 +154,9 @@
     <input type="text" id="join-code" maxlength="4" placeholder="КОД" autocomplete="off">
     <button class="secondary" id="btn-join">Присоединиться по коду</button>
     <div class="hint">Один из вас создаёт игру и говорит другу код из 4 символов. Второй вводит код — и бой начинается.</div>
+    <div class="divider">на одном компьютере</div>
+    <button class="secondary" id="btn-local">🎮 Игра на двоих за одним ПК</button>
+    <div class="hint">Играете по очереди на этом же устройстве: между ходами компьютер передаётся сопернику, поле прячется.</div>
   </div>
 </div>
 
@@ -189,7 +195,7 @@
       <div class="fleet-info" id="my-fleet"></div>
     </div>
     <div class="board-wrap" id="enemy-wrap" style="display:none;">
-      <div class="board-title">Флот противника</div>
+      <div class="board-title" id="enemy-title">Флот противника</div>
       <div class="grid-outer">
         <div class="col-labels" id="enemy-cols"></div>
         <div class="row-labels" id="enemy-rows"></div>
@@ -201,6 +207,15 @@
   <div class="placement-controls" id="placement-controls">
     <button class="secondary" id="btn-reroll">🎲 Расставить заново</button>
     <button id="btn-ready">⚔️ Готов к бою!</button>
+  </div>
+</div>
+
+<!-- ===== Экран передачи компьютера (локальная игра) ===== -->
+<div id="pass-screen">
+  <div class="card">
+    <h2 id="pass-title">Передайте компьютер сопернику</h2>
+    <div class="hint">Чтобы соперник не увидел ваше поле, экран скрыт.<br>Передайте устройство и нажмите кнопку.</div>
+    <button id="btn-pass-ready">Я готов — показать поле</button>
   </div>
 </div>
 
@@ -234,9 +249,12 @@ const BROKERS = [
 ];
 
 /* ================= Состояние ================= */
-let mqClient = null;          // MQTT-клиент (транспорт)
+let mqClients = [];           // MQTT-клиенты ко всем брокерам сразу
 let myId = null, peerId = null, roomTopic = null, paired = false;
-let joinTimer = null, connectTimer = null, brokerIdx = 0;
+let seen = new Set(), msgSeq = 0;
+let joinTimer = null, connectTimer = null;
+let mode = 'online';          // online | local
+let L = null, passCb = null;  // состояние локальной игры «за одним ПК»
 let isHost = false;
 let phase = 'menu';           // menu | wait | connecting | placement | battle | over
 let myBoard = null;           // {grid, ships:[{cells:[[x,y]],hits:Set}]}
@@ -358,21 +376,23 @@ function renderFleets(){
 /* ================= Сетевое взаимодействие (через MQTT) ================= */
 const randId = () => Math.random().toString(36).slice(2, 10);
 
+// Публикация на ВСЕ подключённые брокеры сразу (чтобы соперник получил
+// сообщение по любому общему серверу). У каждого сообщения свой id — приёмник
+// отсеивает дубликаты, пришедшие сразу с нескольких брокеров.
+function publish(obj){
+  const full = JSON.stringify(Object.assign({from:myId, id:myId + '-' + (++msgSeq)}, obj));
+  mqClients.forEach(c => { if(c.connected){ try{ c.publish(roomTopic, full); }catch(e){} } });
+}
 // Игровое сообщение сопернику
 function send(msg){
-  if(mqClient && mqClient.connected && peerId)
-    mqClient.publish(roomTopic, JSON.stringify({from:myId, to:peerId, kind:'game', data:msg}));
-}
-// Служебное сообщение (рукопожатие)
-function publishRaw(obj){
-  if(mqClient && mqClient.connected)
-    mqClient.publish(roomTopic, JSON.stringify(Object.assign({from:myId}, obj)));
+  if(peerId) publish({to:peerId, kind:'game', data:msg});
 }
 function cleanupPeer(){
   clearTimeout(joinTimer); clearTimeout(connectTimer);
   joinTimer = connectTimer = null;
-  peerId = null; paired = false;
-  if(mqClient){ try{ mqClient.end(true); }catch(e){} mqClient = null; }
+  peerId = null; paired = false; seen = new Set(); msgSeq = 0;
+  mqClients.forEach(c => { try{ c.end(true); }catch(e){} });
+  mqClients = [];
 }
 function fatal(title, text){
   cleanupPeer();
@@ -384,46 +404,48 @@ function fatal(title, text){
   $('overlay').classList.add('active');
 }
 
-// Подключение к брокеру с перебором адресов. onReady — когда подписаны на комнату.
+// Подключаемся ко ВСЕМ брокерам одновременно. onReady — как только заработал
+// хотя бы один; onFail — если за отведённое время не поднялся ни один.
 function connectBroker(code, onReady, onFail){
   myId = randId();
   roomTopic = TOPIC_PREFIX + code.toLowerCase();
-  brokerIdx = 0;
-  attempt();
+  mqClients = []; seen = new Set(); msgSeq = 0;
+  let readyFired = false;
 
-  function attempt(){
-    if(brokerIdx >= BROKERS.length){ onFail && onFail(); return; }
-    const client = mqtt.connect(BROKERS[brokerIdx], {
-      clientId: 'mb_' + myId + '_' + brokerIdx,
-      clean: true, connectTimeout: 8000, reconnectPeriod: 2000, keepalive: 30
-    });
-    mqClient = client;
-    let ready = false;
-    connectTimer = setTimeout(() => {                 // брокер не ответил — следующий
-      if(!ready){ try{ client.end(true); }catch(e){} brokerIdx++; attempt(); }
-    }, 9000);
-    client.on('connect', () => {
-      client.subscribe(roomTopic, {qos:0}, err => {
-        if(ready) return;                             // это переподключение — просто переподписались
-        if(err){ clearTimeout(connectTimer); try{client.end(true);}catch(e){} brokerIdx++; attempt(); return; }
-        ready = true; clearTimeout(connectTimer);
-        onReady && onReady();
+  BROKERS.forEach((url, i) => {
+    let client;
+    try {
+      client = mqtt.connect(url, {
+        clientId: 'mb_' + myId + '_' + i,
+        clean: true, connectTimeout: 8000, reconnectPeriod: 4000, keepalive: 30
       });
+    } catch(e){ return; }
+    mqClients.push(client);
+    client.on('connect', () => {
+      client.subscribe(roomTopic, {qos:0});           // переподписываемся и при reconnect
+      if(!readyFired){ readyFired = true; clearTimeout(connectTimer); onReady && onReady(); }
     });
     client.on('message', (t, payload) => onBrokerMessage(payload));
-    client.on('error', () => {});                     // ошибки транспорта гасим, полагаемся на таймаут/reconnect
-  }
+    client.on('error', () => {});                     // ошибки транспорта гасим
+  });
+
+  connectTimer = setTimeout(() => { if(!readyFired) onFail && onFail(); }, 11000);
 }
 
 function onBrokerMessage(payload){
   let m;
   try { m = JSON.parse(payload.toString()); } catch(e){ return; }
   if(!m || m.from === myId) return;                   // свои сообщения игнорируем
+  if(m.id){                                           // дедупликация между брокерами
+    if(seen.has(m.id)) return;
+    seen.add(m.id);
+    if(seen.size > 1000) seen = new Set();
+  }
 
   if(m.kind === 'join'){                              // гость стучится к хосту
     if(isHost && (!peerId || peerId === m.from)){
       peerId = m.from;
-      publishRaw({kind:'welcome', to:m.from});
+      publish({kind:'welcome', to:m.from});
       if(!paired){ paired = true; startPlacement(); }
     }
     return;
@@ -442,6 +464,7 @@ function onBrokerMessage(payload){
 }
 
 function hostGame(){
+  mode = 'online';
   isHost = true;
   phase = 'wait';
   const code = makeCode();
@@ -461,6 +484,7 @@ function hostGame(){
 }
 
 function joinGame(code){
+  mode = 'online';
   isHost = false;
   phase = 'connecting';
   showScreen('connecting');
@@ -472,8 +496,8 @@ function joinGame(code){
       let tries = 0;
       (function ping(){
         if(phase !== 'connecting') return;
-        publishRaw({kind:'join'});                    // зовём хоста, пока не ответит
-        if(++tries >= 20){
+        publish({kind:'join'});                       // зовём хоста, пока не ответит
+        if(++tries >= 30){
           fatal('Игра не найдена', 'Никто не отвечает на код ' + code + '. Проверьте код: возможно, друг ещё не создал игру, отменил её или уже начал другую. Попросите создать игру заново и пришлите новый код.');
           return;
         }
@@ -500,6 +524,8 @@ function startPlacement(){
   $('placement-controls').style.display = 'flex';
   $('btn-reroll').disabled = false;
   $('btn-ready').disabled = false;
+  $('my-name').textContent = 'вы';
+  $('enemy-title').textContent = 'Флот противника';
   showScreen('game');
   setStatus('Расставьте корабли и нажмите «Готов к бою!»');
   renderMyBoard();
@@ -640,6 +666,141 @@ function onMessage(m){
   }
 }
 
+/* ================= Локальная игра «за одним ПК» ================= */
+function startLocal(){
+  mode = 'local';
+  L = { boards:[genBoard(), genBoard()], shots:[{},{}],
+        left:[SHIP_SIZES.length, SHIP_SIZES.length], placing:0, cur:0, phase:'place' };
+  $('overlay').classList.remove('active');
+  $('pass-screen').classList.remove('active');
+  $('enemy-wrap').style.display = 'none';
+  $('placement-controls').style.display = 'flex';
+  $('btn-reroll').disabled = false;
+  $('btn-ready').disabled = false;
+  showScreen('game');
+  localRenderPlace();
+}
+
+function showPass(title, cb){
+  $('pass-title').textContent = title;
+  $('pass-screen').classList.add('active');
+  passCb = cb;
+}
+
+function localRenderPlace(){
+  const b = L.boards[L.placing];
+  $('my-name').textContent = 'Игрок ' + (L.placing + 1);
+  setStatus('Игрок ' + (L.placing + 1) + ': расставьте корабли и нажмите «Готов»');
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      if(b.grid[y][x]) el.classList.add('ship');
+    }
+  $('my-fleet').innerHTML = SHIP_SIZES.map(s => `<span class="fleet-ship">${'<i></i>'.repeat(s)}</span>`).join('');
+  $('enemy-fleet').innerHTML = '';
+}
+
+function localReroll(){
+  L.boards[L.placing] = genBoard();
+  localRenderPlace();
+}
+
+function localReady(){
+  if(L.placing === 0){
+    L.placing = 1;
+    showPass('Передайте компьютер Игроку 2 для расстановки', localRenderPlace);
+  } else {
+    L.phase = 'battle';
+    L.cur = 0;
+    $('placement-controls').style.display = 'none';
+    $('enemy-wrap').style.display = '';
+    showPass('Оба флота готовы! Передайте компьютер Игроку 1 — он ходит первым', startLocalTurn);
+  }
+}
+
+function startLocalTurn(){
+  const p = L.cur;
+  $('my-name').textContent = 'Игрок ' + (p + 1);
+  $('enemy-title').textContent = 'Поле Игрока ' + (2 - p);
+  setStatus('🎯 Игрок ' + (p + 1) + ', ваш ход — стреляйте!', 'my-turn');
+  localRenderBattle();
+}
+
+function localRenderBattle(){
+  const p = L.cur, opp = 1 - p;
+  const myB = L.boards[p], oppShots = L.shots[opp], myShotsL = L.shots[p];
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      const s = oppShots[key(x,y)];
+      if(myB.grid[y][x]) el.classList.add('ship');
+      if(s === 'miss') el.classList.add('miss');
+      if(s === 'hit') el.classList.add('hit');
+      if(s === 'sunk') el.classList.add('hit','sunk');
+    }
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('enemy-grid', x, y);
+      el.className = 'cell';
+      const s = myShotsL[key(x,y)];
+      if(s) el.classList.add('shot');
+      if(s === 'miss') el.classList.add('miss');
+      if(s === 'hit') el.classList.add('hit');
+      if(s === 'sunk') el.classList.add('hit','sunk');
+    }
+  $('enemy-grid').classList.toggle('clickable', L.phase === 'battle');
+  const myAlive = myB.ships.map(s => s.hits.size < s.cells.length);
+  $('my-fleet').innerHTML = SHIP_SIZES.map((sz, i) =>
+    `<span class="fleet-ship ${myAlive[i] ? '' : 'dead'}">${'<i></i>'.repeat(sz)}</span>`).join('');
+  $('enemy-fleet').innerHTML =
+    `<span class="hint">кораблей соперника осталось: <b style="color:var(--text)">${L.left[opp]}</b> из ${SHIP_SIZES.length}</span>`;
+}
+
+function localShoot(x, y){
+  if(L.phase !== 'battle') return;
+  const p = L.cur, opp = 1 - p, shots = L.shots[p], board = L.boards[opp];
+  if(shots[key(x,y)]) return;
+  const id = board.grid[y][x];
+  if(!id){
+    shots[key(x,y)] = 'miss';
+    localRenderBattle();
+    L.cur = opp;
+    showPass('Мимо! Ход переходит. Передайте компьютер Игроку ' + (opp + 1), startLocalTurn);
+    return;
+  }
+  const ship = board.ships[id - 1];
+  ship.hits.add(key(x,y));
+  if(ship.hits.size === ship.cells.length){
+    ship.cells.forEach(([cx,cy]) => { shots[key(cx,cy)] = 'sunk'; });
+    ship.cells.forEach(([cx,cy]) => {
+      for(let dx = -1; dx <= 1; dx++)
+        for(let dy = -1; dy <= 1; dy++){
+          const nx = cx + dx, ny = cy + dy;
+          if(nx >= 0 && nx < N && ny >= 0 && ny < N && !shots[key(nx,ny)]) shots[key(nx,ny)] = 'miss';
+        }
+    });
+    L.left[opp]--;
+    if(board.ships.every(s => s.hits.size === s.cells.length)){ localRenderBattle(); localOver(p); return; }
+  } else {
+    shots[key(x,y)] = 'hit';
+  }
+  localRenderBattle(); // попал — тот же игрок ходит ещё
+}
+
+function localOver(winner){
+  L.phase = 'over';
+  $('enemy-grid').classList.remove('clickable');
+  $('overlay-title').textContent = '🏆 Победил Игрок ' + (winner + 1) + '!';
+  $('overlay-title').className = 'win';
+  $('overlay-text').textContent = 'Весь флот соперника отправлен на дно.';
+  $('btn-rematch').style.display = '';
+  $('btn-rematch').disabled = false;
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+
 /* ================= UI: события ================= */
 buildLabels('my-cols','my-rows');
 buildLabels('enemy-cols','enemy-rows');
@@ -647,6 +808,7 @@ buildGrid('my-grid');
 buildGrid('enemy-grid');
 
 $('btn-create').onclick = hostGame;
+$('btn-local').onclick = startLocal;
 
 $('btn-join').onclick = () => {
   const code = $('join-code').value.trim().toUpperCase();
@@ -661,13 +823,21 @@ $('btn-cancel-wait').onclick = $('btn-cancel-connect').onclick = () => {
   showScreen('menu');
 };
 
+$('btn-pass-ready').onclick = () => {
+  $('pass-screen').classList.remove('active');
+  const cb = passCb; passCb = null;
+  if(cb) cb();
+};
+
 $('btn-reroll').onclick = () => {
+  if(mode === 'local'){ localReroll(); return; }
   if(iAmReady) return;
   myBoard = genBoard();
   renderMyBoard();
 };
 
 $('btn-ready').onclick = () => {
+  if(mode === 'local'){ localReady(); return; }
   if(iAmReady) return;
   iAmReady = true;
   $('btn-ready').disabled = true;
@@ -679,10 +849,13 @@ $('btn-ready').onclick = () => {
 
 $('enemy-grid').addEventListener('click', e => {
   const cell = e.target.closest('.cell');
-  if(cell) shoot(+cell.dataset.x, +cell.dataset.y);
+  if(!cell) return;
+  if(mode === 'local') localShoot(+cell.dataset.x, +cell.dataset.y);
+  else shoot(+cell.dataset.x, +cell.dataset.y);
 });
 
 $('btn-rematch').onclick = () => {
+  if(mode === 'local'){ startLocal(); return; }
   iWantRematch = true;
   $('btn-rematch').disabled = true;
   send({type:'rematch'});
@@ -692,8 +865,11 @@ $('btn-rematch').onclick = () => {
 
 $('btn-to-menu').onclick = () => {
   cleanupPeer();
+  mode = 'online';
   phase = 'menu';
+  L = null; passCb = null;
   $('overlay').classList.remove('active');
+  $('pass-screen').classList.remove('active');
   showScreen('menu');
 };
 </script>
