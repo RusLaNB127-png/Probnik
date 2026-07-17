@@ -34,5 +34,19 @@ pub/sub по теме из кода комнаты). Для e2e без сети:
 у `#overlay`.
 
 Есть локальный режим «за одним ПК» (`mode==='local'`, состояние в `L`):
-не требует сети, проверяется на одной вкладке. Кнопка `#btn-local`, экран
-передачи `#pass-screen` + `#btn-pass-ready`, победитель — `localOver`.
+не требует сети, проверяется на одной вкладке. Кнопка `#btn-local` →
+экран имён `#screen-local-names` (`#ln1`/`#ln2`, `#btn-local-start`) →
+игра. Экран передачи `#pass-screen` + `#btn-pass-ready`, победитель —
+`localOver`.
+
+Профили и лидерборд в localStorage (`mboy-profile`, `mboy-leaderboard`).
+ВАЖНО для e2e: обе страницы по file:// делят один localStorage — для
+разных профилей хост и гость должны жить в РАЗНЫХ browser context'ах
+(реле через exposeFunction работает и между контекстами). Вход в профиль:
+`#prof-input` + кнопка в `#profile-box`. Результаты партий пишутся в
+лидерборд автоматически (`recordResult`).
+
+Ручная расстановка: редактор `E` (`initEditor`/`editorRender`), кнопки
+`#btn-clear`/`#btn-rotate`/`#btn-reroll`, палитра `#ship-palette`,
+клики по `#my-grid`. Кнопка выхода из игры — `#btn-exit` (онлайн шлёт
+`{type:'leave'}` сопернику).

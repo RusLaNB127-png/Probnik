@@ -67,11 +67,13 @@
   }
   @keyframes spin{to{transform:rotate(360deg);}}
 
+  .status-row{display:flex; gap:10px; margin-bottom:18px; justify-content:center; align-items:stretch; width:100%; max-width:830px;}
   #status{
-    font-size:17px; font-weight:600; text-align:center; margin-bottom:18px;
+    flex:1; font-size:17px; font-weight:600; text-align:center;
     padding:10px 22px; border-radius:12px; background:var(--panel); border:1px solid var(--line);
     min-height:44px; display:flex; align-items:center; justify-content:center;
   }
+  #btn-exit{flex:none; padding:10px 14px; font-size:14px;}
   #status.my-turn{border-color:var(--ok); color:var(--ok);}
   #status.enemy-turn{border-color:var(--muted); color:var(--muted);}
 
@@ -161,12 +163,40 @@
     background:var(--panel2); border:1px solid var(--line); border-radius:10px;}
   .lb-rank{width:30px; text-align:center; font-weight:700; font-size:15px; flex:none;}
   .lb-nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .lb-wins{flex:none; color:var(--accent); font-weight:700; min-width:76px; text-align:right; font-size:14px;}
+  .lb-wins{flex:none; color:var(--accent); font-weight:700; min-width:132px; text-align:right; font-size:13px;}
   .lb-btn{flex:none; padding:5px 10px; font-size:13px; border-radius:8px;}
   .lb-del{background:transparent; color:var(--muted); border:1px solid var(--line);}
   .lb-empty{color:var(--muted); font-size:14px; text-align:center; padding:14px 0;}
 
   .placement-controls,.battle-controls{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; justify-content:center;}
+  .placement-controls{flex-direction:column; align-items:center;}
+  .pal-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .pal-btn{
+    display:flex; align-items:center; gap:7px; padding:8px 12px;
+    background:var(--panel2); border:1px solid var(--line); color:var(--text); border-radius:10px;
+  }
+  .pal-btn.sel{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .pal-btn:disabled{opacity:.35;}
+  .pal-ship{display:flex; gap:2px;}
+  .pal-ship i{width:11px; height:11px; border-radius:2px; display:block;
+    background:linear-gradient(180deg,#b9d4f2,#5f88ba);}
+  .pal-ship i:first-child{border-radius:6px 2px 2px 6px;}
+  .pal-count{font-size:12px; color:var(--muted); font-weight:700;}
+  .cell.pv-ok{background:rgba(76,217,123,.45) !important; box-shadow:none;}
+  .cell.pv-bad{background:rgba(255,93,93,.5) !important; box-shadow:none;}
+
+  /* профиль и поля имён */
+  .prof-row{display:flex; gap:8px; align-items:center;}
+  .prof-name{flex:1; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #profile-box{padding-bottom:10px; border-bottom:1px solid var(--line);}
+  .name-input{
+    font:inherit; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font-size:16px !important;
+    letter-spacing:normal !important; text-transform:none !important; text-align:left !important;
+    outline:none; min-width:0;
+  }
+  .prof-row .name-input{flex:1;}
+  .name-input:focus{border-color:var(--accent);}
 
   #overlay,#pass-screen{
     position:fixed; inset:0; background:rgba(5,12,22,.82); display:none;
@@ -198,6 +228,7 @@
 <!-- ===== Меню ===== -->
 <div class="screen active" id="screen-menu">
   <div class="card">
+    <div id="profile-box"></div>
     <h2>Играть с другом по сети</h2>
     <button id="btn-create">Создать игру</button>
     <div class="divider">или</div>
@@ -208,6 +239,18 @@
     <button class="secondary" id="btn-local">🎮 Игра на двоих за одним ПК</button>
     <div class="hint">Играете по очереди на этом же устройстве: между ходами компьютер передаётся сопернику, поле прячется.</div>
     <button class="secondary" id="btn-board">🏆 Лидерборд</button>
+  </div>
+</div>
+
+<!-- ===== Имена для локальной игры ===== -->
+<div class="screen" id="screen-local-names">
+  <div class="card">
+    <h2>🎮 Кто играет?</h2>
+    <input type="text" id="ln1" class="name-input" maxlength="20" placeholder="Игрок 1" autocomplete="off">
+    <input type="text" id="ln2" class="name-input" maxlength="20" placeholder="Игрок 2" autocomplete="off">
+    <button id="btn-local-start">Начать</button>
+    <div class="hint">Если ввести имена, результат партии автоматически попадёт в лидерборд.</div>
+    <button class="secondary" id="btn-local-back">Назад</button>
   </div>
 </div>
 
@@ -248,7 +291,10 @@
 
 <!-- ===== Игра ===== -->
 <div class="screen" id="screen-game">
-  <div id="status">Расставьте корабли</div>
+  <div class="status-row">
+    <div id="status">Расставьте корабли</div>
+    <button class="secondary" id="btn-exit" title="Выйти в главное меню">🚪 В меню</button>
+  </div>
   <div class="boards">
     <div class="board-wrap">
       <div class="board-title">Ваш флот — <b id="my-name">вы</b></div>
@@ -270,8 +316,14 @@
     </div>
   </div>
   <div class="placement-controls" id="placement-controls">
-    <button class="secondary" id="btn-reroll">🎲 Расставить заново</button>
-    <button id="btn-ready">⚔️ Готов к бою!</button>
+    <div class="pal-row" id="ship-palette"></div>
+    <div class="pal-row">
+      <button class="secondary" id="btn-rotate">↔ Горизонтально</button>
+      <button class="secondary" id="btn-clear">🧹 Очистить поле</button>
+      <button class="secondary" id="btn-reroll">🎲 Случайно</button>
+      <button id="btn-ready">⚔️ Готов к бою!</button>
+    </div>
+    <div class="hint">Выберите корабль и кликайте по своему полю. Правая кнопка мыши — повернуть. Клик по кораблю — убрать его.</div>
   </div>
 </div>
 
@@ -320,6 +372,8 @@ let seen = new Set(), msgSeq = 0;
 let joinTimer = null, connectTimer = null;
 let mode = 'online';          // online | local
 let L = null, passCb = null;  // состояние локальной игры «за одним ПК»
+let E = null;                 // редактор расстановки {board, remaining, sel, horiz}
+let myName = '', oppName = '';
 let isHost = false;
 let phase = 'menu';           // menu | wait | connecting | placement | battle | over
 let myBoard = null;           // {grid, ships:[{cells:[[x,y]],hits:Set}]}
@@ -349,6 +403,49 @@ function makeCode(){
   let c = '';
   for(let i = 0; i < 4; i++) c += CODE_ALPHABET[Math.floor(Math.random()*CODE_ALPHABET.length)];
   return c;
+}
+
+/* ================= Профиль ================= */
+const PROF_KEY = 'mboy-profile';
+function getProfile(){
+  try { return localStorage.getItem(PROF_KEY) || ''; } catch(e){ return ''; }
+}
+function setProfile(name){
+  try { name ? localStorage.setItem(PROF_KEY, name) : localStorage.removeItem(PROF_KEY); } catch(e){}
+}
+function renderProfile(){
+  const box = $('profile-box');
+  box.innerHTML = '';
+  const row = document.createElement('div');
+  row.className = 'prof-row';
+  const name = getProfile();
+  if(name){
+    const s = document.createElement('span');
+    s.className = 'prof-name';
+    s.textContent = '👤 ' + name;
+    const b = document.createElement('button');
+    b.className = 'lb-btn secondary';
+    b.textContent = 'Выйти';
+    b.onclick = () => { setProfile(''); renderProfile(); };
+    row.append(s, b);
+  } else {
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.maxLength = 20; inp.id = 'prof-input';
+    inp.placeholder = 'Ваше имя (профиль)'; inp.className = 'name-input';
+    inp.autocomplete = 'off';
+    const b = document.createElement('button');
+    b.className = 'lb-btn';
+    b.textContent = 'Войти';
+    const doLogin = () => {
+      const v = inp.value.trim().slice(0, 20);
+      if(!v){ inp.focus(); return; }
+      setProfile(v); renderProfile();
+    };
+    b.onclick = doLogin;
+    inp.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+    row.append(inp, b);
+  }
+  box.appendChild(row);
 }
 
 /* ================= Генерация расстановки ================= */
@@ -382,6 +479,122 @@ function genBoard(){
     if(!placed) return genBoard(); // редкий тупик — пробуем целиком заново
   }
   return {grid, ships};
+}
+
+/* ================= Редактор расстановки ================= */
+function rebuildGrid(board){
+  board.grid = Array.from({length:N}, () => Array(N).fill(0));
+  board.ships.forEach((s, i) => s.cells.forEach(([x,y]) => board.grid[y][x] = i + 1));
+}
+function canPlace(grid, cells){
+  return cells.every(([x,y]) => {
+    for(let dx = -1; dx <= 1; dx++)
+      for(let dy = -1; dy <= 1; dy++){
+        const nx = x + dx, ny = y + dy;
+        if(nx >= 0 && nx < N && ny >= 0 && ny < N && grid[ny][nx]) return false;
+      }
+    return true;
+  });
+}
+function shipCellsFrom(x, y, size, horiz){
+  const cells = [];
+  for(let i = 0; i < size; i++){
+    const cx = horiz ? x + i : x, cy = horiz ? y : y + i;
+    if(cx >= N || cy >= N) return null;
+    cells.push([cx, cy]);
+  }
+  return cells;
+}
+// board заполняется/чистится через свойства того же объекта,
+// чтобы ссылки (myBoard / L.boards[i]) оставались валидными
+function initEditor(board){
+  E = {board, remaining:[], sel:null, horiz:true};
+}
+function editingActive(){
+  return (mode === 'online' && phase === 'placement' && !iAmReady) ||
+         (mode === 'local' && L && L.phase === 'place');
+}
+function editorClear(){
+  E.board.ships = [];
+  rebuildGrid(E.board);
+  E.remaining = SHIP_SIZES.slice();
+  E.sel = E.remaining[0];
+}
+function editorRandom(){
+  const nb = genBoard();
+  E.board.grid = nb.grid;
+  E.board.ships = nb.ships;
+  E.remaining = [];
+  E.sel = null;
+}
+function editorClick(x, y){
+  const id = E.board.grid[y][x];
+  if(id){                                             // клик по кораблю — снять его
+    const size = E.board.ships[id - 1].cells.length;
+    E.board.ships.splice(id - 1, 1);
+    rebuildGrid(E.board);
+    E.remaining.push(size);
+    E.remaining.sort((a,b) => b - a);
+    E.sel = size;
+  } else if(E.sel){                                   // пустая клетка — поставить выбранный
+    const cells = shipCellsFrom(x, y, E.sel, E.horiz);
+    if(!cells || !canPlace(E.board.grid, cells)) return;
+    E.board.ships.push({cells, hits:new Set()});
+    rebuildGrid(E.board);
+    E.remaining.splice(E.remaining.indexOf(E.sel), 1);
+    if(!E.remaining.includes(E.sel)) E.sel = E.remaining[0] || null;
+  } else return;
+  clearPreview();
+  editorRender();
+}
+let pvCells = [];
+function clearPreview(){
+  pvCells.forEach(el => el.classList.remove('pv-ok','pv-bad'));
+  pvCells = [];
+}
+function previewAt(x, y){
+  clearPreview();
+  if(!editingActive() || !E.sel || E.board.grid[y][x]) return;
+  const cells = shipCellsFrom(x, y, E.sel, E.horiz);
+  const ok = cells && canPlace(E.board.grid, cells);
+  (cells || [[x,y]]).forEach(([cx,cy]) => {
+    const el = cellEl('my-grid', cx, cy);
+    el.classList.add(ok ? 'pv-ok' : 'pv-bad');
+    pvCells.push(el);
+  });
+}
+function editorRender(){
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      if(E.board.grid[y][x]) el.classList.add(...shipCellClasses(E.board, x, y));
+    }
+  // палитра оставшихся кораблей
+  const pal = $('ship-palette');
+  pal.innerHTML = '';
+  [4,3,2,1].forEach(size => {
+    const count = E.remaining.filter(s => s === size).length;
+    const b = document.createElement('button');
+    b.className = 'pal-btn' + (E.sel === size ? ' sel' : '');
+    b.disabled = !count;
+    const bar = document.createElement('span');
+    bar.className = 'pal-ship';
+    for(let i = 0; i < size; i++) bar.appendChild(document.createElement('i'));
+    const cnt = document.createElement('span');
+    cnt.className = 'pal-count';
+    cnt.textContent = '×' + count;
+    b.append(bar, cnt);
+    b.onclick = () => { if(count){ E.sel = size; editorRender(); } };
+    pal.appendChild(b);
+  });
+  $('btn-rotate').textContent = E.horiz ? '↔ Горизонтально' : '↕ Вертикально';
+  $('btn-ready').disabled = E.remaining.length > 0;
+  const label = mode === 'local' && L ? L.names[L.placing] + ': ' : '';
+  if(E.remaining.length)
+    setStatus(label + 'расставьте корабли — осталось ' + E.remaining.length + ' шт.');
+  else
+    setStatus(label + 'флот готов! Жмите «Готов к бою!»');
 }
 
 /* ================= Отрисовка ================= */
@@ -530,7 +743,8 @@ function onBrokerMessage(payload){
   if(m.kind === 'join'){                              // гость стучится к хосту
     if(isHost && (!peerId || peerId === m.from)){
       peerId = m.from;
-      publish({kind:'welcome', to:m.from});
+      oppName = typeof m.name === 'string' ? m.name.slice(0, 20) : '';
+      publish({kind:'welcome', to:m.from, name:myName || null});
       if(!paired){ paired = true; startPlacement(); }
     }
     return;
@@ -538,6 +752,7 @@ function onBrokerMessage(payload){
   if(m.kind === 'welcome'){                           // хост принял гостя
     if(!isHost && m.to === myId){
       peerId = m.from;
+      oppName = typeof m.name === 'string' ? m.name.slice(0, 20) : '';
       clearTimeout(joinTimer); joinTimer = null;
       if(!paired){ paired = true; startPlacement(); }
     }
@@ -552,6 +767,7 @@ function hostGame(){
   mode = 'online';
   isHost = true;
   phase = 'wait';
+  myName = getProfile(); oppName = '';
   const code = makeCode();
   $('my-code').textContent = '····';
   $('wait-hint').textContent = 'Подключаемся к серверу…';
@@ -572,6 +788,7 @@ function joinGame(code){
   mode = 'online';
   isHost = false;
   phase = 'connecting';
+  myName = getProfile(); oppName = '';
   showScreen('connecting');
   $('connecting-hint').textContent = 'Подключаемся к серверу…';
   connectBroker(code,
@@ -581,7 +798,7 @@ function joinGame(code){
       let tries = 0;
       (function ping(){
         if(phase !== 'connecting') return;
-        publish({kind:'join'});                       // зовём хоста, пока не ответит
+        publish({kind:'join', name:myName || null});  // зовём хоста, пока не ответит
         if(++tries >= 30){
           fatal('Игра не найдена', 'Никто не отвечает на код ' + code + '. Проверьте код: возможно, друг ещё не создал игру, отменил её или уже начал другую. Попросите создать игру заново и пришлите новый код.');
           return;
@@ -609,13 +826,13 @@ function startPlacement(){
   $('enemy-wrap').style.display = 'none';
   $('placement-controls').style.display = 'flex';
   $('btn-reroll').disabled = false;
-  $('btn-ready').disabled = false;
-  $('my-name').textContent = 'вы';
-  $('enemy-title').textContent = 'Флот противника';
+  $('my-name').textContent = myName || 'вы';
+  $('enemy-title').textContent = 'Флот противника' + (oppName ? ' — ' + oppName : '');
   showScreen('game');
-  setStatus('Расставьте корабли и нажмите «Готов к бою!»');
-  renderMyBoard();
-  renderFleets();
+  initEditor(myBoard);
+  editorRender();
+  $('my-fleet').innerHTML = SHIP_SIZES.map(s => `<span class="fleet-ship">${'<i></i>'.repeat(s)}</span>`).join('');
+  $('enemy-fleet').innerHTML = '';
 }
 
 function tryStartBattle(){
@@ -715,6 +932,9 @@ function onIncomingShot(m){
 /* ---- конец игры ---- */
 function endGame(iWon){
   phase = 'over';
+  // автозапись в лидерборд: свой результат и результат соперника (если имена известны)
+  recordResult(iWon ? (myName || null) : (oppName || null),
+               iWon ? (oppName || null) : (myName || null));
   $('overlay-title').textContent = iWon ? '🏆 Победа!' : '💥 Поражение';
   $('overlay-title').className = iWon ? 'win' : 'lose';
   $('overlay-text').textContent = iWon
@@ -750,21 +970,26 @@ function onMessage(m){
       if(iWantRematch) startPlacement();
       else $('rematch-note').textContent = 'Соперник хочет реванш!';
       break;
+    case 'leave':
+      if(phase !== 'menu' && phase !== 'over')
+        fatal('Соперник вышел', (oppName || 'Соперник') + ' покинул игру. Создайте новую или сыграйте за одним ПК.');
+      break;
   }
 }
 
 /* ================= Локальная игра «за одним ПК» ================= */
-function startLocal(){
+function startLocal(names){
   mode = 'local';
   L = { boards:[genBoard(), genBoard()], shots:[{},{}],
-        left:[SHIP_SIZES.length, SHIP_SIZES.length], placing:0, cur:0, phase:'place' };
+        left:[SHIP_SIZES.length, SHIP_SIZES.length], placing:0, cur:0, phase:'place',
+        names: names || ['Игрок 1','Игрок 2'] };
   $('overlay').classList.remove('active');
   $('pass-screen').classList.remove('active');
   $('enemy-wrap').style.display = 'none';
   $('placement-controls').style.display = 'flex';
   $('btn-reroll').disabled = false;
-  $('btn-ready').disabled = false;
   showScreen('game');
+  initEditor(L.boards[0]);
   localRenderPlace();
 }
 
@@ -775,42 +1000,32 @@ function showPass(title, cb){
 }
 
 function localRenderPlace(){
-  const b = L.boards[L.placing];
-  $('my-name').textContent = 'Игрок ' + (L.placing + 1);
-  setStatus('Игрок ' + (L.placing + 1) + ': расставьте корабли и нажмите «Готов»');
-  for(let y = 0; y < N; y++)
-    for(let x = 0; x < N; x++){
-      const el = cellEl('my-grid', x, y);
-      el.className = 'cell';
-      if(b.grid[y][x]) el.classList.add(...shipCellClasses(b, x, y));
-    }
+  $('my-name').textContent = L.names[L.placing];
+  editorRender();
   $('my-fleet').innerHTML = SHIP_SIZES.map(s => `<span class="fleet-ship">${'<i></i>'.repeat(s)}</span>`).join('');
   $('enemy-fleet').innerHTML = '';
 }
 
-function localReroll(){
-  L.boards[L.placing] = genBoard();
-  localRenderPlace();
-}
-
 function localReady(){
+  if(E.remaining.length) return;                      // расставлены не все корабли
   if(L.placing === 0){
     L.placing = 1;
-    showPass('Передайте компьютер Игроку 2 для расстановки', localRenderPlace);
+    initEditor(L.boards[1]);
+    showPass('Передайте компьютер: ' + L.names[1] + ' расставляет корабли', localRenderPlace);
   } else {
     L.phase = 'battle';
     L.cur = 0;
     $('placement-controls').style.display = 'none';
     $('enemy-wrap').style.display = '';
-    showPass('Оба флота готовы! Передайте компьютер Игроку 1 — он ходит первым', startLocalTurn);
+    showPass('Оба флота готовы! Передайте компьютер: первым ходит ' + L.names[0], startLocalTurn);
   }
 }
 
 function startLocalTurn(){
   const p = L.cur;
-  $('my-name').textContent = 'Игрок ' + (p + 1);
-  $('enemy-title').textContent = 'Поле Игрока ' + (2 - p);
-  setStatus('🎯 Игрок ' + (p + 1) + ', ваш ход — стреляйте!', 'my-turn');
+  $('my-name').textContent = L.names[p];
+  $('enemy-title').textContent = 'Поле — ' + L.names[1 - p];
+  setStatus('🎯 ' + L.names[p] + ', ваш ход — стреляйте!', 'my-turn');
   localRenderBattle();
 }
 
@@ -858,7 +1073,7 @@ function localShoot(x, y){
     shots[key(x,y)] = 'miss';
     localRenderBattle();
     L.cur = opp;
-    showPass('Мимо! Ход переходит. Передайте компьютер Игроку ' + (opp + 1), startLocalTurn);
+    showPass('Мимо! Ход переходит. Передайте компьютер: ' + L.names[opp], startLocalTurn);
     return;
   }
   const ship = board.ships[id - 1];
@@ -883,7 +1098,11 @@ function localShoot(x, y){
 function localOver(winner){
   L.phase = 'over';
   $('enemy-grid').classList.remove('clickable');
-  $('overlay-title').textContent = '🏆 Победил Игрок ' + (winner + 1) + '!';
+  // автозапись в лидерборд (имена по умолчанию «Игрок 1/2» не записываем)
+  const def = n => /^Игрок [12]$/.test(n);
+  recordResult(def(L.names[winner]) ? null : L.names[winner],
+               def(L.names[1 - winner]) ? null : L.names[1 - winner]);
+  $('overlay-title').textContent = '🏆 Победил(а) ' + L.names[winner] + '!';
   $('overlay-title').className = 'win';
   $('overlay-text').textContent = 'Весь флот соперника отправлен на дно.';
   $('btn-rematch').style.display = '';
@@ -895,14 +1114,30 @@ function localOver(winner){
 /* ================= Лидерборд ================= */
 const LB_KEY = 'mboy-leaderboard';
 function lbLoad(){
-  try { const l = JSON.parse(localStorage.getItem(LB_KEY)); return Array.isArray(l) ? l : []; }
+  try {
+    const l = JSON.parse(localStorage.getItem(LB_KEY));
+    return Array.isArray(l) ? l.map(p => ({name:String(p.name), wins:p.wins || 0, losses:p.losses || 0})) : [];
+  }
   catch(e){ return []; }
+}
+// Автозапись результата партии: +победа одному, +поражение другому (null — пропустить)
+function recordResult(winName, loseName){
+  if(!winName && !loseName) return;
+  const list = lbLoad();
+  const up = n => {
+    let p = list.find(q => q.name.toLowerCase() === n.toLowerCase());
+    if(!p){ p = {name:n, wins:0, losses:0}; list.push(p); }
+    return p;
+  };
+  if(winName) up(winName).wins++;
+  if(loseName) up(loseName).losses++;
+  lbSave(list);
 }
 function lbSave(list){
   try { localStorage.setItem(LB_KEY, JSON.stringify(list)); } catch(e){}
 }
 function lbRender(){
-  const list = lbLoad().sort((a,b) => b.wins - a.wins);
+  const list = lbLoad().sort((a,b) => b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name));
   const box = $('lb-list');
   box.innerHTML = '';
   if(!list.length){
@@ -927,7 +1162,7 @@ function lbRender(){
 
     const wins = document.createElement('span');
     wins.className = 'lb-wins';
-    wins.textContent = 'побед: ' + p.wins;
+    wins.textContent = 'побед: ' + p.wins + ' · пораж.: ' + p.losses;
 
     const plus = document.createElement('button');
     plus.className = 'lb-btn'; plus.textContent = '+1';
@@ -957,7 +1192,7 @@ function lbAdd(){
   if(!name){ input.focus(); return; }
   const list = lbLoad();
   if(!list.some(p => p.name.toLowerCase() === name.toLowerCase()))
-    list.push({name, wins:0});
+    list.push({name, wins:0, losses:0});
   lbSave(list);
   input.value = '';
   input.focus();
@@ -970,13 +1205,44 @@ buildLabels('enemy-cols','enemy-rows');
 buildGrid('my-grid');
 buildGrid('enemy-grid');
 
+renderProfile();
+
+function goToMenu(){
+  cleanupPeer();
+  mode = 'online';
+  phase = 'menu';
+  L = null; passCb = null; E = null; oppName = '';
+  $('overlay').classList.remove('active');
+  $('pass-screen').classList.remove('active');
+  renderProfile();
+  showScreen('menu');
+}
+
 $('btn-create').onclick = hostGame;
-$('btn-local').onclick = startLocal;
+
+$('btn-local').onclick = () => {
+  $('ln1').value = getProfile() || '';
+  $('ln2').value = '';
+  showScreen('local-names');
+};
+$('btn-local-back').onclick = () => showScreen('menu');
+$('btn-local-start').onclick = () => {
+  const n1 = $('ln1').value.trim().slice(0, 20) || 'Игрок 1';
+  const n2 = $('ln2').value.trim().slice(0, 20) || 'Игрок 2';
+  startLocal([n1, n2]);
+};
+$('ln1').addEventListener('keydown', e => { if(e.key === 'Enter') $('ln2').focus(); });
+$('ln2').addEventListener('keydown', e => { if(e.key === 'Enter') $('btn-local-start').click(); });
 
 $('btn-board').onclick = () => { lbRender(); showScreen('board'); };
 $('btn-board-back').onclick = () => showScreen('menu');
 $('lb-add-btn').onclick = lbAdd;
 $('lb-name').addEventListener('keydown', e => { if(e.key === 'Enter') lbAdd(); });
+
+$('btn-exit').onclick = () => {
+  if(mode === 'online' && phase !== 'over') send({type:'leave'});
+  setTimeout(goToMenu, 120);                          // даём сообщению уйти
+};
 
 $('btn-join').onclick = () => {
   const code = $('join-code').value.trim().toUpperCase();
@@ -998,13 +1264,44 @@ $('btn-pass-ready').onclick = () => {
 };
 
 $('btn-reroll').onclick = () => {
-  if(mode === 'local'){ localReroll(); return; }
-  if(iAmReady) return;
-  myBoard = genBoard();
-  renderMyBoard();
+  if(!editingActive()) return;
+  editorRandom();
+  editorRender();
+};
+$('btn-clear').onclick = () => {
+  if(!editingActive()) return;
+  editorClear();
+  editorRender();
+};
+$('btn-rotate').onclick = () => {
+  if(!editingActive()) return;
+  E.horiz = !E.horiz;
+  editorRender();
 };
 
+// расстановка мышью на своём поле
+$('my-grid').addEventListener('click', e => {
+  const c = e.target.closest('.cell');
+  if(!c || !editingActive()) return;
+  editorClick(+c.dataset.x, +c.dataset.y);
+});
+$('my-grid').addEventListener('mouseover', e => {
+  const c = e.target.closest('.cell');
+  if(!c || !editingActive()) return;
+  previewAt(+c.dataset.x, +c.dataset.y);
+});
+$('my-grid').addEventListener('mouseleave', clearPreview);
+$('my-grid').addEventListener('contextmenu', e => {
+  if(!editingActive()) return;
+  e.preventDefault();
+  E.horiz = !E.horiz;
+  editorRender();
+  const c = e.target.closest('.cell');
+  if(c) previewAt(+c.dataset.x, +c.dataset.y);
+});
+
 $('btn-ready').onclick = () => {
+  if(!E || E.remaining.length) return;                // расставлены не все корабли
   if(mode === 'local'){ localReady(); return; }
   if(iAmReady) return;
   iAmReady = true;
@@ -1023,7 +1320,7 @@ $('enemy-grid').addEventListener('click', e => {
 });
 
 $('btn-rematch').onclick = () => {
-  if(mode === 'local'){ startLocal(); return; }
+  if(mode === 'local'){ startLocal(L.names); return; }
   iWantRematch = true;
   $('btn-rematch').disabled = true;
   send({type:'rematch'});
@@ -1031,15 +1328,7 @@ $('btn-rematch').onclick = () => {
   else $('rematch-note').textContent = 'Ждём согласия соперника…';
 };
 
-$('btn-to-menu').onclick = () => {
-  cleanupPeer();
-  mode = 'online';
-  phase = 'menu';
-  L = null; passCb = null;
-  $('overlay').classList.remove('active');
-  $('pass-screen').classList.remove('active');
-  showScreen('menu');
-};
+$('btn-to-menu').onclick = goToMenu;
 </script>
 </body>
 </html>
