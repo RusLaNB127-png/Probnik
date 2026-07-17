@@ -725,16 +725,80 @@ function showsInMonth(y,m){
   return state.shows.filter(s=>s.date.startsWith(prefix));
 }
 
+/* ============================================================
+   ЕДИНЫЙ НАБОР МОНОХРОМНЫХ ЛИНЕЙНЫХ ИКОНОК
+   Все иконки — currentColor, штриховые, единая толщина.
+   icon('name')          → инлайн-SVG для HTML
+   iconInSvg('name',x,y) → вложенный SVG (для планов/чертежей)
+   ============================================================ */
+const ICON_PATHS = {
+  plus:      '<path d="M12 5v14M5 12h14"/>',
+  close:     '<path d="M6 6l12 12M18 6L6 18"/>',
+  edit:      '<path d="M4 20h4L19 9a2 2 0 0 0-3-3L5 17v3Z"/><path d="M14 7l3 3"/>',
+  check:     '<path d="M20 6L9 17l-5-5"/>',
+  star:      '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9Z"/>',
+  arrowRight:'<path d="M4 12h15M13 6l6 6-6 6"/>',
+  arrowUp:   '<path d="M12 19V6M6 11l6-6 6 6"/>',
+  arrowDown: '<path d="M12 5v13M6 13l6 6 6-6"/>',
+  calendar:  '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+  user:      '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.7-3.8 3.7-5.6 7.5-5.6s6.8 1.8 7.5 5.6"/>',
+  users:     '<circle cx="9" cy="8" r="3.2"/><path d="M2.6 19.5c.6-3.3 3-4.9 6.4-4.9s5.8 1.6 6.4 4.9"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6M18 14.6c2.6.4 4.2 1.9 4.7 4.6"/>',
+  home:      '<path d="M4 11l8-6.5L20 11"/><path d="M6 9.7V20h12V9.7"/>',
+  phone:     '<path d="M5.5 4h3.2l1.6 4-2.1 1.5a11 11 0 0 0 4.8 4.8L15.5 12l4 1.6v3.2a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3.5 6.2 2 2 0 0 1 5.5 4Z"/>',
+  eye:       '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+  mail:      '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4 7l8 5.5L20 7"/>',
+  monitor:   '<rect x="3" y="4.5" width="18" height="11.5" rx="2"/><path d="M8.5 20h7M12 16v4"/>',
+  ruler:     '<rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/>',
+  gear:      '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  camera:    '<path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/>',
+  grid:      '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/>',
+  compass:   '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8Z"/>',
+  flame:     '<path d="M12 3c.5 3 3.5 4 3.5 7.5a3.5 3.5 0 0 1-7 0c0-1.3.6-2.2 1.2-2.8.2 1 .8 1.5 1.5 1.7.3-2 .8-4 .8-6.4Z"/>',
+  alert:     '<path d="M12 4l8.5 15H3.5Z"/><path d="M12 10.5v4M12 17.5h.01"/>',
+  sparkle:   '<path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7Z"/>',
+  clock:     '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  doc:       '<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/>',
+  swap:      '<path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/>',
+  // Виды из окна (монохром)
+  waves:     '<path d="M3 8c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 13c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 18c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0"/>',
+  mountain:  '<path d="M3 19l6-11 4 6.5 2.5-3.5L21 19Z"/>',
+  droplet:   '<path d="M12 3.5s6 6 6 9.5a6 6 0 0 1-12 0c0-3.5 6-9.5 6-9.5Z"/>',
+  tree:      '<path d="M12 4l4.5 7h-3l3 4.5H7.5l3-4.5h-3Z"/><path d="M12 15.5V21"/>',
+  city:      '<path d="M3 21V9l6-3v15M9 21V4l6 3v14M15 21V10l6 3v8M2 21h20"/>',
+  diamond:   '<path d="M12 3l8.5 9L12 21 3.5 12Z"/>',
+  building2: '<rect x="3" y="8" width="7" height="12" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 11h2M5.5 14h2M15.5 7h3M15.5 11h3M15.5 15h3"/>',
+};
+// Категория вида → имя иконки
+const VIEW_ICON = { sea:'waves', mount:'mountain', pool:'droplet', park:'tree', court:'home', city:'city', inner:'diamond', corp:'building2' };
+// Тип записи журнала → имя иконки
+const LOG_ICON = { book:'home', show:'eye', deal:'edit', note:'mail', call:'phone', lead:'plus' };
+
+function icon(name, size=16, cls=''){
+  const p = ICON_PATHS[name];
+  if(!p) return '';
+  return `<svg class="licon ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+function iconStar(filled, size=16){
+  const p = ICON_PATHS.star;
+  return `<svg class="licon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled?'currentColor':'none'}" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+// Вложенный SVG для использования внутри другого <svg> (планы этажей)
+function iconInSvg(name, x, y, size=16, stroke='currentColor'){
+  const p = ICON_PATHS[name];
+  if(!p) return '';
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
 // ---------- KPI карточка (для воронки и дашборда) ----------
 function kpi(label,val,trend,note){
-  return `<div class="kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="trend ${trend}">${trend==='up'?'▲':'▼'} ${note}</div></div>`;
+  return `<div class="kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="trend ${trend}">${icon(trend==='up'?'arrowUp':'arrowDown',12)} ${note}</div></div>`;
 }
 
 // ---------- Toast ----------
 let toastTimer;
 function toast(msg){
   const t = document.getElementById('toast');
-  t.innerHTML = '<span style="color:var(--st-booked)">✓</span> '+msg;
+  t.innerHTML = icon('check',15)+' '+msg;
   t.classList.add('show'); clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
 }

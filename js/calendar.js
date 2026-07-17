@@ -120,7 +120,7 @@ function renderCalStats(){
     const u = getUnit(next.unitId);
     nextHtml = `
       <div class="cal-stat-next">
-        <div class="lbl">⚡ Ближайший показ</div>
+        <div class="lbl ic-inline">${icon('clock',12)} Ближайший показ</div>
         <div class="val">${next.time} · ${client?client.name:'Клиент'}</div>
         <div class="meta">${fmtDateRu(next.date)}${u?' · '+u.displayNum:''} · ${mgrShort(next.managerId)}</div>
       </div>`;
@@ -129,21 +129,21 @@ function renderCalStats(){
   document.getElementById('calStats').innerHTML = `
     ${nextHtml}
     <div class="cal-stat">
-      <div class="cal-stat-ic">☀</div>
+      <div class="cal-stat-ic">${icon('clock',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">Сегодня</div>
         <div class="cal-stat-value">${todayShows.length} ${declOf(todayShows.length,['показ','показа','показов'])}</div>
       </div>
     </div>
     <div class="cal-stat">
-      <div class="cal-stat-ic">📆</div>
+      <div class="cal-stat-ic">${icon('calendar',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">На неделю</div>
         <div class="cal-stat-value">${weekShows.length} ${declOf(weekShows.length,['показ','показа','показов'])}</div>
       </div>
     </div>
     <div class="cal-stat">
-      <div class="cal-stat-ic" style="color:var(--terra-dark);">✕</div>
+      <div class="cal-stat-ic" style="color:var(--terra-dark);">${icon('close',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">Отмен в ближайшие дни</div>
         <div class="cal-stat-value ${cancelled?'warn':'muted'}">${cancelled}</div>
@@ -182,7 +182,7 @@ function renderCalDay(){
     grid.innerHTML = `
       <div class="cal-day-empty">
         <div class="big">Показов на этот день нет</div>
-        <div>Нажмите «＋ Создать показ», чтобы назначить встречу с клиентом.</div>
+        <div>Нажмите «Создать показ», чтобы назначить встречу с клиентом.</div>
       </div>`;
     return;
   }

@@ -4,7 +4,6 @@
    (шестерёнка) доступно редактирование всех блоков.
    ============================================================ */
 
-const LOG_ICONS = { book:'⌂', show:'👁', deal:'✎', note:'✉', call:'☎', lead:'＋' };
 
 // Схемы форм редактирования блоков дашборда
 const DASH_SCHEMAS = {
@@ -41,8 +40,8 @@ const DASH_SCHEMAS = {
     { k:'who',    label:'Кто',      type:'text', req:true },
     { k:'action', label:'Действие', type:'text' },
     { k:'icon',   label:'Тип', type:'select', options:[
-      ['book','Бронь ⌂'],['show','Показ 👁'],['deal','Сделка ✎'],
-      ['note','Заметка ✉'],['call','Звонок ☎'],['lead','Лид ＋']] },
+      ['book','Бронь'],['show','Показ'],['deal','Сделка'],
+      ['note','Заметка'],['call','Звонок'],['lead','Лид']] },
   ]},
 };
 
@@ -66,7 +65,7 @@ function renderDashboard(){
     bar.style.display = 'block';
     bar.innerHTML = `
       <div class="dash-admin-head">
-        <h4>⚙ Редактирование дашборда <span class="badge-admin">Админ</span></h4>
+        <h4 class="ic-inline">${icon('gear',15)} Редактирование дашборда <span class="badge-admin">Админ</span></h4>
         <div class="dash-admin-actions">
           <button class="btn btn-sm" id="dashDemoBtn">Загрузить пример</button>
           <button class="btn btn-sm" id="dashClearBtn" style="color:var(--terra-dark);border-color:var(--terra-dark);">Очистить всё</button>
@@ -149,7 +148,7 @@ function renderDashboard(){
         <td>${m.plan}/${m.fact}</td>
         <td><span class="tbl-bar" style="width:${(+m.fact||0)/maxFact*70}px"></span> ${m.fact} млн</td>
         <td>${m.books}</td><td>${m.conv}%</td>
-        <td><span class="chip ${m.rating>=4.5?'ok':m.rating>=4?'warn':'hot'}">★ ${m.rating}</span></td></tr>`;
+        <td><span class="chip ${m.rating>=4.5?'ok':m.rating>=4?'warn':'hot'}" class="ic-inline">${iconStar(true,11)} ${m.rating}</span></td></tr>`;
     }).join('') : `<tr><td colspan="7">${emptyState('Добавьте менеджеров в блоке «Продажи по менеджерам»', false)}</td></tr>`}</tbody>`;
 
   // ---- Прогноз выручки ----
@@ -174,7 +173,7 @@ function renderDashboard(){
   document.getElementById('actionLog').innerHTML =
     (admin ? addBtn('log','Добавить запись') : '') +
     (d.log.length ? d.log.map(l=>`
-      <div class="log-item dash-row"><div class="ic">${LOG_ICONS[l.icon]||'•'}</div>
+      <div class="log-item dash-row"><div class="ic">${icon(LOG_ICON[l.icon]||'doc',15)}</div>
         <div style="flex:1;"><div><b>${escapeHtml(l.who)}</b> ${escapeHtml(l.action||'')}</div></div>
         <div class="tm">${escapeHtml(l.time||'')}</div>${rowCtrls('log',l.id)}</div>`).join('') : emptyState('Журнал пуст', admin));
 
@@ -192,15 +191,15 @@ function renderDashboard(){
 
 /* ---------- Хелперы рендера ---------- */
 function initials(name){ return String(name||'').split(' ').map(w=>w[0]||'').join('').slice(0,2); }
-function addBtn(section, label){ return `<button class="dash-add" data-add="${section}">＋ ${label}</button>`; }
+function addBtn(section, label){ return `<button class="dash-add" data-add="${section}" class="ic-inline">${icon('plus',14)} ${label}</button>`; }
 function rowCtrls(section, id){
   if(!state.adminMode) return '';
   return `<span class="dash-row-ctrls">
-    <button class="dash-ce" data-edit-sec="${section}" data-edit-id="${id}" title="Редактировать">✎</button>
-    <button class="dash-cd" data-del-sec="${section}" data-del-id="${id}" title="Удалить">✕</button></span>`;
+    <button class="dash-ce" data-edit-sec="${section}" data-edit-id="${id}" title="Редактировать">${icon('edit',12)}</button>
+    <button class="dash-cd" data-del-sec="${section}" data-del-id="${id}" title="Удалить">${icon('close',12)}</button></span>`;
 }
 function emptyState(text, admin){
-  return `<div class="dash-empty">${text}${admin?' · нажмите «＋», чтобы добавить':''}</div>`;
+  return `<div class="dash-empty">${text}${admin?' · нажмите «+», чтобы добавить':''}</div>`;
 }
 
 /* ---------- Связывание элементов управления ---------- */

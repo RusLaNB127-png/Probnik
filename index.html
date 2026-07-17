@@ -103,7 +103,7 @@
     <div class="filters-actions">
       <label class="check-inline">
         <input type="checkbox" id="fFavorites">
-        <span>★ Только избранные</span>
+        <span class="ic-inline"><svg class="licon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9Z"/></svg> Только избранные</span>
       </label>
       <button class="btn btn-sm" id="fReset">Сбросить фильтры</button>
     </div>
@@ -126,7 +126,7 @@
 
 <!-- ======================= ЛАЙТБОКС (планировки и виды) ======================= -->
 <div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">✕</button>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Назад">‹</button>
   <button class="lightbox-nav next" id="lightboxNext" aria-label="Вперёд">›</button>
   <figure class="lightbox-stage">
@@ -140,7 +140,7 @@
 <main class="view" id="view-clients">
   <div class="view-head">
     <div><h2>Профиль клиента</h2><p>Центр работы с клиентом: помещения, показы, сделки, задачи, документы и история коммуникаций</p></div>
-    <button class="btn btn-primary" id="newClientBtn">＋ Создать клиента</button>
+    <button class="btn btn-primary ic-inline" id="newClientBtn"><svg class="licon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Создать клиента</button>
   </div>
 
   <!-- Фильтры списка клиентов -->
@@ -231,13 +231,13 @@
     </div>
 
     <div class="card col-6">
-      <h3>🔥 Горячие клиенты</h3>
+      <h3 class="ic-inline"><svg class="licon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.5 3 3.5 4 3.5 7.5a3.5 3.5 0 0 1-7 0c0-1.3.6-2.2 1.2-2.8.2 1 .8 1.5 1.5 1.7.3-2 .8-4 .8-6.4Z"/></svg> Горячие клиенты</h3>
       <div class="card-sub">Высокая вероятность сделки в ближайшие дни</div>
       <div id="hotClients"></div>
     </div>
 
     <div class="card col-6">
-      <h3>⚠️ Проблемные сделки</h3>
+      <h3 class="ic-inline"><svg class="licon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l8.5 15H3.5Z"/><path d="M12 10.5v4M12 17.5h.01"/></svg> Проблемные сделки</h3>
       <div class="card-sub">Требуют вмешательства РОП</div>
       <div id="problemDeals"></div>
     </div>
@@ -268,7 +268,7 @@
 
     <div class="card col-12" style="background:linear-gradient(135deg,#FBEFE4,#F6E4D2); border-color:#E8CBAE;">
       <h3 style="color:var(--terra-dark); display:flex; align-items:center; gap:9px;">
-        <span class="spark" style="width:26px;height:26px;border-radius:8px;background:var(--terra);display:grid;place-items:center;color:#fff;">✦</span>
+        <span class="spark" style="width:26px;height:26px;border-radius:8px;background:var(--terra);display:grid;place-items:center;color:#fff;"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7Z"/></svg></span>
         Рекомендации AI для руководителя
       </h3>
       <div class="card-sub">Где проседает воронка, кого дожать, какие объекты зависают</div>
@@ -306,8 +306,8 @@
         </div>
       </div>
       <div class="cal-shell-actions">
-        <button class="btn btn-primary" id="calNewBtn">＋ Создать показ</button>
-        <button class="icon-btn" id="calClose" title="Закрыть">✕</button>
+        <button class="btn btn-primary ic-inline" id="calNewBtn"><svg class="licon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Создать показ</button>
+        <button class="icon-btn" id="calClose" title="Закрыть"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </header>
 
@@ -362,7 +362,7 @@
         <h3 id="showFormTitle">Новый показ</h3>
         <div class="form-sub">Заполните данные о встрече с клиентом</div>
       </div>
-      <button class="icon-btn" id="showFormClose">✕</button>
+      <button class="icon-btn" id="showFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="showForm" class="form-body">
       <input type="hidden" id="showId">
@@ -415,7 +415,7 @@
         <h3>Редактирование помещения</h3>
         <div class="form-sub" id="unitFormSub">—</div>
       </div>
-      <button class="icon-btn" id="unitFormClose">✕</button>
+      <button class="icon-btn" id="unitFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="unitForm" class="form-body">
       <input type="hidden" id="unitFormId">
@@ -473,7 +473,7 @@
           <div class="photo-input-row">
             <input type="text" id="unitFormViewPhotos" placeholder="https://...,https://...">
             <input type="file" id="unitFormViewFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormViewFilesBtn">📷 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormViewFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormViewPreview"></div>
         </div>
@@ -486,7 +486,7 @@
           <div class="photo-input-row">
             <input type="text" id="unitFormPlans" placeholder="https://...,https://...">
             <input type="file" id="unitFormPlanFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormPlanFilesBtn">📐 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormPlanFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormPlanPreview"></div>
         </div>
@@ -495,7 +495,7 @@
           <div class="photo-input-row">
             <input type="text" id="unitFormPhotos" placeholder="https://...,https://...">
             <input type="file" id="unitFormPhotoFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormPhotoFilesBtn">📷 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormPhotoFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormPhotoPreview"></div>
         </div>
@@ -520,7 +520,7 @@
         <h3 id="clientFormTitle">Добавление клиента</h3>
         <div class="form-sub">Заполните данные клиента отдела продаж</div>
       </div>
-      <button class="icon-btn" id="clientFormClose">✕</button>
+      <button class="icon-btn" id="clientFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="clientForm" class="form-body">
       <input type="hidden" id="clientFormId">
@@ -626,7 +626,7 @@
   <div class="form-shell">
     <header class="form-head">
       <div><h3 id="taskFormTitle">Новая задача</h3><div class="form-sub" id="taskFormSub">—</div></div>
-      <button class="icon-btn" id="taskFormClose">✕</button>
+      <button class="icon-btn" id="taskFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="taskForm" class="form-body">
       <input type="hidden" id="taskClientId">
@@ -652,7 +652,7 @@
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Прикрепить документ</h3><div class="form-sub" id="docFormSub">—</div></div>
-      <button class="icon-btn" id="docFormClose">✕</button>
+      <button class="icon-btn" id="docFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="docForm" class="form-body">
       <input type="hidden" id="docClientId">
@@ -683,7 +683,7 @@
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Контактное лицо</h3><div class="form-sub" id="contactFormSub">—</div></div>
-      <button class="icon-btn" id="contactFormClose">✕</button>
+      <button class="icon-btn" id="contactFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="contactForm" class="form-body">
       <input type="hidden" id="contactClientId">
@@ -710,7 +710,7 @@
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Добавить помещение в избранное</h3><div class="form-sub" id="pickUnitSub">—</div></div>
-      <button class="icon-btn" id="pickUnitClose">✕</button>
+      <button class="icon-btn" id="pickUnitClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <div class="form-body">
       <input type="hidden" id="pickClientId">
@@ -728,7 +728,7 @@
   <div class="form-shell">
     <header class="form-head">
       <div><h3 id="dashEditTitle">—</h3><div class="form-sub">Данные дашборда РОП · сохраняются в базу</div></div>
-      <button class="icon-btn" id="dashEditClose">✕</button>
+      <button class="icon-btn" id="dashEditClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="dashEditForm" class="form-body">
       <input type="hidden" id="dashEditSection">

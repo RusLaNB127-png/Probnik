@@ -59,14 +59,14 @@ const DEFAULT_BUILDING = {
 // ---------- Виды из окна ----------
 const VIEW_DIRECTIONS = ['Север','Северо-восток','Восток','Юго-восток','Юг','Юго-запад','Запад','Северо-запад'];
 const VIEW_CATEGORIES = [
-  { id:'sea',     label:'Море',           icon:'🌊', color:'#6B92BC' },
-  { id:'mount',   label:'Горы',           icon:'⛰', color:'#7A6354' },
-  { id:'pool',    label:'Бассейн',        icon:'💧', color:'#7CB4C9' },
-  { id:'park',    label:'Парковая зона',  icon:'🌳', color:'#7C9B6E' },
-  { id:'court',   label:'Двор',           icon:'🏡', color:'#B7AB9B' },
-  { id:'city',    label:'Город',          icon:'🏙', color:'#A89485' },
-  { id:'inner',   label:'Внутренний двор',icon:'◇', color:'#C8B89A' },
-  { id:'corp',    label:'Соседний корпус',icon:'⊟', color:'#9C8E80' },
+  { id:'sea',     label:'Море',           color:'#6B92BC' },
+  { id:'mount',   label:'Горы',           color:'#7A6354' },
+  { id:'pool',    label:'Бассейн',        color:'#7CB4C9' },
+  { id:'park',    label:'Парковая зона',  color:'#7C9B6E' },
+  { id:'court',   label:'Двор',           color:'#B7AB9B' },
+  { id:'city',    label:'Город',          color:'#A89485' },
+  { id:'inner',   label:'Внутренний двор',color:'#C8B89A' },
+  { id:'corp',    label:'Соседний корпус',color:'#9C8E80' },
 ];
 
 // ---------- Источники лидов ----------
@@ -85,19 +85,19 @@ const PRIORITY_ORDER = ['high','medium','low'];
 
 // ---------- Типы событий timeline ----------
 const INTERACTION_TYPES = {
-  created:          { label:'Создан клиент',          icon:'＋', color:'#7C9B6E' },
-  call:             { label:'Звонок',                 icon:'☎',  color:'#6B92BC' },
-  meeting:          { label:'Встреча',                icon:'☕', color:'#E0A458' },
-  show:             { label:'Показ',                  icon:'👁', color:'#6B92BC' },
-  booking:          { label:'Бронирование',           icon:'⌂',  color:'#E0A458' },
-  deal:             { label:'Сделка',                 icon:'✎',  color:'#C2683E' },
+  created:          { label:'Создан клиент',          icon:'plus', color:'#7C9B6E' },
+  call:             { label:'Звонок',                 icon:'phone', color:'#6B92BC' },
+  meeting:          { label:'Встреча',                icon:'users', color:'#E0A458' },
+  show:             { label:'Показ',                  icon:'eye', color:'#6B92BC' },
+  booking:          { label:'Бронирование',           icon:'home', color:'#E0A458' },
+  deal:             { label:'Сделка',                 icon:'edit', color:'#C2683E' },
   status_change:    { label:'Изменён статус',         icon:'⟳',  color:'#7A6354' },
-  comment:          { label:'Комментарий',            icon:'✉',  color:'#7A6354' },
-  document_added:   { label:'Документ добавлен',      icon:'📄', color:'#7A6354' },
-  task_created:     { label:'Задача создана',         icon:'✓',  color:'#6B92BC' },
-  task_completed:   { label:'Задача выполнена',       icon:'✓',  color:'#7C9B6E' },
-  manager_changed:  { label:'Смена менеджера',        icon:'⇄',  color:'#E0A458' },
-  favorite_added:   { label:'В избранное',            icon:'★',  color:'#E0A458' },
+  comment:          { label:'Комментарий',            icon:'mail', color:'#7A6354' },
+  document_added:   { label:'Документ добавлен',      icon:'doc', color:'#7A6354' },
+  task_created:     { label:'Задача создана',         icon:'check', color:'#6B92BC' },
+  task_completed:   { label:'Задача выполнена',       icon:'check', color:'#7C9B6E' },
+  manager_changed:  { label:'Смена менеджера',        icon:'swap', color:'#E0A458' },
+  favorite_added:   { label:'В избранное',            icon:'star', color:'#E0A458' },
 };
 
 // ---------- Стадии сделки ----------

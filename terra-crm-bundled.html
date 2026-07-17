@@ -1792,6 +1792,59 @@ table.tbl tr:hover td{ background:var(--sand); }
   .cell:hover, .btn-primary, .view.active{ transition:none; animation:none; transform:none; }
 }
 
+/* ============================================================
+   ЕДИНЫЙ СТИЛЬ ИКОНОК И КНОПОК (весь интерфейс)
+   Линейные монохромные иконки + одно семейство кнопок.
+   ============================================================ */
+/* — Линейные иконки — */
+.licon{ display:inline-block; vertical-align:-0.15em; flex-shrink:0; }
+.ic-inline{ display:inline-flex; align-items:center; gap:7px; }
+.ic-inline .licon{ vertical-align:middle; }
+
+/* — Общая геометрия семейства кнопок — */
+.btn, .btn-sm, .btn-primary,
+.panel-quick-btn, .go-link, .dash-add,
+.mt-floor-btn, .cal-quick-btn, .fav-toggle, .pres-toggle{
+  font-family:inherit; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px;
+  font-weight:600; transition:.15s;
+  line-height:1.15;
+}
+/* Вторичная (по умолчанию) — акцент моря на ховере */
+.btn{ border:1px solid var(--line); background:var(--bg-2); color:var(--brown); padding:9px 15px; font-size:13px; border-radius:10px; }
+.btn:hover{ border-color:var(--sea); color:var(--sea); }
+.btn-sm{ padding:7px 11px; font-size:12px; border-radius:9px; }
+/* Первичная — терракотовый градиент */
+.btn-primary{ background:linear-gradient(135deg,var(--terra),var(--terra-dark)); border:1px solid var(--terra); color:#fff; box-shadow:0 2px 8px rgba(168,81,44,.24); }
+.btn-primary:hover{ background:linear-gradient(135deg,var(--terra-dark),var(--terra-ink)); border-color:var(--terra-dark); color:#fff; }
+/* Иконка-кнопка (только иконка, квадратная) */
+.btn.icon-only{ padding:7px; }
+.licon{ pointer-events:none; }
+
+/* Быстрые действия карточки — тот же язык, что и .btn */
+.panel-quick-btn{ padding:7px 11px; font-size:12px; border:1px solid var(--line); background:var(--bg-2); color:var(--brown); border-radius:9px; }
+.panel-quick-btn:hover{ border-color:var(--sea); color:var(--sea); background:var(--bg-2); }
+.panel-quick-btn .licon{ opacity:.85; }
+
+/* go-link — компактная вторичная кнопка перехода */
+.go-link{ border:1px solid var(--line); background:var(--bg-2); color:var(--sea-dark); padding:5px 10px; font-size:12px; border-radius:8px; }
+.go-link:hover{ border-color:var(--sea); background:var(--sea); color:#fff; }
+
+/* Маленькие иконочные кнопки задач — единый вид */
+.tk-actions button{
+  width:26px; height:26px; border-radius:7px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--brown-soft);
+  display:inline-grid; place-items:center; transition:.12s; padding:0; cursor:pointer;
+}
+.tk-actions [data-task-edit]:hover, .tk-actions [data-task-postpone]:hover{ border-color:var(--sea); color:var(--sea); }
+.tk-actions [data-task-del]:hover{ border-color:var(--terra); color:var(--terra); }
+
+/* Тег типа в истории взаимодействий — иконка + подпись */
+.tl-type{ display:inline-flex; align-items:center; gap:5px; }
+
+/* Контейнеры-«боксы» иконок (журнал, календарь) центрируют вложенный svg */
+.log-item .ic, .cal-stat-ic, .notif-item .ic{ display:grid; place-items:center; }
+
 </style>
 </head>
 <body>
@@ -1888,7 +1941,7 @@ table.tbl tr:hover td{ background:var(--sand); }
     <div class="filters-actions">
       <label class="check-inline">
         <input type="checkbox" id="fFavorites">
-        <span>★ Только избранные</span>
+        <span class="ic-inline"><svg class="licon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9Z"/></svg> Только избранные</span>
       </label>
       <button class="btn btn-sm" id="fReset">Сбросить фильтры</button>
     </div>
@@ -1911,7 +1964,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 
 <!-- ======================= ЛАЙТБОКС (планировки и виды) ======================= -->
 <div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">✕</button>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Назад">‹</button>
   <button class="lightbox-nav next" id="lightboxNext" aria-label="Вперёд">›</button>
   <figure class="lightbox-stage">
@@ -1925,7 +1978,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 <main class="view" id="view-clients">
   <div class="view-head">
     <div><h2>Профиль клиента</h2><p>Центр работы с клиентом: помещения, показы, сделки, задачи, документы и история коммуникаций</p></div>
-    <button class="btn btn-primary" id="newClientBtn">＋ Создать клиента</button>
+    <button class="btn btn-primary ic-inline" id="newClientBtn"><svg class="licon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Создать клиента</button>
   </div>
 
   <!-- Фильтры списка клиентов -->
@@ -2016,13 +2069,13 @@ table.tbl tr:hover td{ background:var(--sand); }
     </div>
 
     <div class="card col-6">
-      <h3>🔥 Горячие клиенты</h3>
+      <h3 class="ic-inline"><svg class="licon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.5 3 3.5 4 3.5 7.5a3.5 3.5 0 0 1-7 0c0-1.3.6-2.2 1.2-2.8.2 1 .8 1.5 1.5 1.7.3-2 .8-4 .8-6.4Z"/></svg> Горячие клиенты</h3>
       <div class="card-sub">Высокая вероятность сделки в ближайшие дни</div>
       <div id="hotClients"></div>
     </div>
 
     <div class="card col-6">
-      <h3>⚠️ Проблемные сделки</h3>
+      <h3 class="ic-inline"><svg class="licon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l8.5 15H3.5Z"/><path d="M12 10.5v4M12 17.5h.01"/></svg> Проблемные сделки</h3>
       <div class="card-sub">Требуют вмешательства РОП</div>
       <div id="problemDeals"></div>
     </div>
@@ -2053,7 +2106,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 
     <div class="card col-12" style="background:linear-gradient(135deg,#FBEFE4,#F6E4D2); border-color:#E8CBAE;">
       <h3 style="color:var(--terra-dark); display:flex; align-items:center; gap:9px;">
-        <span class="spark" style="width:26px;height:26px;border-radius:8px;background:var(--terra);display:grid;place-items:center;color:#fff;">✦</span>
+        <span class="spark" style="width:26px;height:26px;border-radius:8px;background:var(--terra);display:grid;place-items:center;color:#fff;"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7Z"/></svg></span>
         Рекомендации AI для руководителя
       </h3>
       <div class="card-sub">Где проседает воронка, кого дожать, какие объекты зависают</div>
@@ -2091,8 +2144,8 @@ table.tbl tr:hover td{ background:var(--sand); }
         </div>
       </div>
       <div class="cal-shell-actions">
-        <button class="btn btn-primary" id="calNewBtn">＋ Создать показ</button>
-        <button class="icon-btn" id="calClose" title="Закрыть">✕</button>
+        <button class="btn btn-primary ic-inline" id="calNewBtn"><svg class="licon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Создать показ</button>
+        <button class="icon-btn" id="calClose" title="Закрыть"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </header>
 
@@ -2147,7 +2200,7 @@ table.tbl tr:hover td{ background:var(--sand); }
         <h3 id="showFormTitle">Новый показ</h3>
         <div class="form-sub">Заполните данные о встрече с клиентом</div>
       </div>
-      <button class="icon-btn" id="showFormClose">✕</button>
+      <button class="icon-btn" id="showFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="showForm" class="form-body">
       <input type="hidden" id="showId">
@@ -2200,7 +2253,7 @@ table.tbl tr:hover td{ background:var(--sand); }
         <h3>Редактирование помещения</h3>
         <div class="form-sub" id="unitFormSub">—</div>
       </div>
-      <button class="icon-btn" id="unitFormClose">✕</button>
+      <button class="icon-btn" id="unitFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="unitForm" class="form-body">
       <input type="hidden" id="unitFormId">
@@ -2258,7 +2311,7 @@ table.tbl tr:hover td{ background:var(--sand); }
           <div class="photo-input-row">
             <input type="text" id="unitFormViewPhotos" placeholder="https://...,https://...">
             <input type="file" id="unitFormViewFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormViewFilesBtn">📷 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormViewFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormViewPreview"></div>
         </div>
@@ -2271,7 +2324,7 @@ table.tbl tr:hover td{ background:var(--sand); }
           <div class="photo-input-row">
             <input type="text" id="unitFormPlans" placeholder="https://...,https://...">
             <input type="file" id="unitFormPlanFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormPlanFilesBtn">📐 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormPlanFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormPlanPreview"></div>
         </div>
@@ -2280,7 +2333,7 @@ table.tbl tr:hover td{ background:var(--sand); }
           <div class="photo-input-row">
             <input type="text" id="unitFormPhotos" placeholder="https://...,https://...">
             <input type="file" id="unitFormPhotoFiles" accept="image/*" multiple style="display:none;">
-            <button type="button" class="btn btn-sm" id="unitFormPhotoFilesBtn">📷 Загрузить</button>
+            <button type="button" class="btn btn-sm" id="unitFormPhotoFilesBtn"><svg class="licon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/></svg> Загрузить</button>
           </div>
           <div class="photo-preview" id="unitFormPhotoPreview"></div>
         </div>
@@ -2305,7 +2358,7 @@ table.tbl tr:hover td{ background:var(--sand); }
         <h3 id="clientFormTitle">Добавление клиента</h3>
         <div class="form-sub">Заполните данные клиента отдела продаж</div>
       </div>
-      <button class="icon-btn" id="clientFormClose">✕</button>
+      <button class="icon-btn" id="clientFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="clientForm" class="form-body">
       <input type="hidden" id="clientFormId">
@@ -2411,7 +2464,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   <div class="form-shell">
     <header class="form-head">
       <div><h3 id="taskFormTitle">Новая задача</h3><div class="form-sub" id="taskFormSub">—</div></div>
-      <button class="icon-btn" id="taskFormClose">✕</button>
+      <button class="icon-btn" id="taskFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="taskForm" class="form-body">
       <input type="hidden" id="taskClientId">
@@ -2437,7 +2490,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Прикрепить документ</h3><div class="form-sub" id="docFormSub">—</div></div>
-      <button class="icon-btn" id="docFormClose">✕</button>
+      <button class="icon-btn" id="docFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="docForm" class="form-body">
       <input type="hidden" id="docClientId">
@@ -2468,7 +2521,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Контактное лицо</h3><div class="form-sub" id="contactFormSub">—</div></div>
-      <button class="icon-btn" id="contactFormClose">✕</button>
+      <button class="icon-btn" id="contactFormClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="contactForm" class="form-body">
       <input type="hidden" id="contactClientId">
@@ -2495,7 +2548,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   <div class="form-shell">
     <header class="form-head">
       <div><h3>Добавить помещение в избранное</h3><div class="form-sub" id="pickUnitSub">—</div></div>
-      <button class="icon-btn" id="pickUnitClose">✕</button>
+      <button class="icon-btn" id="pickUnitClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <div class="form-body">
       <input type="hidden" id="pickClientId">
@@ -2513,7 +2566,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   <div class="form-shell">
     <header class="form-head">
       <div><h3 id="dashEditTitle">—</h3><div class="form-sub">Данные дашборда РОП · сохраняются в базу</div></div>
-      <button class="icon-btn" id="dashEditClose">✕</button>
+      <button class="icon-btn" id="dashEditClose"><svg class="licon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </header>
     <form id="dashEditForm" class="form-body">
       <input type="hidden" id="dashEditSection">
@@ -2594,14 +2647,14 @@ const DEFAULT_BUILDING = {
 // ---------- Виды из окна ----------
 const VIEW_DIRECTIONS = ['Север','Северо-восток','Восток','Юго-восток','Юг','Юго-запад','Запад','Северо-запад'];
 const VIEW_CATEGORIES = [
-  { id:'sea',     label:'Море',           icon:'🌊', color:'#6B92BC' },
-  { id:'mount',   label:'Горы',           icon:'⛰', color:'#7A6354' },
-  { id:'pool',    label:'Бассейн',        icon:'💧', color:'#7CB4C9' },
-  { id:'park',    label:'Парковая зона',  icon:'🌳', color:'#7C9B6E' },
-  { id:'court',   label:'Двор',           icon:'🏡', color:'#B7AB9B' },
-  { id:'city',    label:'Город',          icon:'🏙', color:'#A89485' },
-  { id:'inner',   label:'Внутренний двор',icon:'◇', color:'#C8B89A' },
-  { id:'corp',    label:'Соседний корпус',icon:'⊟', color:'#9C8E80' },
+  { id:'sea',     label:'Море',           color:'#6B92BC' },
+  { id:'mount',   label:'Горы',           color:'#7A6354' },
+  { id:'pool',    label:'Бассейн',        color:'#7CB4C9' },
+  { id:'park',    label:'Парковая зона',  color:'#7C9B6E' },
+  { id:'court',   label:'Двор',           color:'#B7AB9B' },
+  { id:'city',    label:'Город',          color:'#A89485' },
+  { id:'inner',   label:'Внутренний двор',color:'#C8B89A' },
+  { id:'corp',    label:'Соседний корпус',color:'#9C8E80' },
 ];
 
 // ---------- Источники лидов ----------
@@ -2620,19 +2673,19 @@ const PRIORITY_ORDER = ['high','medium','low'];
 
 // ---------- Типы событий timeline ----------
 const INTERACTION_TYPES = {
-  created:          { label:'Создан клиент',          icon:'＋', color:'#7C9B6E' },
-  call:             { label:'Звонок',                 icon:'☎',  color:'#6B92BC' },
-  meeting:          { label:'Встреча',                icon:'☕', color:'#E0A458' },
-  show:             { label:'Показ',                  icon:'👁', color:'#6B92BC' },
-  booking:          { label:'Бронирование',           icon:'⌂',  color:'#E0A458' },
-  deal:             { label:'Сделка',                 icon:'✎',  color:'#C2683E' },
+  created:          { label:'Создан клиент',          icon:'plus', color:'#7C9B6E' },
+  call:             { label:'Звонок',                 icon:'phone', color:'#6B92BC' },
+  meeting:          { label:'Встреча',                icon:'users', color:'#E0A458' },
+  show:             { label:'Показ',                  icon:'eye', color:'#6B92BC' },
+  booking:          { label:'Бронирование',           icon:'home', color:'#E0A458' },
+  deal:             { label:'Сделка',                 icon:'edit', color:'#C2683E' },
   status_change:    { label:'Изменён статус',         icon:'⟳',  color:'#7A6354' },
-  comment:          { label:'Комментарий',            icon:'✉',  color:'#7A6354' },
-  document_added:   { label:'Документ добавлен',      icon:'📄', color:'#7A6354' },
-  task_created:     { label:'Задача создана',         icon:'✓',  color:'#6B92BC' },
-  task_completed:   { label:'Задача выполнена',       icon:'✓',  color:'#7C9B6E' },
-  manager_changed:  { label:'Смена менеджера',        icon:'⇄',  color:'#E0A458' },
-  favorite_added:   { label:'В избранное',            icon:'★',  color:'#E0A458' },
+  comment:          { label:'Комментарий',            icon:'mail', color:'#7A6354' },
+  document_added:   { label:'Документ добавлен',      icon:'doc', color:'#7A6354' },
+  task_created:     { label:'Задача создана',         icon:'check', color:'#6B92BC' },
+  task_completed:   { label:'Задача выполнена',       icon:'check', color:'#7C9B6E' },
+  manager_changed:  { label:'Смена менеджера',        icon:'swap', color:'#E0A458' },
+  favorite_added:   { label:'В избранное',            icon:'star', color:'#E0A458' },
 };
 
 // ---------- Стадии сделки ----------
@@ -3588,16 +3641,80 @@ function showsInMonth(y,m){
   return state.shows.filter(s=>s.date.startsWith(prefix));
 }
 
+/* ============================================================
+   ЕДИНЫЙ НАБОР МОНОХРОМНЫХ ЛИНЕЙНЫХ ИКОНОК
+   Все иконки — currentColor, штриховые, единая толщина.
+   icon('name')          → инлайн-SVG для HTML
+   iconInSvg('name',x,y) → вложенный SVG (для планов/чертежей)
+   ============================================================ */
+const ICON_PATHS = {
+  plus:      '<path d="M12 5v14M5 12h14"/>',
+  close:     '<path d="M6 6l12 12M18 6L6 18"/>',
+  edit:      '<path d="M4 20h4L19 9a2 2 0 0 0-3-3L5 17v3Z"/><path d="M14 7l3 3"/>',
+  check:     '<path d="M20 6L9 17l-5-5"/>',
+  star:      '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9Z"/>',
+  arrowRight:'<path d="M4 12h15M13 6l6 6-6 6"/>',
+  arrowUp:   '<path d="M12 19V6M6 11l6-6 6 6"/>',
+  arrowDown: '<path d="M12 5v13M6 13l6 6 6-6"/>',
+  calendar:  '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+  user:      '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.7-3.8 3.7-5.6 7.5-5.6s6.8 1.8 7.5 5.6"/>',
+  users:     '<circle cx="9" cy="8" r="3.2"/><path d="M2.6 19.5c.6-3.3 3-4.9 6.4-4.9s5.8 1.6 6.4 4.9"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6M18 14.6c2.6.4 4.2 1.9 4.7 4.6"/>',
+  home:      '<path d="M4 11l8-6.5L20 11"/><path d="M6 9.7V20h12V9.7"/>',
+  phone:     '<path d="M5.5 4h3.2l1.6 4-2.1 1.5a11 11 0 0 0 4.8 4.8L15.5 12l4 1.6v3.2a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3.5 6.2 2 2 0 0 1 5.5 4Z"/>',
+  eye:       '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+  mail:      '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4 7l8 5.5L20 7"/>',
+  monitor:   '<rect x="3" y="4.5" width="18" height="11.5" rx="2"/><path d="M8.5 20h7M12 16v4"/>',
+  ruler:     '<rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M7 8v3M11 8v4M15 8v3M19 8v4"/>',
+  gear:      '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  camera:    '<path d="M4 8.5h3l1.7-2h6.6l1.7 2H20a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18v-8A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.3"/>',
+  grid:      '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/>',
+  compass:   '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8Z"/>',
+  flame:     '<path d="M12 3c.5 3 3.5 4 3.5 7.5a3.5 3.5 0 0 1-7 0c0-1.3.6-2.2 1.2-2.8.2 1 .8 1.5 1.5 1.7.3-2 .8-4 .8-6.4Z"/>',
+  alert:     '<path d="M12 4l8.5 15H3.5Z"/><path d="M12 10.5v4M12 17.5h.01"/>',
+  sparkle:   '<path d="M12 3.5l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7Z"/>',
+  clock:     '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  doc:       '<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/>',
+  swap:      '<path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/>',
+  // Виды из окна (монохром)
+  waves:     '<path d="M3 8c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 13c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 18c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0"/>',
+  mountain:  '<path d="M3 19l6-11 4 6.5 2.5-3.5L21 19Z"/>',
+  droplet:   '<path d="M12 3.5s6 6 6 9.5a6 6 0 0 1-12 0c0-3.5 6-9.5 6-9.5Z"/>',
+  tree:      '<path d="M12 4l4.5 7h-3l3 4.5H7.5l3-4.5h-3Z"/><path d="M12 15.5V21"/>',
+  city:      '<path d="M3 21V9l6-3v15M9 21V4l6 3v14M15 21V10l6 3v8M2 21h20"/>',
+  diamond:   '<path d="M12 3l8.5 9L12 21 3.5 12Z"/>',
+  building2: '<rect x="3" y="8" width="7" height="12" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/><path d="M5.5 11h2M5.5 14h2M15.5 7h3M15.5 11h3M15.5 15h3"/>',
+};
+// Категория вида → имя иконки
+const VIEW_ICON = { sea:'waves', mount:'mountain', pool:'droplet', park:'tree', court:'home', city:'city', inner:'diamond', corp:'building2' };
+// Тип записи журнала → имя иконки
+const LOG_ICON = { book:'home', show:'eye', deal:'edit', note:'mail', call:'phone', lead:'plus' };
+
+function icon(name, size=16, cls=''){
+  const p = ICON_PATHS[name];
+  if(!p) return '';
+  return `<svg class="licon ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+function iconStar(filled, size=16){
+  const p = ICON_PATHS.star;
+  return `<svg class="licon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled?'currentColor':'none'}" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+// Вложенный SVG для использования внутри другого <svg> (планы этажей)
+function iconInSvg(name, x, y, size=16, stroke='currentColor'){
+  const p = ICON_PATHS[name];
+  if(!p) return '';
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
 // ---------- KPI карточка (для воронки и дашборда) ----------
 function kpi(label,val,trend,note){
-  return `<div class="kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="trend ${trend}">${trend==='up'?'▲':'▼'} ${note}</div></div>`;
+  return `<div class="kpi"><div class="label">${label}</div><div class="val">${val}</div><div class="trend ${trend}">${icon(trend==='up'?'arrowUp':'arrowDown',12)} ${note}</div></div>`;
 }
 
 // ---------- Toast ----------
 let toastTimer;
 function toast(msg){
   const t = document.getElementById('toast');
-  t.innerHTML = '<span style="color:var(--st-booked)">✓</span> '+msg;
+  t.innerHTML = icon('check',15)+' '+msg;
   t.classList.add('show'); clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
 }
@@ -3623,7 +3740,7 @@ function buildFilters(){
   document.getElementById('fFloor').innerHTML = `<option value="">Все этажи</option>`+floors.map(f=>`<option value="${f}">${f} этаж</option>`).join('');
   document.getElementById('fStatus').innerHTML = `<option value="">Все статусы</option>`+STATUS_ORDER.map(s=>`<option value="${s}">${STATUSES[s].label}</option>`).join('');
   document.getElementById('fManager').innerHTML = `<option value="">Все менеджеры</option>`+MANAGERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.icon} ${v.label}</option>`).join('');
+  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.label}</option>`).join('');
   ['fCorp','fFloor','fStatus','fManager','fPriceMin','fPriceMax','fAreaMin','fAreaMax','fQuery'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && el.tagName==='INPUT') el.value='';
@@ -3737,8 +3854,8 @@ function renderGridView(){
       html += `<div class="chess-row"><div class="floor-label">${f} эт.</div><div class="cells">`;
       rowUnits.forEach(u=>{
         const visible = passFilter(u);
-        const fav = state.favorites.has(u.id) ? '<span class="fav-star">★</span>' : '';
-        const adminBtn = state.adminMode ? '<span class="admin-edit" data-edit="'+u.id+'" title="Редактировать">✎</span>' : '';
+        const fav = state.favorites.has(u.id) ? '<span class="fav-star">'+iconStar(true,11)+'</span>' : '';
+        const adminBtn = state.adminMode ? '<span class="admin-edit" data-edit="'+u.id+'" title="Редактировать">'+icon('edit',11)+'</span>' : '';
         html += `<div class="cell ${visible?'':'dim'} ${u.id===state.selectedUnitId?'sel':''}"
                     style="background:${STATUSES[u.status].color}" data-id="${u.id}" title="${u.displayNum} · ${STATUSES[u.status].label}">
                    ${fav}
@@ -3957,7 +4074,7 @@ function aptSVG(c){
     <rect x="${plX}" y="${plY}" width="${plW}" height="15" rx="4" fill="${st.color}"/>
     <text x="${plX+plW/2}" y="${plY+10.5}" class="fp-apt-status">${escapeHtml(label)}</text>`;
   // Иконка вида
-  const viewIc = cat ? `<text x="${rx+rw-pad}" y="${ry+pad+11}" class="fp-apt-view" text-anchor="end">${cat.icon}</text>` : '';
+  const viewIc = cat ? iconInSvg(VIEW_ICON[cat.id], rx+rw-pad-16, ry+pad-2, 16, '#82705F') : '';
 
   return `
   <g class="apt ${sel?'sel':''} ${visible?'':'dim'}" data-id="${u.id}" style="--st:${st.color}">
@@ -4021,7 +4138,7 @@ function showFloorTooltip(e, u){
     <div class="ft-row"><span>Площадь</span><b>${u.area} м²</b></div>
     <div class="ft-row"><span>Цена</span><b>${fmtMoney(u.total)}</b></div>
     <div class="ft-row"><span>Этаж</span><b>${u.floor}</b></div>
-    ${cat ? `<div class="ft-row"><span>Вид</span><b>${cat.icon} ${cat.label}</b></div>` : ''}
+    ${cat ? `<div class="ft-row"><span>Вид</span><b class="ic-inline">${icon(VIEW_ICON[cat.id],13)} ${cat.label}</b></div>` : ''}
     <span class="ft-status" style="background:${st.color}">${st.label}</span>
   `;
   el.classList.add('show');
@@ -4131,7 +4248,7 @@ function renderAside(){
       <h4>Сводка по объекту</h4>
       ${STATUS_ORDER.map(s=>`<div class="mini-stat"><span style="display:flex;align-items:center;gap:7px;"><span class="dot" style="width:11px;height:11px;border-radius:3px;background:${STATUSES[s].color}"></span>${STATUSES[s].label}</span><b>${counts[s]}</b></div>`).join('')}
       <div class="mini-stat" style="border-top:1px solid var(--line);margin-top:4px;padding-top:9px;"><span>Всего помещений</span><b>${total}</b></div>
-      <div class="mini-stat"><span>★ Избранных</span><b>${favCount}</b></div>
+      <div class="mini-stat"><span class="ic-inline">${iconStar(true,12)} Избранных</span><b>${favCount}</b></div>
     </div>
     <div class="mini-card">
       <h4>Активность показов</h4>
@@ -4185,29 +4302,29 @@ function openPanel(id){
   panel.classList.toggle('presentation', pres);
 
   panel.innerHTML = `
-    <div class="pres-banner">🎬 Презентационный режим · клиент видит только основное</div>
+    <div class="pres-banner ic-inline">${icon('monitor',15)} Презентационный режим · клиент видит только основное</div>
     <div class="panel-head">
       <div>
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--brown-soft);">${u.kind} · ${u.corp}</div>
         <h3 style="font-size:24px;margin-top:3px;">${u.displayNum}</h3>
         <div style="margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <span class="status-pill" style="background:${st.color}"><span class="dot"></span>${st.label}</span>
-          <button class="fav-toggle ${isFav?'on':''} pres-hide" id="favBtn">${isFav?'★ В избранном':'☆ В избранное'}</button>
-          <button class="pres-toggle ${pres?'on':''}" id="presBtn">${pres?'✓ Презентация':'🎬 Презентация'}</button>
+          <button class="fav-toggle ic-inline ${isFav?'on':''} pres-hide" id="favBtn">${iconStar(isFav,14)} ${isFav?'В избранном':'В избранное'}</button>
+          <button class="pres-toggle ic-inline ${pres?'on':''}" id="presBtn">${pres?icon('check',14):icon('monitor',14)} Презентация</button>
         </div>
       </div>
-      <button class="close" id="panelClose">✕</button>
+      <button class="close" id="panelClose">${icon('close',17)}</button>
     </div>
 
     <div class="panel-body">
       <!-- Быстрые действия -->
       <div class="panel-actions-row pres-hide">
-        <button class="panel-quick-btn" data-q="show">  <span class="ic">📅</span>Назначить показ</button>
-        <button class="panel-quick-btn" data-q="book">  <span class="ic">⌂</span>Создать бронь</button>
-        ${client ? `<button class="panel-quick-btn" data-q="client"><span class="ic">👤</span>Профиль клиента</button>` : ''}
-        ${u.plans && u.plans.length ? `<button class="panel-quick-btn" data-q="plan"><span class="ic">📐</span>Планировка</button>` : ''}
-        ${(u.view && u.view.photos && u.view.photos.length) ? `<button class="panel-quick-btn" data-q="view"><span class="ic">🌅</span>Вид из окна</button>` : ''}
-        <button class="panel-quick-btn" data-q="floor"><span class="ic">▦</span>Этаж целиком</button>
+        <button class="panel-quick-btn" data-q="show">${icon('calendar',16)}Назначить показ</button>
+        <button class="panel-quick-btn" data-q="book">${icon('home',16)}Создать бронь</button>
+        ${client ? `<button class="panel-quick-btn" data-q="client">${icon('user',16)}Профиль клиента</button>` : ''}
+        ${u.plans && u.plans.length ? `<button class="panel-quick-btn" data-q="plan">${icon('ruler',16)}Планировка</button>` : ''}
+        ${(u.view && u.view.photos && u.view.photos.length) ? `<button class="panel-quick-btn" data-q="view">${icon('camera',16)}Вид из окна</button>` : ''}
+        <button class="panel-quick-btn" data-q="floor">${icon('grid',16)}Этаж целиком</button>
       </div>
 
       <div class="kv">
@@ -4231,8 +4348,8 @@ function openPanel(id){
       <div class="panel-section-title">Вид из окна</div>
       <div class="view-block">
         <div class="view-block-head">
-          ${cat ? `<span class="view-cat-tag" style="background:${cat.color}">${cat.icon} ${cat.label}</span>` : ''}
-          ${u.view && u.view.direction ? `<span class="view-direction-tag">↗ ${u.view.direction}</span>` : ''}
+          ${cat ? `<span class="view-cat-tag ic-inline">${icon(VIEW_ICON[cat.id],14)} ${cat.label}</span>` : ''}
+          ${u.view && u.view.direction ? `<span class="view-direction-tag ic-inline">${icon('compass',13)} ${u.view.direction}</span>` : ''}
           ${!cat && !(u.view && u.view.direction) ? `<span style="color:var(--brown-soft); font-size:12px;">Не указан</span>` : ''}
         </div>
         ${u.view && u.view.description ? `<div style="font-size:13px; color:var(--brown); line-height:1.45;">${escapeHtml(u.view.description)}</div>` : ''}
@@ -4251,13 +4368,14 @@ function openPanel(id){
         <div class="person-row">
           <div class="avatar">${mgrShort(u.managerId)}</div>
           <div class="meta"><b>${mgrName(u.managerId)}</b><span>Менеджер отдела продаж</span></div>
+          <button class="go-link ic-inline" data-go-mgr="${u.managerId}">${icon('arrowRight',13)} Клиенты</button>
         </div>
 
         <div class="panel-section-title">Клиент</div>
         ${ client ? `<div class="person-row">
               <div class="avatar">${client.name.split(' ').map(w=>w[0]).join('')}</div>
               <div class="meta"><b>${client.name}</b><span>${client.phone} · ${client.stage}</span></div>
-              <button class="go-link" data-go-client="${client.id}">→ Карточка</button>
+              <button class="go-link ic-inline" data-go-client="${client.id}">${icon('arrowRight',13)} Карточка</button>
            </div>`
           : `<div class="person-row" style="color:var(--brown-soft)"><div class="avatar" style="background:var(--line-soft)">—</div><div class="meta"><b>Клиент не закреплён</b><span>Помещение без активной сделки</span></div></div>` }
 
@@ -4272,11 +4390,11 @@ function openPanel(id){
                     <b>${c ? c.name : 'Клиент'}</b>
                     <span>${fmtDateRu(s.date)} · ${mgrName(s.managerId)} · ${ss.label}</span>
                   </div>
-                  <button class="go-link" data-go-show="${s.id}">→ В календарь</button>
+                  <button class="go-link ic-inline" data-go-show="${s.id}">${icon('arrowRight',13)} В календарь</button>
                 </div>`;
               }).join('')
             : `<div style="color:var(--brown-soft); font-size:13px; padding:6px 2px;">Показы не назначены</div>` }
-        <button class="btn btn-sm" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">＋ Назначить показ</button>
+        <button class="btn btn-sm ic-inline" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">${icon('plus',14)} Назначить показ</button>
 
         <div class="panel-section-title">Сменить статус</div>
         <div style="display:flex;flex-wrap:wrap;gap:7px;" id="statusSwitcher">
@@ -4290,7 +4408,7 @@ function openPanel(id){
       <button class="btn" data-act="show">Назначить показ</button>
       <button class="btn" data-act="deal">Создать сделку</button>
       ${ state.adminMode
-          ? `<button class="btn" data-act="edit">✎ Редактировать</button>`
+          ? `<button class="btn ic-inline" data-act="edit">${icon('edit',15)} Редактировать</button>`
           : `<button class="btn" data-act="status">Изменить статус</button>` }
     </div>`;
 
@@ -4364,6 +4482,9 @@ function openPanel(id){
   });
   panel.querySelectorAll('[data-go-show]').forEach(b=>b.onclick=()=>{
     closePanel(); openCalendarOnShow(b.dataset.goShow);
+  });
+  panel.querySelectorAll('[data-go-mgr]').forEach(b=>b.onclick=()=>{
+    closePanel(); goManager(b.dataset.goMgr);
   });
 
   panel.querySelectorAll('.panel-actions [data-act]').forEach(btn=>btn.onclick=()=>{
@@ -4444,8 +4565,8 @@ function renderAdminPanel(){
   const cfg = state.buildingConfig;
   panel.innerHTML = `
     <div class="admin-panel-head">
-      <h4>⚙ Управление структурой здания <span class="badge-admin">Админ</span></h4>
-      <button class="btn btn-sm" id="adminAddCorp">＋ Добавить корпус</button>
+      <h4 class="ic-inline">${icon('gear',15)} Управление структурой здания <span class="badge-admin">Админ</span></h4>
+      <button class="btn btn-sm ic-inline" id="adminAddCorp">${icon('plus',14)} Добавить корпус</button>
     </div>
     <div class="admin-panel-corps">
       ${cfg.corps.map(corp=>{
@@ -4454,7 +4575,7 @@ function renderAdminPanel(){
         return `<div class="admin-corp" data-corp-card="${corp}">
           <div class="admin-corp-name" style="display:flex; justify-content:space-between; align-items:center;">
             <span>${corp} · ${corpUnits.length} помещений</span>
-            ${cfg.corps.length>1 ? `<button class="btn btn-sm" data-corp-remove="${corp}" style="color:var(--terra-dark); border-color:var(--terra-dark);" title="Удалить корпус">✕</button>` : ''}
+            ${cfg.corps.length>1 ? `<button class="btn btn-sm icon-only" data-corp-remove="${corp}" style="color:var(--terra-dark); border-color:var(--terra-dark);" title="Удалить корпус">${icon('close',14)}</button>` : ''}
           </div>
           <div class="admin-stepper">
             <span class="lbl">Этажей в этом корпусе</span>
@@ -4547,7 +4668,7 @@ function renderPhotoPreview(host, arr, kind){
   host.innerHTML = arr.map((p,i)=>{
     const isMain = kind==='view' && p.isMain;
     return `<div class="pp-thumb ${isMain?'is-main':''}" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-i="${i}" title="${kind==='view' ? (isMain?'Основная фотография':'Кликните, чтобы сделать основной') : (p.title||'')}">
-      <button type="button" class="pp-del" data-i="${i}">✕</button>
+      <button type="button" class="pp-del" data-i="${i}">${icon('close',12)}</button>
     </div>`;
   }).join('');
   host.querySelectorAll('.pp-del').forEach(b=>b.onclick = e=>{
@@ -4594,7 +4715,7 @@ function openUnitForm(id){
   document.getElementById('unitFormViewDir').innerHTML = `<option value="">— не указано —</option>`+
     VIEW_DIRECTIONS.map(d=>`<option ${d===v.direction?'selected':''}>${d}</option>`).join('');
   document.getElementById('unitFormViewCat').innerHTML = `<option value="">— не указана —</option>`+
-    VIEW_CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===v.category?'selected':''}>${c.icon} ${c.label}</option>`).join('');
+    VIEW_CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===v.category?'selected':''}>${c.label}</option>`).join('');
   document.getElementById('unitFormViewDesc').value    = v.description || '';
   document.getElementById('unitFormViewComment').value = v.comment || '';
   document.getElementById('unitFormViewPhotos').value  = '';
@@ -4836,8 +4957,8 @@ function renderClientCard(){
         </div>
         <div class="cc-head-actions">
           <span class="stage-tag" style="background:var(--terra); color:#fff; padding:6px 12px; font-size:12px;">${c.stage}</span>
-          <button class="btn btn-sm" id="ccAssignShow">＋ Назначить показ</button>
-          <button class="btn btn-sm" id="ccEdit">✎ Редактировать</button>
+          <button class="btn btn-sm" id="ccAssignShow" class="ic-inline">${icon('plus',14)} Назначить показ</button>
+          <button class="btn btn-sm" id="ccEdit" class="ic-inline">${icon('edit',14)} Редактировать</button>
         </div>
       </div>
 
@@ -4932,8 +5053,8 @@ function renderTabOverview(pane, c){
     <div>${renderMgrHistory(c)}</div>
 
     <div style="margin-top:24px; display:flex; gap:10px; padding-top:16px; border-top:1px dashed var(--line);">
-      <button class="btn" id="ccComment">＋ Добавить комментарий в историю</button>
-      <button class="btn" id="ccCall">☎ Зафиксировать звонок</button>
+      <button class="btn" id="ccComment" class="ic-inline">${icon('plus',14)} Добавить комментарий в историю</button>
+      <button class="btn" id="ccCall" class="ic-inline">${icon('phone',14)} Зафиксировать звонок</button>
       <button class="btn" style="color:var(--terra-dark); border-color:var(--terra-dark); margin-left:auto;" id="ccDelete">Удалить клиента</button>
     </div>
   `;
@@ -5029,7 +5150,7 @@ function renderTabUnits(pane, c, segs){
 
     <div style="display:flex; align-items:center; margin-bottom:12px; gap:10px;">
       <div class="cc-block-title" style="margin:0;">${segData[seg].label} — ${segData[seg].items.length}</div>
-      <button class="btn btn-sm" style="margin-left:auto;" id="addToFavBtn">＋ Добавить в избранное</button>
+      <button class="btn btn-sm" style="margin-left:auto;" id="addToFavBtn" class="ic-inline">${icon('plus',14)} Добавить в избранное</button>
     </div>
 
     <div id="unitsList">${renderUnitsList(segData[seg].items, c, seg)}</div>
@@ -5092,11 +5213,11 @@ function renderUnitsList(items, c, seg){
         ${u.corp} · ${u.pricePerM} тыс. ₽/м² · ${fmtMoney(u.total)} · ${st.label}
       </div>
       <div class="ucm-actions">
-        <button class="btn btn-sm" data-show-unit="${u.id}">＋ Показ</button>
+        <button class="btn btn-sm" data-show-unit="${u.id}" class="ic-inline">${icon('plus',13)} Показ</button>
         ${u.status!=='booked' && u.status!=='sold' ? `<button class="btn btn-sm" data-book-unit="${u.id}">Бронь</button>` : ''}
         ${u.status==='booked' ? `<button class="btn btn-sm" data-deal-unit="${u.id}">Сделка</button>` : ''}
-        <button class="btn btn-sm" data-go-unit="${u.id}">→ В шахматке</button>
-        ${seg==='favorite' && inFav ? `<button class="btn btn-sm" data-unfav-unit="${u.id}" style="color:var(--terra-dark);">★ Убрать</button>` : ''}
+        <button class="btn btn-sm" data-go-unit="${u.id}">${icon('arrowRight',13)} В шахматке</button>
+        ${seg==='favorite' && inFav ? `<button class="btn btn-sm" data-unfav-unit="${u.id}" style="color:var(--terra-dark);">${iconStar(true,13)} Убрать</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -5119,11 +5240,11 @@ function renderTabShows(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Показы клиента — ${list.length}</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addShowBtn">＋ Назначить показ</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addShowBtn" class="ic-inline">${icon('plus',14)} Назначить показ</button>
     </div>
 
     ${nextShow ? `<div style="background:linear-gradient(135deg, var(--terra), var(--terra-dark)); color:#fff; border-radius:11px; padding:14px 16px; margin-bottom:16px;">
-      <div style="font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">⚡ Ближайший показ</div>
+      <div class="ic-inline" style="font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">${icon('clock',12)} Ближайший показ</div>
       <div style="font-family:'Fraunces',serif; font-size:18px; font-weight:600; margin-top:3px;">
         ${fmtDateRu(nextShow.date)} · ${nextShow.time}${getUnit(nextShow.unitId)?' · '+getUnit(nextShow.unitId).displayNum:''}
       </div>
@@ -5143,8 +5264,8 @@ function renderTabShows(pane, c){
           ${s.comment?'<div style="font-style:italic; margin-top:3px;">«'+esc(s.comment)+'»</div>':''}
         </div>
         <div class="ucm-actions">
-          <button class="btn btn-sm" data-show-edit="${s.id}">✎ Изменить</button>
-          ${u?`<button class="btn btn-sm" data-go-unit="${u.id}">→ Помещение</button>`:''}
+          <button class="btn btn-sm" data-show-edit="${s.id}" class="ic-inline">${icon('edit',13)} Изменить</button>
+          ${u?`<button class="btn btn-sm" data-go-unit="${u.id}">${icon('arrowRight',13)} Помещение</button>`:''}
           <button class="btn btn-sm" data-show-cal="${s.id}">→ В календарь</button>
         </div>
       </div>`;
@@ -5174,7 +5295,7 @@ function renderTabTasks(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Задачи — ${tasks.filter(t=>!t.done).length} активных</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addTaskBtn">＋ Создать задачу</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addTaskBtn" class="ic-inline">${icon('plus',14)} Создать задачу</button>
     </div>
     ${tasks.length ? tasks.map(t=>{
       const overdue = !t.done && t.dueDate && t.dueDate < todayIso;
@@ -5187,9 +5308,9 @@ function renderTabTasks(pane, c){
           </div>
         </div>
         <div class="tk-actions">
-          <button data-task-edit="${t.id}" title="Изменить">✎</button>
-          <button data-task-postpone="${t.id}" title="Перенести на завтра">→</button>
-          <button data-task-del="${t.id}" title="Удалить">✕</button>
+          <button data-task-edit="${t.id}" title="Изменить">${icon('edit',12)}</button>
+          <button data-task-postpone="${t.id}" title="Перенести на завтра">${icon('arrowRight',12)}</button>
+          <button data-task-del="${t.id}" title="Удалить">${icon('close',12)}</button>
         </div>
       </div>`;
     }).join('') : `<div class="unit-empty">Задач нет</div>`}
@@ -5227,7 +5348,7 @@ function renderTabDocs(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Документы — ${docs.length}</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addDocBtn">＋ Прикрепить документ</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addDocBtn" class="ic-inline">${icon('plus',14)} Прикрепить документ</button>
     </div>
     ${docs.length ? docs.map(d=>`
       <div class="doc-card">
@@ -5263,7 +5384,7 @@ function renderTabTimeline(pane, c){
       const t = INTERACTION_TYPES[ev.type] || { label:ev.type, icon:'•', color:'#7A6354' };
       return `<div class="tl-event">
         <div class="tl-time">${ev.at || ''}</div>
-        <div class="tl-text"><span class="tl-type" style="background:${t.color}22; color:${t.color};">${t.icon} ${t.label}</span>${esc(ev.text)}</div>
+        <div class="tl-text"><span class="tl-type" style="background:${t.color}22; color:${t.color};">${icon(t.icon,13)} ${t.label}</span>${esc(ev.text)}</div>
       </div>`;
     }).join('')}</div>` : `<div class="unit-empty">История пуста</div>`}
   `;
@@ -5608,7 +5729,7 @@ function renderPickList(query){
       <div class="pu-st" style="background:${STATUSES[u.status].color}"></div>
       <div class="pu-num">${u.displayNum}</div>
       <div class="pu-meta"><b>${u.kind} · ${u.area} м²</b>${u.corp} · ${u.floor} эт. · ${STATUSES[u.status].label}</div>
-      <button class="btn btn-sm" style="${inFav?'border-color:var(--terra); color:var(--terra);':''}">${inFav?'★ В избранном':'☆ Добавить'}</button>
+      <button class="btn btn-sm" style="${inFav?'border-color:var(--terra); color:var(--terra);':''}">${iconStar(inFav,13)} ${inFav?'В избранном':'Добавить'}</button>
     </div>`;
   }).join('');
   el.querySelectorAll('.pick-unit-item').forEach(it=>it.onclick=()=>{
@@ -5734,7 +5855,6 @@ function svgGroupedBars(data){
    (шестерёнка) доступно редактирование всех блоков.
    ============================================================ */
 
-const LOG_ICONS = { book:'⌂', show:'👁', deal:'✎', note:'✉', call:'☎', lead:'＋' };
 
 // Схемы форм редактирования блоков дашборда
 const DASH_SCHEMAS = {
@@ -5771,8 +5891,8 @@ const DASH_SCHEMAS = {
     { k:'who',    label:'Кто',      type:'text', req:true },
     { k:'action', label:'Действие', type:'text' },
     { k:'icon',   label:'Тип', type:'select', options:[
-      ['book','Бронь ⌂'],['show','Показ 👁'],['deal','Сделка ✎'],
-      ['note','Заметка ✉'],['call','Звонок ☎'],['lead','Лид ＋']] },
+      ['book','Бронь'],['show','Показ'],['deal','Сделка'],
+      ['note','Заметка'],['call','Звонок'],['lead','Лид']] },
   ]},
 };
 
@@ -5796,7 +5916,7 @@ function renderDashboard(){
     bar.style.display = 'block';
     bar.innerHTML = `
       <div class="dash-admin-head">
-        <h4>⚙ Редактирование дашборда <span class="badge-admin">Админ</span></h4>
+        <h4 class="ic-inline">${icon('gear',15)} Редактирование дашборда <span class="badge-admin">Админ</span></h4>
         <div class="dash-admin-actions">
           <button class="btn btn-sm" id="dashDemoBtn">Загрузить пример</button>
           <button class="btn btn-sm" id="dashClearBtn" style="color:var(--terra-dark);border-color:var(--terra-dark);">Очистить всё</button>
@@ -5879,7 +5999,7 @@ function renderDashboard(){
         <td>${m.plan}/${m.fact}</td>
         <td><span class="tbl-bar" style="width:${(+m.fact||0)/maxFact*70}px"></span> ${m.fact} млн</td>
         <td>${m.books}</td><td>${m.conv}%</td>
-        <td><span class="chip ${m.rating>=4.5?'ok':m.rating>=4?'warn':'hot'}">★ ${m.rating}</span></td></tr>`;
+        <td><span class="chip ${m.rating>=4.5?'ok':m.rating>=4?'warn':'hot'}" class="ic-inline">${iconStar(true,11)} ${m.rating}</span></td></tr>`;
     }).join('') : `<tr><td colspan="7">${emptyState('Добавьте менеджеров в блоке «Продажи по менеджерам»', false)}</td></tr>`}</tbody>`;
 
   // ---- Прогноз выручки ----
@@ -5904,7 +6024,7 @@ function renderDashboard(){
   document.getElementById('actionLog').innerHTML =
     (admin ? addBtn('log','Добавить запись') : '') +
     (d.log.length ? d.log.map(l=>`
-      <div class="log-item dash-row"><div class="ic">${LOG_ICONS[l.icon]||'•'}</div>
+      <div class="log-item dash-row"><div class="ic">${icon(LOG_ICON[l.icon]||'doc',15)}</div>
         <div style="flex:1;"><div><b>${escapeHtml(l.who)}</b> ${escapeHtml(l.action||'')}</div></div>
         <div class="tm">${escapeHtml(l.time||'')}</div>${rowCtrls('log',l.id)}</div>`).join('') : emptyState('Журнал пуст', admin));
 
@@ -5922,15 +6042,15 @@ function renderDashboard(){
 
 /* ---------- Хелперы рендера ---------- */
 function initials(name){ return String(name||'').split(' ').map(w=>w[0]||'').join('').slice(0,2); }
-function addBtn(section, label){ return `<button class="dash-add" data-add="${section}">＋ ${label}</button>`; }
+function addBtn(section, label){ return `<button class="dash-add" data-add="${section}" class="ic-inline">${icon('plus',14)} ${label}</button>`; }
 function rowCtrls(section, id){
   if(!state.adminMode) return '';
   return `<span class="dash-row-ctrls">
-    <button class="dash-ce" data-edit-sec="${section}" data-edit-id="${id}" title="Редактировать">✎</button>
-    <button class="dash-cd" data-del-sec="${section}" data-del-id="${id}" title="Удалить">✕</button></span>`;
+    <button class="dash-ce" data-edit-sec="${section}" data-edit-id="${id}" title="Редактировать">${icon('edit',12)}</button>
+    <button class="dash-cd" data-del-sec="${section}" data-del-id="${id}" title="Удалить">${icon('close',12)}</button></span>`;
 }
 function emptyState(text, admin){
-  return `<div class="dash-empty">${text}${admin?' · нажмите «＋», чтобы добавить':''}</div>`;
+  return `<div class="dash-empty">${text}${admin?' · нажмите «+», чтобы добавить':''}</div>`;
 }
 
 /* ---------- Связывание элементов управления ---------- */
@@ -6128,7 +6248,7 @@ function renderCalStats(){
     const u = getUnit(next.unitId);
     nextHtml = `
       <div class="cal-stat-next">
-        <div class="lbl">⚡ Ближайший показ</div>
+        <div class="lbl ic-inline">${icon('clock',12)} Ближайший показ</div>
         <div class="val">${next.time} · ${client?client.name:'Клиент'}</div>
         <div class="meta">${fmtDateRu(next.date)}${u?' · '+u.displayNum:''} · ${mgrShort(next.managerId)}</div>
       </div>`;
@@ -6137,21 +6257,21 @@ function renderCalStats(){
   document.getElementById('calStats').innerHTML = `
     ${nextHtml}
     <div class="cal-stat">
-      <div class="cal-stat-ic">☀</div>
+      <div class="cal-stat-ic">${icon('clock',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">Сегодня</div>
         <div class="cal-stat-value">${todayShows.length} ${declOf(todayShows.length,['показ','показа','показов'])}</div>
       </div>
     </div>
     <div class="cal-stat">
-      <div class="cal-stat-ic">📆</div>
+      <div class="cal-stat-ic">${icon('calendar',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">На неделю</div>
         <div class="cal-stat-value">${weekShows.length} ${declOf(weekShows.length,['показ','показа','показов'])}</div>
       </div>
     </div>
     <div class="cal-stat">
-      <div class="cal-stat-ic" style="color:var(--terra-dark);">✕</div>
+      <div class="cal-stat-ic" style="color:var(--terra-dark);">${icon('close',16)}</div>
       <div class="cal-stat-body">
         <div class="cal-stat-label">Отмен в ближайшие дни</div>
         <div class="cal-stat-value ${cancelled?'warn':'muted'}">${cancelled}</div>
@@ -6190,7 +6310,7 @@ function renderCalDay(){
     grid.innerHTML = `
       <div class="cal-day-empty">
         <div class="big">Показов на этот день нет</div>
-        <div>Нажмите «＋ Создать показ», чтобы назначить встречу с клиентом.</div>
+        <div>Нажмите «Создать показ», чтобы назначить встречу с клиентом.</div>
       </div>`;
     return;
   }
@@ -6501,6 +6621,18 @@ function goClient(id){
 function goUnit(id){
   document.querySelector('.tab[data-view="chess"]').click();
   openPanel(id);
+}
+
+// Перейти к клиентам выбранного менеджера (фильтр по менеджеру)
+function goManager(managerId){
+  document.querySelector('.tab[data-view="clients"]').click();
+  state.clientFilters.mgr = managerId;
+  const sel = document.getElementById('clFilterMgr');
+  if(sel) sel.value = managerId;
+  renderClientList();
+  const first = clients().find(c=>c.mgr===managerId);
+  if(first){ state.activeClientId = first.id; renderClientCard(); }
+  toast('Клиенты менеджера: '+mgrName(managerId));
 }
 
 /* ---------- ESC закрывает всё ---------- */

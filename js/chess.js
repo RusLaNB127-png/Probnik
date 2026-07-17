@@ -17,7 +17,7 @@ function buildFilters(){
   document.getElementById('fFloor').innerHTML = `<option value="">Все этажи</option>`+floors.map(f=>`<option value="${f}">${f} этаж</option>`).join('');
   document.getElementById('fStatus').innerHTML = `<option value="">Все статусы</option>`+STATUS_ORDER.map(s=>`<option value="${s}">${STATUSES[s].label}</option>`).join('');
   document.getElementById('fManager').innerHTML = `<option value="">Все менеджеры</option>`+MANAGERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.icon} ${v.label}</option>`).join('');
+  document.getElementById('fView').innerHTML = `<option value="">Любой вид</option>`+VIEW_CATEGORIES.map(v=>`<option value="${v.id}">${v.label}</option>`).join('');
   ['fCorp','fFloor','fStatus','fManager','fPriceMin','fPriceMax','fAreaMin','fAreaMax','fQuery'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && el.tagName==='INPUT') el.value='';
@@ -131,8 +131,8 @@ function renderGridView(){
       html += `<div class="chess-row"><div class="floor-label">${f} эт.</div><div class="cells">`;
       rowUnits.forEach(u=>{
         const visible = passFilter(u);
-        const fav = state.favorites.has(u.id) ? '<span class="fav-star">★</span>' : '';
-        const adminBtn = state.adminMode ? '<span class="admin-edit" data-edit="'+u.id+'" title="Редактировать">✎</span>' : '';
+        const fav = state.favorites.has(u.id) ? '<span class="fav-star">'+iconStar(true,11)+'</span>' : '';
+        const adminBtn = state.adminMode ? '<span class="admin-edit" data-edit="'+u.id+'" title="Редактировать">'+icon('edit',11)+'</span>' : '';
         html += `<div class="cell ${visible?'':'dim'} ${u.id===state.selectedUnitId?'sel':''}"
                     style="background:${STATUSES[u.status].color}" data-id="${u.id}" title="${u.displayNum} · ${STATUSES[u.status].label}">
                    ${fav}
@@ -351,7 +351,7 @@ function aptSVG(c){
     <rect x="${plX}" y="${plY}" width="${plW}" height="15" rx="4" fill="${st.color}"/>
     <text x="${plX+plW/2}" y="${plY+10.5}" class="fp-apt-status">${escapeHtml(label)}</text>`;
   // Иконка вида
-  const viewIc = cat ? `<text x="${rx+rw-pad}" y="${ry+pad+11}" class="fp-apt-view" text-anchor="end">${cat.icon}</text>` : '';
+  const viewIc = cat ? iconInSvg(VIEW_ICON[cat.id], rx+rw-pad-16, ry+pad-2, 16, '#82705F') : '';
 
   return `
   <g class="apt ${sel?'sel':''} ${visible?'':'dim'}" data-id="${u.id}" style="--st:${st.color}">
@@ -415,7 +415,7 @@ function showFloorTooltip(e, u){
     <div class="ft-row"><span>Площадь</span><b>${u.area} м²</b></div>
     <div class="ft-row"><span>Цена</span><b>${fmtMoney(u.total)}</b></div>
     <div class="ft-row"><span>Этаж</span><b>${u.floor}</b></div>
-    ${cat ? `<div class="ft-row"><span>Вид</span><b>${cat.icon} ${cat.label}</b></div>` : ''}
+    ${cat ? `<div class="ft-row"><span>Вид</span><b class="ic-inline">${icon(VIEW_ICON[cat.id],13)} ${cat.label}</b></div>` : ''}
     <span class="ft-status" style="background:${st.color}">${st.label}</span>
   `;
   el.classList.add('show');
@@ -525,7 +525,7 @@ function renderAside(){
       <h4>Сводка по объекту</h4>
       ${STATUS_ORDER.map(s=>`<div class="mini-stat"><span style="display:flex;align-items:center;gap:7px;"><span class="dot" style="width:11px;height:11px;border-radius:3px;background:${STATUSES[s].color}"></span>${STATUSES[s].label}</span><b>${counts[s]}</b></div>`).join('')}
       <div class="mini-stat" style="border-top:1px solid var(--line);margin-top:4px;padding-top:9px;"><span>Всего помещений</span><b>${total}</b></div>
-      <div class="mini-stat"><span>★ Избранных</span><b>${favCount}</b></div>
+      <div class="mini-stat"><span class="ic-inline">${iconStar(true,12)} Избранных</span><b>${favCount}</b></div>
     </div>
     <div class="mini-card">
       <h4>Активность показов</h4>
@@ -579,29 +579,29 @@ function openPanel(id){
   panel.classList.toggle('presentation', pres);
 
   panel.innerHTML = `
-    <div class="pres-banner">🎬 Презентационный режим · клиент видит только основное</div>
+    <div class="pres-banner ic-inline">${icon('monitor',15)} Презентационный режим · клиент видит только основное</div>
     <div class="panel-head">
       <div>
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--brown-soft);">${u.kind} · ${u.corp}</div>
         <h3 style="font-size:24px;margin-top:3px;">${u.displayNum}</h3>
         <div style="margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <span class="status-pill" style="background:${st.color}"><span class="dot"></span>${st.label}</span>
-          <button class="fav-toggle ${isFav?'on':''} pres-hide" id="favBtn">${isFav?'★ В избранном':'☆ В избранное'}</button>
-          <button class="pres-toggle ${pres?'on':''}" id="presBtn">${pres?'✓ Презентация':'🎬 Презентация'}</button>
+          <button class="fav-toggle ic-inline ${isFav?'on':''} pres-hide" id="favBtn">${iconStar(isFav,14)} ${isFav?'В избранном':'В избранное'}</button>
+          <button class="pres-toggle ic-inline ${pres?'on':''}" id="presBtn">${pres?icon('check',14):icon('monitor',14)} Презентация</button>
         </div>
       </div>
-      <button class="close" id="panelClose">✕</button>
+      <button class="close" id="panelClose">${icon('close',17)}</button>
     </div>
 
     <div class="panel-body">
       <!-- Быстрые действия -->
       <div class="panel-actions-row pres-hide">
-        <button class="panel-quick-btn" data-q="show">  <span class="ic">📅</span>Назначить показ</button>
-        <button class="panel-quick-btn" data-q="book">  <span class="ic">⌂</span>Создать бронь</button>
-        ${client ? `<button class="panel-quick-btn" data-q="client"><span class="ic">👤</span>Профиль клиента</button>` : ''}
-        ${u.plans && u.plans.length ? `<button class="panel-quick-btn" data-q="plan"><span class="ic">📐</span>Планировка</button>` : ''}
-        ${(u.view && u.view.photos && u.view.photos.length) ? `<button class="panel-quick-btn" data-q="view"><span class="ic">🌅</span>Вид из окна</button>` : ''}
-        <button class="panel-quick-btn" data-q="floor"><span class="ic">▦</span>Этаж целиком</button>
+        <button class="panel-quick-btn" data-q="show">${icon('calendar',16)}Назначить показ</button>
+        <button class="panel-quick-btn" data-q="book">${icon('home',16)}Создать бронь</button>
+        ${client ? `<button class="panel-quick-btn" data-q="client">${icon('user',16)}Профиль клиента</button>` : ''}
+        ${u.plans && u.plans.length ? `<button class="panel-quick-btn" data-q="plan">${icon('ruler',16)}Планировка</button>` : ''}
+        ${(u.view && u.view.photos && u.view.photos.length) ? `<button class="panel-quick-btn" data-q="view">${icon('camera',16)}Вид из окна</button>` : ''}
+        <button class="panel-quick-btn" data-q="floor">${icon('grid',16)}Этаж целиком</button>
       </div>
 
       <div class="kv">
@@ -625,8 +625,8 @@ function openPanel(id){
       <div class="panel-section-title">Вид из окна</div>
       <div class="view-block">
         <div class="view-block-head">
-          ${cat ? `<span class="view-cat-tag" style="background:${cat.color}">${cat.icon} ${cat.label}</span>` : ''}
-          ${u.view && u.view.direction ? `<span class="view-direction-tag">↗ ${u.view.direction}</span>` : ''}
+          ${cat ? `<span class="view-cat-tag ic-inline">${icon(VIEW_ICON[cat.id],14)} ${cat.label}</span>` : ''}
+          ${u.view && u.view.direction ? `<span class="view-direction-tag ic-inline">${icon('compass',13)} ${u.view.direction}</span>` : ''}
           ${!cat && !(u.view && u.view.direction) ? `<span style="color:var(--brown-soft); font-size:12px;">Не указан</span>` : ''}
         </div>
         ${u.view && u.view.description ? `<div style="font-size:13px; color:var(--brown); line-height:1.45;">${escapeHtml(u.view.description)}</div>` : ''}
@@ -645,13 +645,14 @@ function openPanel(id){
         <div class="person-row">
           <div class="avatar">${mgrShort(u.managerId)}</div>
           <div class="meta"><b>${mgrName(u.managerId)}</b><span>Менеджер отдела продаж</span></div>
+          <button class="go-link ic-inline" data-go-mgr="${u.managerId}">${icon('arrowRight',13)} Клиенты</button>
         </div>
 
         <div class="panel-section-title">Клиент</div>
         ${ client ? `<div class="person-row">
               <div class="avatar">${client.name.split(' ').map(w=>w[0]).join('')}</div>
               <div class="meta"><b>${client.name}</b><span>${client.phone} · ${client.stage}</span></div>
-              <button class="go-link" data-go-client="${client.id}">→ Карточка</button>
+              <button class="go-link ic-inline" data-go-client="${client.id}">${icon('arrowRight',13)} Карточка</button>
            </div>`
           : `<div class="person-row" style="color:var(--brown-soft)"><div class="avatar" style="background:var(--line-soft)">—</div><div class="meta"><b>Клиент не закреплён</b><span>Помещение без активной сделки</span></div></div>` }
 
@@ -666,11 +667,11 @@ function openPanel(id){
                     <b>${c ? c.name : 'Клиент'}</b>
                     <span>${fmtDateRu(s.date)} · ${mgrName(s.managerId)} · ${ss.label}</span>
                   </div>
-                  <button class="go-link" data-go-show="${s.id}">→ В календарь</button>
+                  <button class="go-link ic-inline" data-go-show="${s.id}">${icon('arrowRight',13)} В календарь</button>
                 </div>`;
               }).join('')
             : `<div style="color:var(--brown-soft); font-size:13px; padding:6px 2px;">Показы не назначены</div>` }
-        <button class="btn btn-sm" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">＋ Назначить показ</button>
+        <button class="btn btn-sm ic-inline" style="margin-top:9px;" onclick="openShowFormForUnit('${u.id}')">${icon('plus',14)} Назначить показ</button>
 
         <div class="panel-section-title">Сменить статус</div>
         <div style="display:flex;flex-wrap:wrap;gap:7px;" id="statusSwitcher">
@@ -684,7 +685,7 @@ function openPanel(id){
       <button class="btn" data-act="show">Назначить показ</button>
       <button class="btn" data-act="deal">Создать сделку</button>
       ${ state.adminMode
-          ? `<button class="btn" data-act="edit">✎ Редактировать</button>`
+          ? `<button class="btn ic-inline" data-act="edit">${icon('edit',15)} Редактировать</button>`
           : `<button class="btn" data-act="status">Изменить статус</button>` }
     </div>`;
 
@@ -758,6 +759,9 @@ function openPanel(id){
   });
   panel.querySelectorAll('[data-go-show]').forEach(b=>b.onclick=()=>{
     closePanel(); openCalendarOnShow(b.dataset.goShow);
+  });
+  panel.querySelectorAll('[data-go-mgr]').forEach(b=>b.onclick=()=>{
+    closePanel(); goManager(b.dataset.goMgr);
   });
 
   panel.querySelectorAll('.panel-actions [data-act]').forEach(btn=>btn.onclick=()=>{
@@ -838,8 +842,8 @@ function renderAdminPanel(){
   const cfg = state.buildingConfig;
   panel.innerHTML = `
     <div class="admin-panel-head">
-      <h4>⚙ Управление структурой здания <span class="badge-admin">Админ</span></h4>
-      <button class="btn btn-sm" id="adminAddCorp">＋ Добавить корпус</button>
+      <h4 class="ic-inline">${icon('gear',15)} Управление структурой здания <span class="badge-admin">Админ</span></h4>
+      <button class="btn btn-sm ic-inline" id="adminAddCorp">${icon('plus',14)} Добавить корпус</button>
     </div>
     <div class="admin-panel-corps">
       ${cfg.corps.map(corp=>{
@@ -848,7 +852,7 @@ function renderAdminPanel(){
         return `<div class="admin-corp" data-corp-card="${corp}">
           <div class="admin-corp-name" style="display:flex; justify-content:space-between; align-items:center;">
             <span>${corp} · ${corpUnits.length} помещений</span>
-            ${cfg.corps.length>1 ? `<button class="btn btn-sm" data-corp-remove="${corp}" style="color:var(--terra-dark); border-color:var(--terra-dark);" title="Удалить корпус">✕</button>` : ''}
+            ${cfg.corps.length>1 ? `<button class="btn btn-sm icon-only" data-corp-remove="${corp}" style="color:var(--terra-dark); border-color:var(--terra-dark);" title="Удалить корпус">${icon('close',14)}</button>` : ''}
           </div>
           <div class="admin-stepper">
             <span class="lbl">Этажей в этом корпусе</span>
@@ -941,7 +945,7 @@ function renderPhotoPreview(host, arr, kind){
   host.innerHTML = arr.map((p,i)=>{
     const isMain = kind==='view' && p.isMain;
     return `<div class="pp-thumb ${isMain?'is-main':''}" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-i="${i}" title="${kind==='view' ? (isMain?'Основная фотография':'Кликните, чтобы сделать основной') : (p.title||'')}">
-      <button type="button" class="pp-del" data-i="${i}">✕</button>
+      <button type="button" class="pp-del" data-i="${i}">${icon('close',12)}</button>
     </div>`;
   }).join('');
   host.querySelectorAll('.pp-del').forEach(b=>b.onclick = e=>{
@@ -988,7 +992,7 @@ function openUnitForm(id){
   document.getElementById('unitFormViewDir').innerHTML = `<option value="">— не указано —</option>`+
     VIEW_DIRECTIONS.map(d=>`<option ${d===v.direction?'selected':''}>${d}</option>`).join('');
   document.getElementById('unitFormViewCat').innerHTML = `<option value="">— не указана —</option>`+
-    VIEW_CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===v.category?'selected':''}>${c.icon} ${c.label}</option>`).join('');
+    VIEW_CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===v.category?'selected':''}>${c.label}</option>`).join('');
   document.getElementById('unitFormViewDesc').value    = v.description || '';
   document.getElementById('unitFormViewComment').value = v.comment || '';
   document.getElementById('unitFormViewPhotos').value  = '';

@@ -101,6 +101,18 @@ function goUnit(id){
   openPanel(id);
 }
 
+// Перейти к клиентам выбранного менеджера (фильтр по менеджеру)
+function goManager(managerId){
+  document.querySelector('.tab[data-view="clients"]').click();
+  state.clientFilters.mgr = managerId;
+  const sel = document.getElementById('clFilterMgr');
+  if(sel) sel.value = managerId;
+  renderClientList();
+  const first = clients().find(c=>c.mgr===managerId);
+  if(first){ state.activeClientId = first.id; renderClientCard(); }
+  toast('Клиенты менеджера: '+mgrName(managerId));
+}
+
 /* ---------- ESC закрывает всё ---------- */
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){

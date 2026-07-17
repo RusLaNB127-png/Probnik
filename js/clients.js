@@ -121,8 +121,8 @@ function renderClientCard(){
         </div>
         <div class="cc-head-actions">
           <span class="stage-tag" style="background:var(--terra); color:#fff; padding:6px 12px; font-size:12px;">${c.stage}</span>
-          <button class="btn btn-sm" id="ccAssignShow">＋ Назначить показ</button>
-          <button class="btn btn-sm" id="ccEdit">✎ Редактировать</button>
+          <button class="btn btn-sm" id="ccAssignShow" class="ic-inline">${icon('plus',14)} Назначить показ</button>
+          <button class="btn btn-sm" id="ccEdit" class="ic-inline">${icon('edit',14)} Редактировать</button>
         </div>
       </div>
 
@@ -217,8 +217,8 @@ function renderTabOverview(pane, c){
     <div>${renderMgrHistory(c)}</div>
 
     <div style="margin-top:24px; display:flex; gap:10px; padding-top:16px; border-top:1px dashed var(--line);">
-      <button class="btn" id="ccComment">＋ Добавить комментарий в историю</button>
-      <button class="btn" id="ccCall">☎ Зафиксировать звонок</button>
+      <button class="btn" id="ccComment" class="ic-inline">${icon('plus',14)} Добавить комментарий в историю</button>
+      <button class="btn" id="ccCall" class="ic-inline">${icon('phone',14)} Зафиксировать звонок</button>
       <button class="btn" style="color:var(--terra-dark); border-color:var(--terra-dark); margin-left:auto;" id="ccDelete">Удалить клиента</button>
     </div>
   `;
@@ -314,7 +314,7 @@ function renderTabUnits(pane, c, segs){
 
     <div style="display:flex; align-items:center; margin-bottom:12px; gap:10px;">
       <div class="cc-block-title" style="margin:0;">${segData[seg].label} — ${segData[seg].items.length}</div>
-      <button class="btn btn-sm" style="margin-left:auto;" id="addToFavBtn">＋ Добавить в избранное</button>
+      <button class="btn btn-sm" style="margin-left:auto;" id="addToFavBtn" class="ic-inline">${icon('plus',14)} Добавить в избранное</button>
     </div>
 
     <div id="unitsList">${renderUnitsList(segData[seg].items, c, seg)}</div>
@@ -377,11 +377,11 @@ function renderUnitsList(items, c, seg){
         ${u.corp} · ${u.pricePerM} тыс. ₽/м² · ${fmtMoney(u.total)} · ${st.label}
       </div>
       <div class="ucm-actions">
-        <button class="btn btn-sm" data-show-unit="${u.id}">＋ Показ</button>
+        <button class="btn btn-sm" data-show-unit="${u.id}" class="ic-inline">${icon('plus',13)} Показ</button>
         ${u.status!=='booked' && u.status!=='sold' ? `<button class="btn btn-sm" data-book-unit="${u.id}">Бронь</button>` : ''}
         ${u.status==='booked' ? `<button class="btn btn-sm" data-deal-unit="${u.id}">Сделка</button>` : ''}
-        <button class="btn btn-sm" data-go-unit="${u.id}">→ В шахматке</button>
-        ${seg==='favorite' && inFav ? `<button class="btn btn-sm" data-unfav-unit="${u.id}" style="color:var(--terra-dark);">★ Убрать</button>` : ''}
+        <button class="btn btn-sm" data-go-unit="${u.id}">${icon('arrowRight',13)} В шахматке</button>
+        ${seg==='favorite' && inFav ? `<button class="btn btn-sm" data-unfav-unit="${u.id}" style="color:var(--terra-dark);">${iconStar(true,13)} Убрать</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -404,11 +404,11 @@ function renderTabShows(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Показы клиента — ${list.length}</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addShowBtn">＋ Назначить показ</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addShowBtn" class="ic-inline">${icon('plus',14)} Назначить показ</button>
     </div>
 
     ${nextShow ? `<div style="background:linear-gradient(135deg, var(--terra), var(--terra-dark)); color:#fff; border-radius:11px; padding:14px 16px; margin-bottom:16px;">
-      <div style="font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">⚡ Ближайший показ</div>
+      <div class="ic-inline" style="font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">${icon('clock',12)} Ближайший показ</div>
       <div style="font-family:'Fraunces',serif; font-size:18px; font-weight:600; margin-top:3px;">
         ${fmtDateRu(nextShow.date)} · ${nextShow.time}${getUnit(nextShow.unitId)?' · '+getUnit(nextShow.unitId).displayNum:''}
       </div>
@@ -428,8 +428,8 @@ function renderTabShows(pane, c){
           ${s.comment?'<div style="font-style:italic; margin-top:3px;">«'+esc(s.comment)+'»</div>':''}
         </div>
         <div class="ucm-actions">
-          <button class="btn btn-sm" data-show-edit="${s.id}">✎ Изменить</button>
-          ${u?`<button class="btn btn-sm" data-go-unit="${u.id}">→ Помещение</button>`:''}
+          <button class="btn btn-sm" data-show-edit="${s.id}" class="ic-inline">${icon('edit',13)} Изменить</button>
+          ${u?`<button class="btn btn-sm" data-go-unit="${u.id}">${icon('arrowRight',13)} Помещение</button>`:''}
           <button class="btn btn-sm" data-show-cal="${s.id}">→ В календарь</button>
         </div>
       </div>`;
@@ -459,7 +459,7 @@ function renderTabTasks(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Задачи — ${tasks.filter(t=>!t.done).length} активных</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addTaskBtn">＋ Создать задачу</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addTaskBtn" class="ic-inline">${icon('plus',14)} Создать задачу</button>
     </div>
     ${tasks.length ? tasks.map(t=>{
       const overdue = !t.done && t.dueDate && t.dueDate < todayIso;
@@ -472,9 +472,9 @@ function renderTabTasks(pane, c){
           </div>
         </div>
         <div class="tk-actions">
-          <button data-task-edit="${t.id}" title="Изменить">✎</button>
-          <button data-task-postpone="${t.id}" title="Перенести на завтра">→</button>
-          <button data-task-del="${t.id}" title="Удалить">✕</button>
+          <button data-task-edit="${t.id}" title="Изменить">${icon('edit',12)}</button>
+          <button data-task-postpone="${t.id}" title="Перенести на завтра">${icon('arrowRight',12)}</button>
+          <button data-task-del="${t.id}" title="Удалить">${icon('close',12)}</button>
         </div>
       </div>`;
     }).join('') : `<div class="unit-empty">Задач нет</div>`}
@@ -512,7 +512,7 @@ function renderTabDocs(pane, c){
   pane.innerHTML = `
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
       <div class="cc-block-title" style="margin:0;">Документы — ${docs.length}</div>
-      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addDocBtn">＋ Прикрепить документ</button>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto;" id="addDocBtn" class="ic-inline">${icon('plus',14)} Прикрепить документ</button>
     </div>
     ${docs.length ? docs.map(d=>`
       <div class="doc-card">
@@ -548,7 +548,7 @@ function renderTabTimeline(pane, c){
       const t = INTERACTION_TYPES[ev.type] || { label:ev.type, icon:'•', color:'#7A6354' };
       return `<div class="tl-event">
         <div class="tl-time">${ev.at || ''}</div>
-        <div class="tl-text"><span class="tl-type" style="background:${t.color}22; color:${t.color};">${t.icon} ${t.label}</span>${esc(ev.text)}</div>
+        <div class="tl-text"><span class="tl-type" style="background:${t.color}22; color:${t.color};">${icon(t.icon,13)} ${t.label}</span>${esc(ev.text)}</div>
       </div>`;
     }).join('')}</div>` : `<div class="unit-empty">История пуста</div>`}
   `;
@@ -893,7 +893,7 @@ function renderPickList(query){
       <div class="pu-st" style="background:${STATUSES[u.status].color}"></div>
       <div class="pu-num">${u.displayNum}</div>
       <div class="pu-meta"><b>${u.kind} · ${u.area} м²</b>${u.corp} · ${u.floor} эт. · ${STATUSES[u.status].label}</div>
-      <button class="btn btn-sm" style="${inFav?'border-color:var(--terra); color:var(--terra);':''}">${inFav?'★ В избранном':'☆ Добавить'}</button>
+      <button class="btn btn-sm" style="${inFav?'border-color:var(--terra); color:var(--terra);':''}">${iconStar(inFav,13)} ${inFav?'В избранном':'Добавить'}</button>
     </div>`;
   }).join('');
   el.querySelectorAll('.pick-unit-item').forEach(it=>it.onclick=()=>{

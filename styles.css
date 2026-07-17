@@ -1781,3 +1781,56 @@ table.tbl tr:hover td{ background:var(--sand); }
 @media (prefers-reduced-motion: reduce){
   .cell:hover, .btn-primary, .view.active{ transition:none; animation:none; transform:none; }
 }
+
+/* ============================================================
+   ЕДИНЫЙ СТИЛЬ ИКОНОК И КНОПОК (весь интерфейс)
+   Линейные монохромные иконки + одно семейство кнопок.
+   ============================================================ */
+/* — Линейные иконки — */
+.licon{ display:inline-block; vertical-align:-0.15em; flex-shrink:0; }
+.ic-inline{ display:inline-flex; align-items:center; gap:7px; }
+.ic-inline .licon{ vertical-align:middle; }
+
+/* — Общая геометрия семейства кнопок — */
+.btn, .btn-sm, .btn-primary,
+.panel-quick-btn, .go-link, .dash-add,
+.mt-floor-btn, .cal-quick-btn, .fav-toggle, .pres-toggle{
+  font-family:inherit; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px;
+  font-weight:600; transition:.15s;
+  line-height:1.15;
+}
+/* Вторичная (по умолчанию) — акцент моря на ховере */
+.btn{ border:1px solid var(--line); background:var(--bg-2); color:var(--brown); padding:9px 15px; font-size:13px; border-radius:10px; }
+.btn:hover{ border-color:var(--sea); color:var(--sea); }
+.btn-sm{ padding:7px 11px; font-size:12px; border-radius:9px; }
+/* Первичная — терракотовый градиент */
+.btn-primary{ background:linear-gradient(135deg,var(--terra),var(--terra-dark)); border:1px solid var(--terra); color:#fff; box-shadow:0 2px 8px rgba(168,81,44,.24); }
+.btn-primary:hover{ background:linear-gradient(135deg,var(--terra-dark),var(--terra-ink)); border-color:var(--terra-dark); color:#fff; }
+/* Иконка-кнопка (только иконка, квадратная) */
+.btn.icon-only{ padding:7px; }
+.licon{ pointer-events:none; }
+
+/* Быстрые действия карточки — тот же язык, что и .btn */
+.panel-quick-btn{ padding:7px 11px; font-size:12px; border:1px solid var(--line); background:var(--bg-2); color:var(--brown); border-radius:9px; }
+.panel-quick-btn:hover{ border-color:var(--sea); color:var(--sea); background:var(--bg-2); }
+.panel-quick-btn .licon{ opacity:.85; }
+
+/* go-link — компактная вторичная кнопка перехода */
+.go-link{ border:1px solid var(--line); background:var(--bg-2); color:var(--sea-dark); padding:5px 10px; font-size:12px; border-radius:8px; }
+.go-link:hover{ border-color:var(--sea); background:var(--sea); color:#fff; }
+
+/* Маленькие иконочные кнопки задач — единый вид */
+.tk-actions button{
+  width:26px; height:26px; border-radius:7px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--brown-soft);
+  display:inline-grid; place-items:center; transition:.12s; padding:0; cursor:pointer;
+}
+.tk-actions [data-task-edit]:hover, .tk-actions [data-task-postpone]:hover{ border-color:var(--sea); color:var(--sea); }
+.tk-actions [data-task-del]:hover{ border-color:var(--terra); color:var(--terra); }
+
+/* Тег типа в истории взаимодействий — иконка + подпись */
+.tl-type{ display:inline-flex; align-items:center; gap:5px; }
+
+/* Контейнеры-«боксы» иконок (журнал, календарь) центрируют вложенный svg */
+.log-item .ic, .cal-stat-ic, .notif-item .ic{ display:grid; place-items:center; }
