@@ -571,11 +571,6 @@ function openPanel(id){
   const mainPhoto = (u.view && u.view.photos || []).find(p=>p.isMain) || (u.view && u.view.photos || [])[0];
   const restPhotos = (u.view && u.view.photos || []).filter(p=>!mainPhoto || p.id!==mainPhoto.id);
 
-  // Соседние помещения на том же этаже
-  const neighbors = units()
-    .filter(x=>x.corp===u.corp && x.floor===u.floor && x.id!==u.id)
-    .sort((a,b)=>a.position-b.position);
-
   const unitShows = state.shows
     .filter(s=>s.unitId===id && s.status!=='cancelled')
     .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
@@ -643,19 +638,6 @@ function openPanel(id){
           ${restPhotos.map(p=>`<div class="vp-thumb" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-vp-id="${p.id}"></div>`).join('')}
         </div>
       </div>
-
-      <!-- Соседние помещения (тот же этаж) -->
-      ${ neighbors.length ? `
-      <div class="panel-section-title">Соседние помещения · ${u.floor} этаж</div>
-      <div class="neighbors">
-        ${neighbors.map(n=>{
-          const ns = STATUSES[n.status];
-          return `<div class="neighbor-card" style="--st-color:${ns.color}" data-neighbor="${n.id}">
-            <div class="nc-num">${n.displayNum}</div>
-            <div class="nc-area">${n.area} м²</div>
-          </div>`;
-        }).join('')}
-      </div>` : '' }
 
       <!-- Менеджер и клиент — скрыты в презентации -->
       <div class="pres-hide">
@@ -759,11 +741,6 @@ function openPanel(id){
       state.floorViewFloor = u.floor;
       setChessView('floor');
     }
-  });
-
-  // Соседи
-  panel.querySelectorAll('[data-neighbor]').forEach(el=>{
-    el.onclick = ()=>openPanel(el.dataset.neighbor);
   });
 
   // Старые блоки (видны только не в презентации)

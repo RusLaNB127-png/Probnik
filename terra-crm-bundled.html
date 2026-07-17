@@ -202,18 +202,27 @@ input,select{ font-family:inherit; }
 .mini-stat:last-child{ border-bottom:0; }
 .mini-stat b{ font-family:'Fraunces',serif; font-size:15px; }
 
-/* ---------- Боковая панель объекта ---------- */
-.scrim{ position:fixed; inset:0; background:rgba(74,53,42,.34); backdrop-filter:blur(2px); z-index:90; opacity:0; pointer-events:none; transition:.2s; }
+/* ---------- Карточка объекта (центральная модалка) ---------- */
+.scrim{ position:fixed; inset:0; background:rgba(59,42,32,.5); backdrop-filter:blur(4px); z-index:128; opacity:0; pointer-events:none; transition:.2s; }
 .scrim.show{ opacity:1; pointer-events:auto; }
 .panel{
-  position:fixed; top:0; right:0; height:100vh; width:420px; max-width:92vw; background:var(--bg-2);
-  z-index:100; box-shadow:var(--shadow-lg); transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1);
+  position:fixed; top:50%; left:50%;
+  width:min(660px, 96vw); max-height:92vh;
+  background:var(--bg-2);
+  z-index:130; box-shadow:var(--shadow-lg);
+  border-radius:22px 22px 16px 16px; overflow:hidden;
+  transform:translate(-50%, -46%) scale(.98); opacity:0; pointer-events:none;
+  transition:transform .26s cubic-bezier(.34,1.1,.4,1), opacity .18s ease;
   display:flex; flex-direction:column;
 }
-.panel.show{ transform:none; }
-.panel-head{ padding:20px 22px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start; }
-.panel-head .close{ border:0; background:var(--sand); width:32px; height:32px; border-radius:8px; color:var(--brown); display:grid; place-items:center; }
-.panel-head .close:hover{ background:var(--beige); }
+.panel.show{ transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto; }
+.panel-head{
+  padding:20px 22px; border-bottom:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:flex-start;
+  background:linear-gradient(135deg, #FFF7EC, #F4E4CB);
+}
+.panel-head .close{ border:0; background:rgba(255,255,255,.55); width:32px; height:32px; border-radius:8px; color:var(--brown); display:grid; place-items:center; transition:.12s; }
+.panel-head .close:hover{ background:#fff; color:var(--terra); }
 .panel-body{ padding:22px; overflow-y:auto; flex:1; }
 .status-pill{ display:inline-flex; align-items:center; gap:7px; padding:6px 13px; border-radius:30px; font-size:12.5px; font-weight:700; color:#fff; }
 .status-pill .dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.85); }
@@ -1636,24 +1645,6 @@ table.tbl tr:hover td{ background:var(--sand); }
   color:#E0A458; font-size:13px;
   text-shadow:0 0 3px rgba(0,0,0,.5);
 }
-
-/* Соседние помещения — мини-карточки в панели */
-.neighbors{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(98px,1fr));
-  gap:6px;
-}
-.neighbor-card{
-  padding:8px; border-radius:9px; border:1px solid var(--line);
-  background:#fff; cursor:pointer; transition:.12s;
-  text-align:center; position:relative; overflow:hidden;
-}
-.neighbor-card::before{
-  content:''; position:absolute; top:0; left:0; right:0; height:3px;
-  background:var(--st-color);
-}
-.neighbor-card:hover{ border-color:var(--terra); }
-.neighbor-card .nc-num{ font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:var(--brown-dark); }
-.neighbor-card .nc-area{ font-size:11px; color:var(--brown-soft); margin-top:2px; }
 
 /* ============================================================
    ТЕМА «СРЕДИЗЕМНОМОРЬЕ» — фирменный слой поверх базовых стилей.
@@ -4186,11 +4177,6 @@ function openPanel(id){
   const mainPhoto = (u.view && u.view.photos || []).find(p=>p.isMain) || (u.view && u.view.photos || [])[0];
   const restPhotos = (u.view && u.view.photos || []).filter(p=>!mainPhoto || p.id!==mainPhoto.id);
 
-  // Соседние помещения на том же этаже
-  const neighbors = units()
-    .filter(x=>x.corp===u.corp && x.floor===u.floor && x.id!==u.id)
-    .sort((a,b)=>a.position-b.position);
-
   const unitShows = state.shows
     .filter(s=>s.unitId===id && s.status!=='cancelled')
     .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
@@ -4258,19 +4244,6 @@ function openPanel(id){
           ${restPhotos.map(p=>`<div class="vp-thumb" style="background-image:url('${p.url.replace(/'/g,"%27")}')" data-vp-id="${p.id}"></div>`).join('')}
         </div>
       </div>
-
-      <!-- Соседние помещения (тот же этаж) -->
-      ${ neighbors.length ? `
-      <div class="panel-section-title">Соседние помещения · ${u.floor} этаж</div>
-      <div class="neighbors">
-        ${neighbors.map(n=>{
-          const ns = STATUSES[n.status];
-          return `<div class="neighbor-card" style="--st-color:${ns.color}" data-neighbor="${n.id}">
-            <div class="nc-num">${n.displayNum}</div>
-            <div class="nc-area">${n.area} м²</div>
-          </div>`;
-        }).join('')}
-      </div>` : '' }
 
       <!-- Менеджер и клиент — скрыты в презентации -->
       <div class="pres-hide">
@@ -4374,11 +4347,6 @@ function openPanel(id){
       state.floorViewFloor = u.floor;
       setChessView('floor');
     }
-  });
-
-  // Соседи
-  panel.querySelectorAll('[data-neighbor]').forEach(el=>{
-    el.onclick = ()=>openPanel(el.dataset.neighbor);
   });
 
   // Старые блоки (видны только не в презентации)
