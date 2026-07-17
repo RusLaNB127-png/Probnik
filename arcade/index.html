@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIXEL ARCADE — игровая платформа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<style>
+  :root{
+    --bg:#131024; --bg2:#1b1733; --panel:#241f3d; --panel2:#2e2850;
+    --line:#4a3d78; --line2:#6a56a8;
+    --ink:#f0edff; --muted:#a394d6;
+    --green:#54e06f; --green-d:#2c9a48;
+    --yellow:#ffd23f; --gold:#ffcf5a;
+    --red:#ff5d78; --red-d:#c23a52;
+    --cyan:#38d6ea; --violet:#a877ff;
+    --water:#17203c; --water-h:#1f2c50;
+    --ship:#7fa8d9;
+    --pix:'Pixelify Sans','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:var(--pix);
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 2px, transparent 2px 4px),
+      radial-gradient(1000px 700px at 75% -15%, #2a2150 0%, transparent 60%),
+      radial-gradient(900px 700px at 10% 110%, #241a44 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:22px 14px 60px;
+    letter-spacing:.4px;
+    image-rendering:pixelated;
+  }
+  /* сканлайны поверх всего */
+  #scan{
+    position:fixed; inset:0; pointer-events:none; z-index:200;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+    mix-blend-mode:multiply; opacity:.5;
+  }
+
+  h1,h2,h3{font-weight:700; line-height:1.15;}
+  .muted{color:var(--muted);}
+
+  /* ---- пиксель-кнопки ---- */
+  button{
+    font-family:var(--pix); font-size:16px; font-weight:600; cursor:pointer;
+    text-transform:uppercase; letter-spacing:1px;
+    border:3px solid #0a0813; border-radius:0;
+    padding:11px 16px; background:var(--green); color:#0a0813;
+    box-shadow:4px 4px 0 #0a0813;
+    transition:transform .05s, box-shadow .05s, filter .12s;
+  }
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0813;}
+  button.secondary{background:var(--panel2); color:var(--ink); box-shadow:4px 4px 0 #0a0813;}
+  button.danger{background:var(--red); color:#170208;}
+  button.ghost{background:transparent; color:var(--muted); border-color:var(--line); box-shadow:none;}
+  button.ghost:active{transform:translate(2px,2px); box-shadow:none;}
+  button:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:4px 4px 0 #0a0813; filter:none;}
+
+  input{
+    font-family:var(--pix); font-size:17px;
+    padding:11px 13px; border:3px solid #0a0813; border-radius:0;
+    background:#100d20; color:var(--ink); outline:none; width:100%;
+    box-shadow:inset 2px 2px 0 rgba(0,0,0,.4);
+  }
+  input:focus{border-color:var(--cyan);}
+  input.code{
+    text-align:center; font-size:26px; letter-spacing:12px; text-transform:uppercase; color:var(--cyan);
+  }
+  input::placeholder{color:#6a5c99;}
+
+  /* ---- панели ---- */
+  .view{display:none; width:100%; flex-direction:column; align-items:center;}
+  .view.active{display:flex;}
+  .card{
+    background:var(--panel); border:3px solid #0a0813; border-radius:0;
+    box-shadow:7px 7px 0 rgba(0,0,0,.55);
+    padding:24px 26px; width:100%; max-width:420px;
+    display:flex; flex-direction:column; gap:14px;
+    position:relative;
+  }
+  .card::before{
+    content:''; position:absolute; inset:3px; border:1px solid var(--line); pointer-events:none;
+  }
+  .card h2{font-size:20px; text-align:center; color:var(--yellow);}
+  .divider{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; text-transform:uppercase;}
+  .divider::before,.divider::after{content:''; flex:1; height:3px; background:var(--line);}
+  .hint{color:var(--muted); font-size:14px; text-align:center; line-height:1.55;}
+  .msg{min-height:20px; text-align:center; font-size:14px; color:var(--red);}
+  .msg.ok{color:var(--green);}
+
+  /* ---- логотип / шапка ---- */
+  .logo{
+    font-size:40px; font-weight:700; letter-spacing:3px; text-align:center;
+    color:var(--yellow); text-shadow:4px 4px 0 var(--violet), 8px 8px 0 rgba(0,0,0,.4);
+    margin-bottom:2px;
+  }
+  .logo .b{color:var(--cyan); text-shadow:4px 4px 0 var(--red-d), 8px 8px 0 rgba(0,0,0,.4);}
+  .tagline{color:var(--muted); font-size:14px; text-transform:uppercase; letter-spacing:2px; margin-bottom:26px; text-align:center;}
+
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    width:100%; max-width:720px; margin-bottom:22px; flex-wrap:wrap;
+  }
+  .topbar .logo{font-size:26px; margin:0; text-align:left;}
+  .user-chip{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .user-chip .who{
+    background:var(--panel); border:3px solid #0a0813; padding:7px 12px; font-size:15px;
+    box-shadow:3px 3px 0 #0a0813; color:var(--cyan);
+  }
+
+  /* ---- каталог игр ---- */
+  .games{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:18px;
+    width:100%; max-width:720px;
+  }
+  .game-card{
+    background:var(--panel); border:3px solid #0a0813; box-shadow:6px 6px 0 rgba(0,0,0,.5);
+    padding:22px 18px; display:flex; flex-direction:column; align-items:center; gap:10px;
+    cursor:pointer; transition:transform .06s, box-shadow .06s; text-align:center; position:relative;
+  }
+  .game-card:hover{transform:translate(-2px,-2px); box-shadow:9px 9px 0 rgba(0,0,0,.5);}
+  .game-card:active{transform:translate(2px,2px); box-shadow:3px 3px 0 rgba(0,0,0,.5);}
+  .game-card .ico{font-size:52px; line-height:1;}
+  .game-card .nm{font-size:18px; color:var(--ink); font-weight:600;}
+  .game-card .st{font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--green);}
+  .game-card.soon{cursor:default; opacity:.55;}
+  .game-card.soon:hover{transform:none; box-shadow:6px 6px 0 rgba(0,0,0,.5);}
+  .game-card.soon .st{color:var(--muted);}
+  .badge{
+    position:absolute; top:-11px; right:-11px; background:var(--red); color:#170208;
+    border:3px solid #0a0813; font-size:11px; padding:3px 7px; text-transform:uppercase; transform:rotate(6deg);
+  }
+
+  /* ---- лидерборд ---- */
+  #lb-list{display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto;}
+  .lb-row{
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    background:var(--panel2); border:3px solid #0a0813; box-shadow:3px 3px 0 #0a0813;
+  }
+  .lb-row.me{border-color:var(--cyan);}
+  .lb-rank{width:34px; text-align:center; font-weight:700; font-size:18px; flex:none;}
+  .lb-nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px;}
+  .lb-nm .youtag{color:var(--cyan); font-size:12px; margin-left:6px;}
+  .lb-w{flex:none; color:var(--green); font-weight:700; font-size:15px;}
+  .lb-l{flex:none; color:var(--red); font-weight:700; font-size:15px; min-width:44px; text-align:right;}
+  .lb-empty{color:var(--muted); font-size:15px; text-align:center; padding:20px 0;}
+
+  /* ======== БОЙ ======== */
+  .screen{display:none; width:100%; flex-direction:column; align-items:center;}
+  .screen.active{display:flex;}
+
+  .code-box{
+    font-size:34px; letter-spacing:12px; text-align:center; font-weight:700;
+    background:#100d20; border:3px solid var(--cyan); padding:16px; color:var(--cyan); user-select:all;
+  }
+  .spinner{
+    width:30px; height:30px; margin:2px auto;
+    background:
+      linear-gradient(var(--cyan),var(--cyan)) 0 0/8px 8px no-repeat,
+      linear-gradient(var(--cyan),var(--cyan)) 100% 0/8px 8px no-repeat,
+      linear-gradient(var(--cyan),var(--cyan)) 100% 100%/8px 8px no-repeat,
+      linear-gradient(var(--cyan),var(--cyan)) 0 100%/8px 8px no-repeat;
+    animation:spin 1s steps(4) infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .status-row{display:flex; gap:10px; margin-bottom:16px; justify-content:center; align-items:stretch; width:100%; max-width:830px; flex-wrap:wrap;}
+  #status{
+    flex:1; min-width:240px; font-size:16px; font-weight:600; text-align:center;
+    padding:12px 18px; background:var(--panel); border:3px solid #0a0813; box-shadow:3px 3px 0 #0a0813;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #status.my-turn{border-color:var(--green); color:var(--green);}
+  #status.enemy-turn{color:var(--muted);}
+  #btn-exit{flex:none;}
+
+  .boards{display:flex; gap:44px; flex-wrap:wrap; justify-content:center;}
+  .board-wrap{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .board-title{font-size:15px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .board-title b{color:var(--cyan);}
+
+  .grid-outer{display:grid; grid-template-columns:22px auto; grid-template-rows:22px auto;}
+  .col-labels{grid-column:2; display:grid; grid-template-columns:repeat(10,34px);}
+  .row-labels{grid-row:2; display:grid; grid-template-rows:repeat(10,34px);}
+  .col-labels span,.row-labels span{display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--muted);}
+  .grid{
+    grid-column:2; grid-row:2;
+    display:grid; grid-template-columns:repeat(10,34px); grid-template-rows:repeat(10,34px);
+    border:3px solid #0a0813; box-shadow:4px 4px 0 #0a0813;
+  }
+  .cell{
+    background:var(--water); border:1px solid #0e1630;
+    position:relative; display:flex; align-items:center; justify-content:center; user-select:none;
+  }
+  .grid.clickable .cell:not(.shot):hover{background:var(--water-h); cursor:crosshair;}
+  /* ---- корпуса кораблей ---- */
+  .cell.ship{
+    border-color:transparent;
+    background:linear-gradient(180deg,#b9d4f2 0%,#8fb3de 42%,#5f88ba 100%);
+    box-shadow:inset 0 2px 2px rgba(255,255,255,.35), inset 0 -3px 4px rgba(14,32,60,.45);
+  }
+  .cell.ship.s-v{background:linear-gradient(90deg,#b9d4f2 0%,#8fb3de 42%,#5f88ba 100%);
+    box-shadow:inset 2px 0 2px rgba(255,255,255,.35), inset -3px 0 4px rgba(14,32,60,.45);}
+  .cell.s-h.s-bow{border-radius:16px 2px 2px 16px;}
+  .cell.s-h.s-stern{border-radius:2px 9px 9px 2px;}
+  .cell.s-v.s-bow{border-radius:16px 16px 2px 2px;}
+  .cell.s-v.s-stern{border-radius:2px 2px 9px 9px;}
+  .cell.s-single{border-radius:10px 10px 6px 6px;}
+  .cell.ship:not(.hit):not(.s-bow)::after{
+    content:''; width:8px; height:8px; border-radius:1px;
+    background:radial-gradient(circle at 35% 30%, #35597f 0%, #16304f 70%);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6), 0 1px 1px rgba(255,255,255,.35);
+  }
+  .cell.ship:not(.hit).s-bow::after{
+    content:''; width:12px; height:8px; border-radius:3px 3px 1px 1px;
+    background:linear-gradient(180deg,#d7e7f8,#9dbde2); box-shadow:0 1px 2px rgba(14,32,60,.5);
+  }
+  .cell.ship:not(.hit).s-v.s-bow::after{width:8px; height:12px; border-radius:3px 1px 1px 3px;}
+  .cell.ship:not(.hit).s-single::after{
+    content:''; width:10px; height:10px; border-radius:4px 4px 2px 2px;
+    background:linear-gradient(180deg,#d7e7f8,#9dbde2); box-shadow:0 1px 2px rgba(14,32,60,.5);
+  }
+  .cell.sunk{background:linear-gradient(180deg,#7c3030 0%,#5a1d1d 60%,#421414 100%);
+    border-color:transparent; box-shadow:inset 0 -3px 4px rgba(0,0,0,.4);}
+  .cell.miss::after{content:''; width:8px; height:8px; background:var(--muted);}
+  .cell.hit{background:#7a2d2d;}
+  .cell.hit::after,.cell.hit::before{content:''; position:absolute; width:70%; height:4px; background:var(--red);}
+  .cell.hit::after{transform:rotate(45deg);}
+  .cell.hit::before{transform:rotate(-45deg);}
+  .cell.last-shot{outline:3px solid var(--yellow); outline-offset:-3px; z-index:1;}
+  .cell.pv-ok{background:rgba(84,224,111,.5) !important; box-shadow:none;}
+  .cell.pv-bad{background:rgba(255,93,120,.55) !important; box-shadow:none;}
+
+  .fleet-info{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; min-height:20px;}
+  .fleet-ship{display:flex; gap:2px;}
+  .fleet-ship i{width:12px; height:12px; display:block; background:linear-gradient(180deg,#b9d4f2,#5f88ba);}
+  .fleet-ship.dead i{background:linear-gradient(180deg,#7c3030,#421414);}
+
+  .placement-controls{display:flex; gap:12px; margin-top:20px; flex-direction:column; align-items:center;}
+  .pal-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .pal-btn{
+    display:flex; align-items:center; gap:7px; padding:8px 11px;
+    background:var(--panel2); border:3px solid #0a0813; color:var(--ink); box-shadow:2px 2px 0 #0a0813;
+  }
+  .pal-btn.sel{border-color:var(--yellow);}
+  .pal-btn:disabled{opacity:.35;}
+  .pal-ship{display:flex; gap:2px;}
+  .pal-ship i{width:10px; height:10px; display:block; background:linear-gradient(180deg,#b9d4f2,#5f88ba);}
+  .pal-count{font-size:13px; color:var(--muted); font-weight:700;}
+
+  #overlay,#pass-screen{
+    position:fixed; inset:0; background:rgba(8,6,18,.86); display:none;
+    align-items:center; justify-content:center; z-index:100; padding:16px;
+  }
+  #pass-screen{background:var(--bg); z-index:110;}
+  #overlay.active,#pass-screen.active{display:flex;}
+  #overlay .card,#pass-screen .card{max-width:400px; text-align:center; gap:18px;}
+  #overlay h2{font-size:26px;}
+  #overlay h2.win{color:var(--green);}
+  #overlay h2.lose{color:var(--red);}
+  #pass-screen h2{color:var(--yellow); font-size:22px;}
+  .rematch-note{color:var(--muted); font-size:13px; min-height:18px;}
+
+  .back-link{align-self:flex-start; margin-bottom:14px;}
+
+  @media (max-width:820px){
+    .col-labels{grid-template-columns:repeat(10,30px);}
+    .row-labels{grid-template-rows:repeat(10,30px);}
+    .grid{grid-template-columns:repeat(10,30px); grid-template-rows:repeat(10,30px);}
+    .boards{gap:24px;}
+    .logo{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+<div id="scan"></div>
+
+<!-- ======================= РЕГИСТРАЦИЯ / ВХОД ======================= -->
+<div class="view active" id="view-auth">
+  <div class="logo">PIXEL <span class="b">ARCADE</span></div>
+  <div class="tagline">игровая платформа</div>
+  <div class="card">
+    <h2 id="auth-title">Вход в аккаунт</h2>
+    <input type="text" id="auth-nick" maxlength="16" placeholder="Никнейм" autocomplete="off">
+    <input type="password" id="auth-pass" maxlength="40" placeholder="Пароль" autocomplete="off">
+    <input type="password" id="auth-pass2" maxlength="40" placeholder="Повторите пароль" autocomplete="off" style="display:none;">
+    <div class="msg" id="auth-msg"></div>
+    <button id="auth-submit">Войти</button>
+    <div class="divider">или</div>
+    <button class="secondary" id="auth-toggle">Создать аккаунт</button>
+    <div class="hint">Аккаунт и рекорды хранятся в этом браузере, пароль — в виде хеша. Когда платформа переедет на сервер, аккаунты станут общими для всех.</div>
+  </div>
+</div>
+
+<!-- ======================= ГЛАВНАЯ (БИБЛИОТЕКА) ======================= -->
+<div class="view" id="view-hub">
+  <div class="topbar">
+    <div class="logo">PIXEL <span class="b">ARCADE</span></div>
+    <div class="user-chip">
+      <span class="who" id="hub-who">👤</span>
+      <button class="secondary" id="hub-lb">🏆 Лидерборд</button>
+      <button class="ghost" id="hub-logout">Выйти</button>
+    </div>
+  </div>
+  <div class="games" id="games"></div>
+</div>
+
+<!-- ======================= ЛИДЕРБОРД ======================= -->
+<div class="view" id="view-leaderboard">
+  <div style="width:100%; max-width:560px;">
+    <button class="ghost back-link" id="lb-back">← Библиотека</button>
+    <div class="card" style="max-width:560px;">
+      <h2>🏆 Лидерборд</h2>
+      <div class="hint">Рейтинг всех зарегистрированных игроков. Обновляется автоматически по результатам партий.</div>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= МОРСКОЙ БОЙ ======================= -->
+<div class="view" id="view-battleship">
+
+  <!-- меню игры -->
+  <div class="screen active" id="screen-menu">
+    <div style="width:100%; max-width:420px;">
+      <button class="ghost back-link" id="btn-hub">← Библиотека</button>
+      <div class="card">
+        <h2>⚓ Морской бой</h2>
+        <button id="btn-create">Создать игру</button>
+        <div class="divider">или</div>
+        <input type="text" id="join-code" class="code" maxlength="4" placeholder="КОД" autocomplete="off">
+        <button class="secondary" id="btn-join">Присоединиться по коду</button>
+        <div class="hint">Создайте игру и передайте другу код из 4 символов, чтобы сыграть по сети.</div>
+        <div class="divider">на одном ПК</div>
+        <button class="secondary" id="btn-local">🎮 Игра за одним компьютером</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- имена для локальной игры -->
+  <div class="screen" id="screen-local-names">
+    <div class="card">
+      <h2>🎮 Кто играет?</h2>
+      <input type="text" id="ln1" maxlength="16" placeholder="Игрок 1" autocomplete="off">
+      <input type="text" id="ln2" maxlength="16" placeholder="Игрок 2" autocomplete="off">
+      <button id="btn-local-start">Начать</button>
+      <div class="hint">Если ввести ники зарегистрированных игроков, результат попадёт в общий лидерборд.</div>
+      <button class="secondary" id="btn-local-back">Назад</button>
+    </div>
+  </div>
+
+  <!-- ожидание соперника -->
+  <div class="screen" id="screen-wait">
+    <div class="card">
+      <h2>Код вашей игры</h2>
+      <div class="code-box" id="my-code">····</div>
+      <div class="spinner"></div>
+      <div class="hint" id="wait-hint">Подключаемся к серверу…</div>
+      <button class="secondary" id="btn-cancel-wait">Отмена</button>
+    </div>
+  </div>
+
+  <!-- подключение -->
+  <div class="screen" id="screen-connecting">
+    <div class="card">
+      <h2>Подключение…</h2>
+      <div class="spinner"></div>
+      <div class="hint" id="connecting-hint">Ищем игру…</div>
+      <button class="secondary" id="btn-cancel-connect">Отмена</button>
+    </div>
+  </div>
+
+  <!-- игра -->
+  <div class="screen" id="screen-game">
+    <div class="status-row">
+      <div id="status">Расставьте корабли</div>
+      <button class="danger" id="btn-exit" title="Выйти">🚪 Выйти</button>
+    </div>
+    <div class="boards">
+      <div class="board-wrap">
+        <div class="board-title">Ваш флот — <b id="my-name">вы</b></div>
+        <div class="grid-outer">
+          <div class="col-labels" id="my-cols"></div>
+          <div class="row-labels" id="my-rows"></div>
+          <div class="grid" id="my-grid"></div>
+        </div>
+        <div class="fleet-info" id="my-fleet"></div>
+      </div>
+      <div class="board-wrap" id="enemy-wrap" style="display:none;">
+        <div class="board-title" id="enemy-title">Флот противника</div>
+        <div class="grid-outer">
+          <div class="col-labels" id="enemy-cols"></div>
+          <div class="row-labels" id="enemy-rows"></div>
+          <div class="grid" id="enemy-grid"></div>
+        </div>
+        <div class="fleet-info" id="enemy-fleet"></div>
+      </div>
+    </div>
+    <div class="placement-controls" id="placement-controls">
+      <div class="pal-row" id="ship-palette"></div>
+      <div class="pal-row">
+        <button class="secondary" id="btn-rotate">↔ Горизонтально</button>
+        <button class="secondary" id="btn-clear">🧹 Очистить</button>
+        <button class="secondary" id="btn-reroll">🎲 Случайно</button>
+        <button id="btn-ready">⚔️ Готов!</button>
+      </div>
+      <div class="hint">Выберите корабль и кликайте по полю. Правая кнопка — поворот. Клик по кораблю — убрать.</div>
+    </div>
+  </div>
+</div>
+
+<!-- экран передачи компьютера -->
+<div id="pass-screen">
+  <div class="card">
+    <h2 id="pass-title">Передайте компьютер</h2>
+    <div class="hint">Чтобы соперник не увидел ваше поле, экран скрыт.<br>Передайте устройство и нажмите кнопку.</div>
+    <button id="btn-pass-ready">Я готов — показать поле</button>
+  </div>
+</div>
+
+<!-- оверлей конца игры / ошибок -->
+<div id="overlay">
+  <div class="card">
+    <h2 id="overlay-title"></h2>
+    <div class="hint" id="overlay-text"></div>
+    <button id="btn-rematch" style="display:none;">Ещё раз!</button>
+    <div class="rematch-note" id="rematch-note"></div>
+    <button class="secondary" id="btn-to-menu">В меню игры</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ================= Утилиты ================= */
+const $ = id => document.getElementById(id);
+const key = (x,y) => x + ',' + y;
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $('view-' + name).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + name).classList.add('active');
+}
+
+/* ================= Хеш пароля (SHA-256, чистый JS — работает и по file://) ================= */
+function utf8(s){ return unescape(encodeURIComponent(s)); }
+function sha256(ascii){
+  function rr(n,x){return (x>>>n)|(x<<(32-n));}
+  const mp=Math.pow, maxWord=mp(2,32);
+  let result='';
+  const words=[], bitLen=ascii.length*8;
+  let hash=sha256.h=sha256.h||[];
+  const k=sha256.k=sha256.k||[];
+  let pc=k.length; const comp={};
+  for(let cand=2; pc<64; cand++){
+    if(!comp[cand]){
+      for(let i=0;i<313;i+=cand) comp[i]=cand;
+      hash[pc]=(mp(cand,.5)*maxWord)|0;
+      k[pc++]=(mp(cand,1/3)*maxWord)|0;
+    }
+  }
+  ascii+='\x80';
+  while(ascii.length%64-56) ascii+='\x00';
+  for(let i=0;i<ascii.length;i++){
+    const j=ascii.charCodeAt(i);
+    if(j>>8) return;
+    words[i>>2]|=j<<((3-i)%4)*8;
+  }
+  words[words.length]=(bitLen/maxWord)|0;
+  words[words.length]=bitLen;
+  for(let j=0;j<words.length;){
+    const w=words.slice(j,j+=16);
+    const oldHash=hash;
+    hash=hash.slice(0,8);
+    for(let i=0;i<64;i++){
+      const w15=w[i-15], w2=w[i-2];
+      const a=hash[0], e=hash[4];
+      const t1=hash[7]
+        +(rr(6,e)^rr(11,e)^rr(25,e))
+        +((e&hash[5])^((~e)&hash[6]))
+        +k[i]
+        +(w[i]=(i<16)?w[i]:(
+            w[i-16]+(rr(7,w15)^rr(18,w15)^(w15>>>3))
+            +w[i-7]+(rr(17,w2)^rr(19,w2)^(w2>>>10)))|0);
+      const t2=(rr(2,a)^rr(13,a)^rr(22,a))
+        +((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash);
+      hash[4]=(hash[4]+t1)|0;
+    }
+    for(let i=0;i<8;i++) hash[i]=(hash[i]+oldHash[i])|0;
+  }
+  for(let i=0;i<8;i++)
+    for(let j=3;j+1;j--){
+      const b=(hash[i]>>(j*8))&255;
+      result+=((b<16)?'0':'')+b.toString(16);
+    }
+  return result;
+}
+function randHex(n){ let s='',a='0123456789abcdef'; for(let i=0;i<n;i++) s+=a[Math.floor(Math.random()*16)]; return s; }
+function hashPassword(pw, salt){
+  let h = utf8(salt + '|' + pw);
+  for(let i=0;i<1500;i++) h = sha256(h);
+  return h;
+}
+
+/* ================= Аккаунты и сессия ================= */
+const ACCTS_KEY = 'arcade-accounts', SESS_KEY = 'arcade-session';
+function loadAccounts(){
+  try {
+    const a = JSON.parse(localStorage.getItem(ACCTS_KEY));
+    return Array.isArray(a) ? a : [];
+  } catch(e){ return []; }
+}
+function saveAccounts(a){ try { localStorage.setItem(ACCTS_KEY, JSON.stringify(a)); } catch(e){} }
+function findAccount(nick){
+  if(!nick) return null;
+  const n = nick.toLowerCase();
+  return loadAccounts().find(a => a.nick.toLowerCase() === n) || null;
+}
+function currentNick(){ try { return localStorage.getItem(SESS_KEY) || ''; } catch(e){ return ''; } }
+function setSession(nick){ try { nick ? localStorage.setItem(SESS_KEY, nick) : localStorage.removeItem(SESS_KEY); } catch(e){} }
+
+function registerAccount(nick, pw){
+  nick = nick.trim().slice(0, 16);
+  if(nick.length < 2) return {err:'Ник — минимум 2 символа'};
+  if(!/^[\wА-Яа-яЁё0-9 _.-]+$/.test(nick)) return {err:'В нике недопустимые символы'};
+  if(pw.length < 3) return {err:'Пароль — минимум 3 символа'};
+  if(findAccount(nick)) return {err:'Такой ник уже занят'};
+  const salt = randHex(16);
+  const list = loadAccounts();
+  list.push({nick, salt, hash:hashPassword(pw, salt), wins:0, losses:0, created:Date.now()});
+  saveAccounts(list);
+  setSession(nick);
+  return {ok:true};
+}
+function loginAccount(nick, pw){
+  const acc = findAccount(nick.trim());
+  if(!acc) return {err:'Игрок не найден — создайте аккаунт'};
+  if(acc.hash !== hashPassword(pw, acc.salt)) return {err:'Неверный пароль'};
+  setSession(acc.nick);
+  return {ok:true};
+}
+// автозапись результата партии в аккаунты (только для зарегистрированных ников)
+function recordResult(winName, loseName){
+  if(!winName && !loseName) return;
+  const list = loadAccounts();
+  const bump = (n, field) => {
+    if(!n) return;
+    const acc = list.find(a => a.nick.toLowerCase() === n.toLowerCase());
+    if(acc) acc[field] = (acc[field] || 0) + 1;
+  };
+  bump(winName, 'wins');
+  bump(loseName, 'losses');
+  saveAccounts(list);
+}
+
+/* ================= Экран авторизации ================= */
+let authMode = 'login';
+function setAuthMode(m){
+  authMode = m;
+  const reg = m === 'register';
+  $('auth-title').textContent = reg ? 'Регистрация' : 'Вход в аккаунт';
+  $('auth-pass2').style.display = reg ? '' : 'none';
+  $('auth-submit').textContent = reg ? 'Зарегистрироваться' : 'Войти';
+  $('auth-toggle').textContent = reg ? 'У меня уже есть аккаунт' : 'Создать аккаунт';
+  $('auth-msg').textContent = '';
+  $('auth-msg').className = 'msg';
+}
+function authSubmit(){
+  const nick = $('auth-nick').value, pw = $('auth-pass').value;
+  const msg = $('auth-msg');
+  msg.className = 'msg';
+  let res;
+  if(authMode === 'register'){
+    if(pw !== $('auth-pass2').value){ msg.textContent = 'Пароли не совпадают'; return; }
+    res = registerAccount(nick, pw);
+  } else {
+    res = loginAccount(nick, pw);
+  }
+  if(res.err){ msg.textContent = res.err; return; }
+  $('auth-pass').value = ''; $('auth-pass2').value = '';
+  enterHub();
+}
+function enterHub(){
+  renderHub();
+  showView('hub');
+}
+function showAuth(){
+  setAuthMode('login');
+  $('auth-nick').value = ''; $('auth-pass').value = ''; $('auth-pass2').value = '';
+  showView('auth');
+}
+
+/* ================= Библиотека игр ================= */
+const GAMES = [
+  {id:'battleship', ico:'⚓', nm:'Морской бой', st:'Играть', ready:true},
+  {id:'tictactoe',  ico:'❌', nm:'Крестики-нолики', st:'Скоро', ready:false},
+  {id:'snake',      ico:'🐍', nm:'Змейка', st:'Скоро', ready:false},
+  {id:'memory',     ico:'🃏', nm:'Мемори', st:'Скоро', ready:false}
+];
+function renderHub(){
+  const acc = findAccount(currentNick());
+  $('hub-who').textContent = '👤 ' + (acc ? acc.nick : 'гость') +
+    (acc ? '  ·  ' + (acc.wins||0) + '🏆 / ' + (acc.losses||0) + '💀' : '');
+  const box = $('games');
+  box.innerHTML = '';
+  GAMES.forEach(g => {
+    const c = document.createElement('div');
+    c.className = 'game-card' + (g.ready ? '' : ' soon');
+    c.innerHTML =
+      (g.ready ? '' : '<span class="badge">скоро</span>') +
+      '<span class="ico">' + g.ico + '</span>' +
+      '<span class="nm"></span>' +
+      '<span class="st">' + g.st + '</span>';
+    c.querySelector('.nm').textContent = g.nm;
+    if(g.ready) c.onclick = () => openGame(g.id);
+    box.appendChild(c);
+  });
+}
+function openGame(id){
+  if(id === 'battleship'){
+    goToMenu();
+    showView('battleship');
+  }
+}
+
+/* ================= Лидерборд ================= */
+function renderLeaderboard(){
+  const me = currentNick().toLowerCase();
+  const list = loadAccounts().slice().sort((a,b) =>
+    (b.wins||0) - (a.wins||0) || (a.losses||0) - (b.losses||0) || a.nick.localeCompare(b.nick));
+  const box = $('lb-list');
+  box.innerHTML = '';
+  if(!list.length){
+    const d = document.createElement('div');
+    d.className = 'lb-empty';
+    d.textContent = 'Пока нет игроков. Зарегистрируйтесь — и появитесь здесь.';
+    box.appendChild(d);
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  list.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (p.nick.toLowerCase() === me ? ' me' : '');
+
+    const rank = document.createElement('span');
+    rank.className = 'lb-rank';
+    rank.textContent = medals[i] || (i + 1);
+
+    const nm = document.createElement('span');
+    nm.className = 'lb-nm';
+    nm.textContent = p.nick;
+    if(p.nick.toLowerCase() === me){
+      const you = document.createElement('span');
+      you.className = 'youtag'; you.textContent = '(вы)';
+      nm.appendChild(you);
+    }
+
+    const w = document.createElement('span');
+    w.className = 'lb-w'; w.textContent = (p.wins||0) + '🏆';
+    const l = document.createElement('span');
+    l.className = 'lb-l'; l.textContent = (p.losses||0) + '💀';
+
+    row.append(rank, nm, w, l);
+    box.appendChild(row);
+  });
+}
+
+/* ================= МОРСКОЙ БОЙ ================= */
+const N = 10;
+const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
+const COLS = ['А','Б','В','Г','Д','Е','Ж','З','И','К'];
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const TOPIC_PREFIX = 'mboy2026v2/';
+const BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://test.mosquitto.org:8081/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt'
+];
+
+let mqClients = [];
+let myId = null, peerId = null, roomTopic = null, paired = false;
+let seen = new Set(), msgSeq = 0;
+let joinTimer = null, connectTimer = null;
+let mode = 'online';
+let L = null, passCb = null;
+let E = null;
+let myName = '', oppName = '';
+let isHost = false;
+let phase = 'menu';
+let myBoard = null;
+let myShots = {}, enemyShots = {};
+let myTurn = false;
+let iAmReady = false, enemyReady = false;
+let iWantRematch = false, enemyWantsRematch = false;
+let enemyShipsLeft = SHIP_SIZES.length;
+let enemySunkShips = [];
+let myLastShotCell = null, enemyLastShotCell = null;
+
+function setStatus(text, cls){ const el = $('status'); el.textContent = text; el.className = cls || ''; }
+function makeCode(){ let c=''; for(let i=0;i<4;i++) c+=CODE_ALPHABET[Math.floor(Math.random()*CODE_ALPHABET.length)]; return c; }
+
+/* ---- генерация расстановки ---- */
+function genBoard(){
+  const grid = Array.from({length:N}, () => Array(N).fill(0));
+  const ships = [];
+  for(const size of SHIP_SIZES){
+    let placed = false;
+    for(let tries = 0; tries < 500 && !placed; tries++){
+      const horiz = Math.random() < 0.5;
+      const x = Math.floor(Math.random() * (horiz ? N - size + 1 : N));
+      const y = Math.floor(Math.random() * (horiz ? N : N - size + 1));
+      const cells = [];
+      let ok = true;
+      for(let i = 0; i < size && ok; i++){
+        const cx = horiz ? x + i : x, cy = horiz ? y : y + i;
+        cells.push([cx, cy]);
+        for(let dx = -1; dx <= 1; dx++)
+          for(let dy = -1; dy <= 1; dy++){
+            const nx = cx + dx, ny = cy + dy;
+            if(nx >= 0 && nx < N && ny >= 0 && ny < N && grid[ny][nx]) ok = false;
+          }
+      }
+      if(ok){
+        const id = ships.length + 1;
+        cells.forEach(([cx,cy]) => grid[cy][cx] = id);
+        ships.push({cells, hits:new Set()});
+        placed = true;
+      }
+    }
+    if(!placed) return genBoard();
+  }
+  return {grid, ships};
+}
+
+/* ---- редактор расстановки ---- */
+function rebuildGrid(board){
+  board.grid = Array.from({length:N}, () => Array(N).fill(0));
+  board.ships.forEach((s, i) => s.cells.forEach(([x,y]) => board.grid[y][x] = i + 1));
+}
+function canPlace(grid, cells){
+  return cells.every(([x,y]) => {
+    for(let dx = -1; dx <= 1; dx++)
+      for(let dy = -1; dy <= 1; dy++){
+        const nx = x + dx, ny = y + dy;
+        if(nx >= 0 && nx < N && ny >= 0 && ny < N && grid[ny][nx]) return false;
+      }
+    return true;
+  });
+}
+function shipCellsFrom(x, y, size, horiz){
+  const cells = [];
+  for(let i = 0; i < size; i++){
+    const cx = horiz ? x + i : x, cy = horiz ? y : y + i;
+    if(cx >= N || cy >= N) return null;
+    cells.push([cx, cy]);
+  }
+  return cells;
+}
+function initEditor(board){ E = {board, remaining:[], sel:null, horiz:true}; }
+function editingActive(){
+  return (mode === 'online' && phase === 'placement' && !iAmReady) ||
+         (mode === 'local' && L && L.phase === 'place');
+}
+function editorClear(){ E.board.ships = []; rebuildGrid(E.board); E.remaining = SHIP_SIZES.slice(); E.sel = E.remaining[0]; }
+function editorRandom(){ const nb = genBoard(); E.board.grid = nb.grid; E.board.ships = nb.ships; E.remaining = []; E.sel = null; }
+function editorClick(x, y){
+  const id = E.board.grid[y][x];
+  if(id){
+    const size = E.board.ships[id - 1].cells.length;
+    E.board.ships.splice(id - 1, 1);
+    rebuildGrid(E.board);
+    E.remaining.push(size);
+    E.remaining.sort((a,b) => b - a);
+    E.sel = size;
+  } else if(E.sel){
+    const cells = shipCellsFrom(x, y, E.sel, E.horiz);
+    if(!cells || !canPlace(E.board.grid, cells)) return;
+    E.board.ships.push({cells, hits:new Set()});
+    rebuildGrid(E.board);
+    E.remaining.splice(E.remaining.indexOf(E.sel), 1);
+    if(!E.remaining.includes(E.sel)) E.sel = E.remaining[0] || null;
+  } else return;
+  clearPreview();
+  editorRender();
+}
+let pvCells = [];
+function clearPreview(){ pvCells.forEach(el => el.classList.remove('pv-ok','pv-bad')); pvCells = []; }
+function previewAt(x, y){
+  clearPreview();
+  if(!editingActive() || !E.sel || E.board.grid[y][x]) return;
+  const cells = shipCellsFrom(x, y, E.sel, E.horiz);
+  const ok = cells && canPlace(E.board.grid, cells);
+  (cells || [[x,y]]).forEach(([cx,cy]) => {
+    const el = cellEl('my-grid', cx, cy);
+    el.classList.add(ok ? 'pv-ok' : 'pv-bad');
+    pvCells.push(el);
+  });
+}
+function editorRender(){
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      if(E.board.grid[y][x]) el.classList.add(...shipCellClasses(E.board, x, y));
+    }
+  const pal = $('ship-palette');
+  pal.innerHTML = '';
+  [4,3,2,1].forEach(size => {
+    const count = E.remaining.filter(s => s === size).length;
+    const b = document.createElement('button');
+    b.className = 'pal-btn' + (E.sel === size ? ' sel' : '');
+    b.disabled = !count;
+    const bar = document.createElement('span');
+    bar.className = 'pal-ship';
+    for(let i = 0; i < size; i++) bar.appendChild(document.createElement('i'));
+    const cnt = document.createElement('span');
+    cnt.className = 'pal-count';
+    cnt.textContent = '×' + count;
+    b.append(bar, cnt);
+    b.onclick = () => { if(count){ E.sel = size; editorRender(); } };
+    pal.appendChild(b);
+  });
+  $('btn-rotate').textContent = E.horiz ? '↔ Горизонтально' : '↕ Вертикально';
+  $('btn-ready').disabled = E.remaining.length > 0;
+  const label = mode === 'local' && L ? L.names[L.placing] + ': ' : '';
+  setStatus(E.remaining.length
+    ? label + 'расставьте корабли — осталось ' + E.remaining.length + ' шт.'
+    : label + 'флот готов! Жмите «Готов!»');
+}
+
+/* ---- отрисовка ---- */
+function partClasses(cells, x, y){
+  if(cells.length === 1) return ['ship','s-single'];
+  const horiz = cells[0][1] === cells[1][1];
+  const idx = cells.findIndex(([cx,cy]) => cx === x && cy === y);
+  const part = idx === 0 ? 's-bow' : idx === cells.length - 1 ? 's-stern' : 's-mid';
+  return ['ship', horiz ? 's-h' : 's-v', part];
+}
+function shipCellClasses(board, x, y){
+  const id = board.grid[y][x];
+  return id ? partClasses(board.ships[id - 1].cells, x, y) : [];
+}
+function buildLabels(colsId, rowsId){
+  $(colsId).innerHTML = COLS.map(c => `<span>${c}</span>`).join('');
+  $(rowsId).innerHTML = Array.from({length:N}, (_,i) => `<span>${i+1}</span>`).join('');
+}
+function buildGrid(gridId){
+  const g = $(gridId);
+  g.innerHTML = '';
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const c = document.createElement('div');
+      c.className = 'cell';
+      c.dataset.x = x; c.dataset.y = y;
+      g.appendChild(c);
+    }
+}
+function cellEl(gridId, x, y){ return $(gridId).children[y * N + x]; }
+function renderMyBoard(){
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      const shot = enemyShots[key(x,y)];
+      if(myBoard.grid[y][x]) el.classList.add(...shipCellClasses(myBoard, x, y));
+      if(shot === 'miss') el.classList.add('miss');
+      if(shot === 'hit') el.classList.add('hit');
+      if(shot === 'sunk') el.classList.add('hit','sunk');
+      if(enemyLastShotCell === key(x,y)) el.classList.add('last-shot');
+    }
+}
+function renderEnemyBoard(){
+  const sunkPart = {};
+  enemySunkShips.forEach(cells => cells.forEach(([cx,cy]) => { sunkPart[key(cx,cy)] = cells; }));
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('enemy-grid', x, y);
+      el.className = 'cell';
+      const shot = myShots[key(x,y)];
+      if(shot) el.classList.add('shot');
+      if(shot === 'miss') el.classList.add('miss');
+      if(shot === 'hit') el.classList.add('hit');
+      if(shot === 'sunk'){
+        el.classList.add('hit','sunk');
+        const cells = sunkPart[key(x,y)];
+        if(cells) el.classList.add(...partClasses(cells, x, y).slice(1));
+      }
+      if(myLastShotCell === key(x,y)) el.classList.add('last-shot');
+    }
+  $('enemy-grid').classList.toggle('clickable', phase === 'battle' && myTurn);
+}
+function renderFleets(){
+  const myAlive = myBoard.ships.map(s => s.hits.size < s.cells.length);
+  $('my-fleet').innerHTML = SHIP_SIZES.map((size, i) =>
+    `<span class="fleet-ship ${myAlive[i] ? '' : 'dead'}">${'<i></i>'.repeat(size)}</span>`).join('');
+  $('enemy-fleet').innerHTML =
+    `<span class="hint">кораблей осталось: <b style="color:var(--cyan)">${enemyShipsLeft}</b> из ${SHIP_SIZES.length}</span>`;
+}
+
+/* ---- сеть (MQTT) ---- */
+const randId = () => Math.random().toString(36).slice(2, 10);
+function publish(obj){
+  const full = JSON.stringify(Object.assign({from:myId, id:myId + '-' + (++msgSeq)}, obj));
+  mqClients.forEach(c => { if(c.connected){ try{ c.publish(roomTopic, full); }catch(e){} } });
+}
+function send(msg){ if(peerId) publish({to:peerId, kind:'game', data:msg}); }
+function cleanupPeer(){
+  clearTimeout(joinTimer); clearTimeout(connectTimer);
+  joinTimer = connectTimer = null;
+  peerId = null; paired = false; seen = new Set(); msgSeq = 0;
+  mqClients.forEach(c => { try{ c.end(true); }catch(e){} });
+  mqClients = [];
+}
+function fatal(title, text){
+  cleanupPeer();
+  $('overlay-title').textContent = title;
+  $('overlay-title').className = 'lose';
+  $('overlay-text').textContent = text;
+  $('btn-rematch').style.display = 'none';
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+function connectBroker(code, onReady, onFail){
+  myId = randId();
+  roomTopic = TOPIC_PREFIX + code.toLowerCase();
+  mqClients = []; seen = new Set(); msgSeq = 0;
+  let readyFired = false;
+  BROKERS.forEach((url, i) => {
+    let client;
+    try {
+      client = mqtt.connect(url, {
+        clientId: 'mb_' + myId + '_' + i,
+        clean: true, connectTimeout: 8000, reconnectPeriod: 4000, keepalive: 30
+      });
+    } catch(e){ return; }
+    mqClients.push(client);
+    client.on('connect', () => {
+      client.subscribe(roomTopic, {qos:0});
+      if(!readyFired){ readyFired = true; clearTimeout(connectTimer); onReady && onReady(); }
+    });
+    client.on('message', (t, payload) => onBrokerMessage(payload));
+    client.on('error', () => {});
+  });
+  connectTimer = setTimeout(() => { if(!readyFired) onFail && onFail(); }, 11000);
+}
+function onBrokerMessage(payload){
+  let m;
+  try { m = JSON.parse(payload.toString()); } catch(e){ return; }
+  if(!m || m.from === myId) return;
+  if(m.id){
+    if(seen.has(m.id)) return;
+    seen.add(m.id);
+    if(seen.size > 1000) seen = new Set();
+  }
+  if(m.kind === 'join'){
+    if(isHost && (!peerId || peerId === m.from)){
+      peerId = m.from;
+      oppName = typeof m.name === 'string' ? m.name.slice(0, 16) : '';
+      publish({kind:'welcome', to:m.from, name:myName || null});
+      if(!paired){ paired = true; startPlacement(); }
+    }
+    return;
+  }
+  if(m.kind === 'welcome'){
+    if(!isHost && m.to === myId){
+      peerId = m.from;
+      oppName = typeof m.name === 'string' ? m.name.slice(0, 16) : '';
+      clearTimeout(joinTimer); joinTimer = null;
+      if(!paired){ paired = true; startPlacement(); }
+    }
+    return;
+  }
+  if(m.kind === 'game'){
+    if(m.from === peerId && m.to === myId) onMessage(m.data);
+  }
+}
+function hostGame(){
+  mode = 'online'; isHost = true; phase = 'wait';
+  myName = currentNick(); oppName = '';
+  const code = makeCode();
+  $('my-code').textContent = '····';
+  $('wait-hint').textContent = 'Подключаемся к серверу…';
+  showScreen('wait');
+  connectBroker(code,
+    () => {
+      if(phase !== 'wait') return;
+      $('my-code').textContent = code;
+      $('wait-hint').innerHTML = 'Отправьте этот код другу.<br>Как только он подключится, начнётся расстановка.';
+    },
+    () => {
+      if(phase === 'wait')
+        fatal('Не удалось подключиться', 'Ни один игровой сервер не отвечает. Проверьте интернет. Если вы в рабочей или учебной сети — попробуйте с телефона через мобильный интернет.');
+    });
+}
+function joinGame(code){
+  mode = 'online'; isHost = false; phase = 'connecting';
+  myName = currentNick(); oppName = '';
+  showScreen('connecting');
+  $('connecting-hint').textContent = 'Подключаемся к серверу…';
+  connectBroker(code,
+    () => {
+      if(phase !== 'connecting') return;
+      $('connecting-hint').textContent = 'Сервер найден. Ищем игру ' + code + '…';
+      let tries = 0;
+      (function ping(){
+        if(phase !== 'connecting') return;
+        publish({kind:'join', name:myName || null});
+        if(++tries >= 30){
+          fatal('Игра не найдена', 'Никто не отвечает на код ' + code + '. Проверьте код: возможно, друг ещё не создал игру или уже начал другую.');
+          return;
+        }
+        joinTimer = setTimeout(ping, 1000);
+      })();
+    },
+    () => {
+      if(phase === 'connecting')
+        fatal('Не удалось подключиться', 'Ни один игровой сервер не отвечает. Проверьте интернет и попробуйте снова.');
+    });
+}
+
+/* ---- фазы игры ---- */
+function startPlacement(){
+  phase = 'placement';
+  iAmReady = enemyReady = false;
+  iWantRematch = enemyWantsRematch = false;
+  myShots = {}; enemyShots = {};
+  myLastShotCell = enemyLastShotCell = null;
+  enemyShipsLeft = SHIP_SIZES.length;
+  enemySunkShips = [];
+  myBoard = genBoard();
+  $('overlay').classList.remove('active');
+  $('enemy-wrap').style.display = 'none';
+  $('placement-controls').style.display = 'flex';
+  $('btn-reroll').disabled = false;
+  $('my-name').textContent = myName || 'вы';
+  $('enemy-title').textContent = 'Флот противника' + (oppName ? ' — ' + oppName : '');
+  showScreen('game');
+  initEditor(myBoard);
+  editorRender();
+  $('my-fleet').innerHTML = SHIP_SIZES.map(s => `<span class="fleet-ship">${'<i></i>'.repeat(s)}</span>`).join('');
+  $('enemy-fleet').innerHTML = '';
+}
+function tryStartBattle(){
+  if(!(iAmReady && enemyReady)) return;
+  if(isHost){
+    const hostFirst = Math.random() < 0.5;
+    send({type:'start', youFirst:!hostFirst});
+    beginBattle(hostFirst);
+  }
+}
+function beginBattle(iGoFirst){
+  phase = 'battle';
+  myTurn = iGoFirst;
+  $('placement-controls').style.display = 'none';
+  $('enemy-wrap').style.display = '';
+  renderMyBoard(); renderEnemyBoard(); renderFleets();
+  updateTurnStatus();
+}
+function updateTurnStatus(){
+  if(phase !== 'battle') return;
+  if(myTurn) setStatus('🎯 Ваш ход — стреляйте!', 'my-turn');
+  else setStatus('⏳ Ход противника…', 'enemy-turn');
+}
+function shoot(x, y){
+  if(phase !== 'battle' || !myTurn || myShots[key(x,y)]) return;
+  myTurn = false;
+  send({type:'shot', x, y});
+}
+function onShotResult(m){
+  const k = key(m.x, m.y);
+  myShots[k] = m.result;
+  myLastShotCell = k;
+  if(m.result === 'sunk'){
+    enemySunkShips.push(m.shipCells);
+    m.shipCells.forEach(([cx,cy]) => { myShots[key(cx,cy)] = 'sunk'; });
+    m.shipCells.forEach(([cx,cy]) => {
+      for(let dx = -1; dx <= 1; dx++)
+        for(let dy = -1; dy <= 1; dy++){
+          const nx = cx + dx, ny = cy + dy;
+          if(nx >= 0 && nx < N && ny >= 0 && ny < N && !myShots[key(nx,ny)]) myShots[key(nx,ny)] = 'miss';
+        }
+    });
+    enemyShipsLeft--;
+  }
+  if(m.gameOver){ renderEnemyBoard(); renderFleets(); endGame(true); return; }
+  myTurn = (m.result !== 'miss');
+  renderEnemyBoard(); renderFleets(); updateTurnStatus();
+}
+function onIncomingShot(m){
+  const {x, y} = m;
+  const id = myBoard.grid[y][x];
+  enemyLastShotCell = key(x,y);
+  let result = 'miss', shipCells = null, gameOver = false;
+  if(id){
+    const ship = myBoard.ships[id - 1];
+    ship.hits.add(key(x,y));
+    if(ship.hits.size === ship.cells.length){
+      result = 'sunk'; shipCells = ship.cells;
+      ship.cells.forEach(([cx,cy]) => { enemyShots[key(cx,cy)] = 'sunk'; });
+      gameOver = myBoard.ships.every(s => s.hits.size === s.cells.length);
+    } else {
+      result = 'hit'; enemyShots[key(x,y)] = 'hit';
+    }
+  } else {
+    enemyShots[key(x,y)] = 'miss';
+  }
+  send({type:'result', x, y, result, shipCells, gameOver});
+  if(gameOver){ renderMyBoard(); renderFleets(); endGame(false); return; }
+  myTurn = (result === 'miss');
+  renderMyBoard(); renderFleets(); updateTurnStatus();
+}
+function endGame(iWon){
+  phase = 'over';
+  recordResult(iWon ? (myName || null) : (oppName || null),
+               iWon ? (oppName || null) : (myName || null));
+  $('overlay-title').textContent = iWon ? '🏆 Победа!' : '💥 Поражение';
+  $('overlay-title').className = iWon ? 'win' : 'lose';
+  $('overlay-text').textContent = iWon
+    ? 'Весь флот противника отправлен на дно!'
+    : 'Ваш флот потоплен. В следующий раз повезёт!';
+  $('btn-rematch').style.display = '';
+  $('btn-rematch').disabled = false;
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+function onMessage(m){
+  if(!m || typeof m !== 'object') return;
+  switch(m.type){
+    case 'ready':
+      enemyReady = true;
+      if(phase === 'placement' && !iAmReady) setStatus('Соперник готов! Жмите «Готов!»');
+      tryStartBattle();
+      break;
+    case 'start': if(!isHost) beginBattle(m.youFirst); break;
+    case 'shot': if(phase === 'battle' && !myTurn) onIncomingShot(m); break;
+    case 'result': if(phase === 'battle') onShotResult(m); break;
+    case 'rematch':
+      enemyWantsRematch = true;
+      if(iWantRematch) startPlacement();
+      else $('rematch-note').textContent = 'Соперник хочет реванш!';
+      break;
+    case 'leave':
+      if(phase !== 'menu' && phase !== 'over')
+        fatal('Соперник вышел', (oppName || 'Соперник') + ' покинул игру.');
+      break;
+  }
+}
+
+/* ---- локальная игра ---- */
+function startLocal(names){
+  mode = 'local';
+  L = { boards:[genBoard(), genBoard()], shots:[{},{}],
+        left:[SHIP_SIZES.length, SHIP_SIZES.length], placing:0, cur:0, phase:'place',
+        names: names || ['Игрок 1','Игрок 2'] };
+  $('overlay').classList.remove('active');
+  $('pass-screen').classList.remove('active');
+  $('enemy-wrap').style.display = 'none';
+  $('placement-controls').style.display = 'flex';
+  $('btn-reroll').disabled = false;
+  showScreen('game');
+  initEditor(L.boards[0]);
+  localRenderPlace();
+}
+function showPass(title, cb){ $('pass-title').textContent = title; $('pass-screen').classList.add('active'); passCb = cb; }
+function localRenderPlace(){
+  $('my-name').textContent = L.names[L.placing];
+  editorRender();
+  $('my-fleet').innerHTML = SHIP_SIZES.map(s => `<span class="fleet-ship">${'<i></i>'.repeat(s)}</span>`).join('');
+  $('enemy-fleet').innerHTML = '';
+}
+function localReady(){
+  if(E.remaining.length) return;
+  if(L.placing === 0){
+    L.placing = 1;
+    initEditor(L.boards[1]);
+    showPass('Передайте компьютер: ' + L.names[1] + ' расставляет корабли', localRenderPlace);
+  } else {
+    L.phase = 'battle'; L.cur = 0;
+    $('placement-controls').style.display = 'none';
+    $('enemy-wrap').style.display = '';
+    showPass('Оба флота готовы! Первым ходит ' + L.names[0], startLocalTurn);
+  }
+}
+function startLocalTurn(){
+  const p = L.cur;
+  $('my-name').textContent = L.names[p];
+  $('enemy-title').textContent = 'Поле — ' + L.names[1 - p];
+  setStatus('🎯 ' + L.names[p] + ', ваш ход — стреляйте!', 'my-turn');
+  localRenderBattle();
+}
+function localRenderBattle(){
+  const p = L.cur, opp = 1 - p;
+  const myB = L.boards[p], oppShots = L.shots[opp], myShotsL = L.shots[p];
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('my-grid', x, y);
+      el.className = 'cell';
+      const s = oppShots[key(x,y)];
+      if(myB.grid[y][x]) el.classList.add(...shipCellClasses(myB, x, y));
+      if(s === 'miss') el.classList.add('miss');
+      if(s === 'hit') el.classList.add('hit');
+      if(s === 'sunk') el.classList.add('hit','sunk');
+    }
+  const oppBoard = L.boards[opp];
+  for(let y = 0; y < N; y++)
+    for(let x = 0; x < N; x++){
+      const el = cellEl('enemy-grid', x, y);
+      el.className = 'cell';
+      const s = myShotsL[key(x,y)];
+      if(s) el.classList.add('shot');
+      if(s === 'miss') el.classList.add('miss');
+      if(s === 'hit') el.classList.add('hit');
+      if(s === 'sunk'){ el.classList.add('hit','sunk'); el.classList.add(...shipCellClasses(oppBoard, x, y).slice(1)); }
+    }
+  $('enemy-grid').classList.toggle('clickable', L.phase === 'battle');
+  const myAlive = myB.ships.map(s => s.hits.size < s.cells.length);
+  $('my-fleet').innerHTML = SHIP_SIZES.map((sz, i) =>
+    `<span class="fleet-ship ${myAlive[i] ? '' : 'dead'}">${'<i></i>'.repeat(sz)}</span>`).join('');
+  $('enemy-fleet').innerHTML =
+    `<span class="hint">кораблей соперника: <b style="color:var(--cyan)">${L.left[opp]}</b> из ${SHIP_SIZES.length}</span>`;
+}
+function localShoot(x, y){
+  if(L.phase !== 'battle') return;
+  const p = L.cur, opp = 1 - p, shots = L.shots[p], board = L.boards[opp];
+  if(shots[key(x,y)]) return;
+  const id = board.grid[y][x];
+  if(!id){
+    shots[key(x,y)] = 'miss';
+    localRenderBattle();
+    L.cur = opp;
+    showPass('Мимо! Ход переходит. Передайте компьютер: ' + L.names[opp], startLocalTurn);
+    return;
+  }
+  const ship = board.ships[id - 1];
+  ship.hits.add(key(x,y));
+  if(ship.hits.size === ship.cells.length){
+    ship.cells.forEach(([cx,cy]) => { shots[key(cx,cy)] = 'sunk'; });
+    ship.cells.forEach(([cx,cy]) => {
+      for(let dx = -1; dx <= 1; dx++)
+        for(let dy = -1; dy <= 1; dy++){
+          const nx = cx + dx, ny = cy + dy;
+          if(nx >= 0 && nx < N && ny >= 0 && ny < N && !shots[key(nx,ny)]) shots[key(nx,ny)] = 'miss';
+        }
+    });
+    L.left[opp]--;
+    if(board.ships.every(s => s.hits.size === s.cells.length)){ localRenderBattle(); localOver(p); return; }
+  } else {
+    shots[key(x,y)] = 'hit';
+  }
+  localRenderBattle();
+}
+function localOver(winner){
+  L.phase = 'over';
+  $('enemy-grid').classList.remove('clickable');
+  const def = n => /^Игрок [12]$/.test(n);
+  recordResult(def(L.names[winner]) ? null : L.names[winner],
+               def(L.names[1 - winner]) ? null : L.names[1 - winner]);
+  $('overlay-title').textContent = '🏆 Победил(а) ' + L.names[winner] + '!';
+  $('overlay-title').className = 'win';
+  $('overlay-text').textContent = 'Весь флот соперника отправлен на дно.';
+  $('btn-rematch').style.display = '';
+  $('btn-rematch').disabled = false;
+  $('rematch-note').textContent = '';
+  $('overlay').classList.add('active');
+}
+
+function goToMenu(){
+  cleanupPeer();
+  mode = 'online'; phase = 'menu';
+  L = null; passCb = null; E = null; oppName = '';
+  $('overlay').classList.remove('active');
+  $('pass-screen').classList.remove('active');
+  showScreen('menu');
+}
+
+/* ================= Инициализация ================= */
+buildLabels('my-cols','my-rows');
+buildLabels('enemy-cols','enemy-rows');
+buildGrid('my-grid');
+buildGrid('enemy-grid');
+
+/* --- события авторизации --- */
+setAuthMode('login');
+$('auth-submit').onclick = authSubmit;
+$('auth-toggle').onclick = () => setAuthMode(authMode === 'login' ? 'register' : 'login');
+$('auth-nick').addEventListener('keydown', e => { if(e.key === 'Enter') $('auth-pass').focus(); });
+$('auth-pass').addEventListener('keydown', e => { if(e.key === 'Enter'){ authMode === 'register' ? $('auth-pass2').focus() : authSubmit(); } });
+$('auth-pass2').addEventListener('keydown', e => { if(e.key === 'Enter') authSubmit(); });
+
+/* --- события хаба / лидерборда --- */
+$('hub-logout').onclick = () => { setSession(''); showAuth(); };
+$('hub-lb').onclick = () => { renderLeaderboard(); showView('leaderboard'); };
+$('lb-back').onclick = enterHub;
+$('btn-hub').onclick = enterHub;
+
+/* --- события морского боя --- */
+$('btn-create').onclick = hostGame;
+$('btn-local').onclick = () => {
+  $('ln1').value = currentNick() || '';
+  $('ln2').value = '';
+  showScreen('local-names');
+};
+$('btn-local-back').onclick = () => showScreen('menu');
+$('btn-local-start').onclick = () => {
+  const n1 = $('ln1').value.trim().slice(0, 16) || 'Игрок 1';
+  const n2 = $('ln2').value.trim().slice(0, 16) || 'Игрок 2';
+  startLocal([n1, n2]);
+};
+$('ln1').addEventListener('keydown', e => { if(e.key === 'Enter') $('ln2').focus(); });
+$('ln2').addEventListener('keydown', e => { if(e.key === 'Enter') $('btn-local-start').click(); });
+
+$('btn-join').onclick = () => {
+  const code = $('join-code').value.trim().toUpperCase();
+  if(code.length !== 4){ $('join-code').focus(); return; }
+  joinGame(code);
+};
+$('join-code').addEventListener('keydown', e => { if(e.key === 'Enter') $('btn-join').click(); });
+
+$('btn-cancel-wait').onclick = $('btn-cancel-connect').onclick = () => { cleanupPeer(); phase = 'menu'; showScreen('menu'); };
+
+$('btn-pass-ready').onclick = () => {
+  $('pass-screen').classList.remove('active');
+  const cb = passCb; passCb = null;
+  if(cb) cb();
+};
+
+$('btn-reroll').onclick = () => { if(!editingActive()) return; editorRandom(); editorRender(); };
+$('btn-clear').onclick = () => { if(!editingActive()) return; editorClear(); editorRender(); };
+$('btn-rotate').onclick = () => { if(!editingActive()) return; E.horiz = !E.horiz; editorRender(); };
+
+$('my-grid').addEventListener('click', e => {
+  const c = e.target.closest('.cell');
+  if(!c || !editingActive()) return;
+  editorClick(+c.dataset.x, +c.dataset.y);
+});
+$('my-grid').addEventListener('mouseover', e => {
+  const c = e.target.closest('.cell');
+  if(!c || !editingActive()) return;
+  previewAt(+c.dataset.x, +c.dataset.y);
+});
+$('my-grid').addEventListener('mouseleave', clearPreview);
+$('my-grid').addEventListener('contextmenu', e => {
+  if(!editingActive()) return;
+  e.preventDefault();
+  E.horiz = !E.horiz;
+  editorRender();
+  const c = e.target.closest('.cell');
+  if(c) previewAt(+c.dataset.x, +c.dataset.y);
+});
+
+$('btn-ready').onclick = () => {
+  if(!E || E.remaining.length) return;
+  if(mode === 'local'){ localReady(); return; }
+  if(iAmReady) return;
+  iAmReady = true;
+  $('btn-ready').disabled = true;
+  $('btn-reroll').disabled = true;
+  send({type:'ready'});
+  setStatus(enemyReady ? 'Начинаем!' : 'Ждём соперника…');
+  tryStartBattle();
+};
+
+$('enemy-grid').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+  if(mode === 'local') localShoot(+cell.dataset.x, +cell.dataset.y);
+  else shoot(+cell.dataset.x, +cell.dataset.y);
+});
+
+$('btn-rematch').onclick = () => {
+  if(mode === 'local'){ startLocal(L.names); return; }
+  iWantRematch = true;
+  $('btn-rematch').disabled = true;
+  send({type:'rematch'});
+  if(enemyWantsRematch) startPlacement();
+  else $('rematch-note').textContent = 'Ждём согласия соперника…';
+};
+$('btn-to-menu').onclick = goToMenu;
+
+/* ================= Старт ================= */
+(function boot(){
+  const nick = currentNick();
+  if(nick && findAccount(nick)) enterHub();
+  else showAuth();
+})();
+</script>
+</body>
+</html>
