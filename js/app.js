@@ -129,6 +129,7 @@ function init(){
   initCalendar();
   initUnitForm();
   initLightbox();
+  initDashEdit();
   renderCalLauncher();
 }
 init();

@@ -289,6 +289,59 @@ input,select{ font-family:inherit; }
 /* SVG столбики */
 .svg-chart{ width:100%; height:auto; }
 
+/* ---------- Дашборд РОП: режим администратора ---------- */
+.dash-admin{
+  background:linear-gradient(135deg, #FFF7EC, #F6EAD2);
+  border:1px solid #E2CDA8;
+  border-radius:22px 22px var(--radius) var(--radius);
+  padding:16px 20px; margin-bottom:20px;
+  box-shadow:var(--shadow-sm);
+}
+.dash-admin-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.dash-admin-head h4{ font-size:15px; display:flex; align-items:center; gap:8px; color:var(--terra-dark); }
+.dash-admin-actions{ display:flex; gap:8px; }
+.dash-admin-fields{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; }
+.dash-admin-fields label{
+  display:flex; flex-direction:column; gap:5px;
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--brown-soft);
+}
+.dash-admin-fields input{
+  border:1px solid var(--line); background:var(--bg-2);
+  border-radius:8px; padding:8px 10px; font-size:13.5px; color:var(--brown); outline:none;
+  text-transform:none; letter-spacing:0; font-weight:400;
+}
+.dash-admin-fields input:focus{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(46,94,115,.1); }
+.dash-admin-hint{ font-size:12px; color:var(--brown-soft); margin-top:10px; }
+
+/* Кнопка «добавить» в блоках */
+.dash-add{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px dashed var(--sea); background:rgba(46,94,115,.06);
+  color:var(--sea-dark); font-weight:600; font-size:12.5px;
+  padding:8px 12px; border-radius:9px; margin-bottom:12px; width:100%;
+  justify-content:center; transition:.14s;
+}
+.dash-add:hover{ background:rgba(46,94,115,.12); border-style:solid; }
+
+/* Кнопки редактирования строки */
+.dash-row{ position:relative; }
+.dash-row-ctrls{ display:inline-flex; gap:4px; margin-left:6px; vertical-align:middle; }
+.dash-row-ctrls button{
+  width:22px; height:22px; border-radius:6px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--brown-soft); font-size:11px;
+  display:inline-grid; place-items:center; transition:.12s; line-height:1;
+}
+.dash-row-ctrls .dash-ce:hover{ border-color:var(--sea); color:var(--sea); }
+.dash-row-ctrls .dash-cd:hover{ border-color:var(--terra); color:var(--terra); }
+
+/* Пустое состояние блока */
+.dash-empty{
+  padding:18px 12px; text-align:center;
+  color:var(--brown-soft); font-size:13px;
+  border:1px dashed var(--line); border-radius:10px;
+  background:rgba(0,0,0,.012);
+}
+
 /* списки причин/источников */
 .line-list .li{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
 .line-list .li:last-child{ border-bottom:0; }

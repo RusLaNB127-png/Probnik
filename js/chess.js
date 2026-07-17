@@ -950,6 +950,7 @@ function toggleAdminMode(){
   document.getElementById('adminToggle').classList.toggle('admin-on', state.adminMode);
   renderAdminPanel();
   renderChess();
+  renderDashboard();
   toast(state.adminMode ? 'Режим администратора включён' : 'Режим продаж');
 }
 

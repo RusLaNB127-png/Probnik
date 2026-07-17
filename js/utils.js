@@ -157,6 +157,7 @@ const state = {
   presentationMode:false,             // презентационный режим карточки
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
+  dash:            null,              // данные дашборда РОП (редактируемые, в базе)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -170,6 +171,7 @@ function saveState(){
       shows:          state.shows,
       clients:        state.clients,
       favorites:      [...state.favorites],
+      dash:           state.dash,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -226,6 +228,7 @@ function loadState(){
     state.shows          = data.shows || [];
     state.clients        = (data.clients && data.clients.length ? data.clients : JSON.parse(JSON.stringify(DEFAULT_CLIENTS))).map(migrateClient);
     state.favorites      = new Set(data.favorites || []);
+    state.dash           = normalizeDash(data.dash);
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -239,8 +242,60 @@ function resetToDefaults(){
   state.shows          = genShows(state.unitsList);
   state.clients        = JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
   state.favorites      = new Set();
+  state.dash           = emptyDash();
   saveState();
 }
+
+/* ============================================================
+   ДАШБОРД РОП — данные в базе, редактируемые в админ-режиме
+   ============================================================ */
+function emptyDash(){
+  return { plan:0, overdue:0, period:'', managers:[], hot:[], problems:[], planFact:[], aiRecs:[], log:[] };
+}
+function normalizeDash(d){
+  const base = emptyDash();
+  if(!d || typeof d!=='object') return base;
+  const arr = x => Array.isArray(x) ? x : [];
+  return {
+    plan:     +d.plan || 0,
+    overdue:  +d.overdue || 0,
+    period:   d.period || '',
+    managers: arr(d.managers),
+    hot:      arr(d.hot),
+    problems: arr(d.problems),
+    planFact: arr(d.planFact),
+    aiRecs:   arr(d.aiRecs),
+    log:      arr(d.log),
+  };
+}
+function dashData(){ if(!state.dash) state.dash = emptyDash(); return state.dash; }
+function dashSetField(k, v){ dashData()[k] = v; saveState(); }
+function dashAdd(section, item){ item.id = uid('d'); dashData()[section].push(item); saveState(); return item; }
+function dashUpdate(section, id, patch){
+  const it = dashData()[section].find(x=>x.id===id);
+  if(it) Object.assign(it, patch);
+  saveState();
+}
+function dashRemove(section, id){
+  const a = dashData()[section];
+  const i = a.findIndex(x=>x.id===id);
+  if(i>=0) a.splice(i, 1);
+  saveState();
+}
+function dashClear(){ state.dash = emptyDash(); saveState(); }
+// Демонстрационный набор из встроенного DASH — для кнопки «Загрузить пример»
+function demoDash(){
+  return {
+    plan: DASH.plan, overdue: DASH.overdue, period: 'июнь 2026',
+    managers: DASH.managers.map(m=>({ id:uid('d'), name:m.name, plan:m.plan, fact:m.fact, books:m.books, conv:m.conv, rating:m.rating })),
+    hot:      DASH.hot.map(([name,object,level,prob])=>({ id:uid('d'), name, object, level, prob })),
+    problems: DASH.problems.map(([name,desc,tag])=>({ id:uid('d'), name, desc, tag })),
+    planFact: DASH.planFact.map(([name,plan,fact])=>({ id:uid('d'), name, plan, fact })),
+    aiRecs:   DASH.aiRecs.map(([title,text])=>({ id:uid('d'), title, text })),
+    log:      DASH.log.map(([time,who,action,icon])=>({ id:uid('d'), time, who, action, icon })),
+  };
+}
+function dashLoadDemo(){ state.dash = demoDash(); saveState(); }
 
 // При старте: загружаем сохранённое или генерируем дефолт
 function initState(){

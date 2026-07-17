@@ -209,6 +209,9 @@
 <main class="view" id="view-dashboard">
   <div class="view-head"><div><h2>Дашборд РОП</h2><p id="dashSub">Управленческая сводка по объекту · июнь 2026</p></div></div>
 
+  <!-- Панель редактирования (видна в режиме администратора) -->
+  <div class="dash-admin" id="dashAdminBar" style="display:none;"></div>
+
   <div class="kpi-row" id="dashKpi"></div>
 
   <div class="dash-grid">
@@ -717,6 +720,27 @@
       </div>
       <div class="pick-unit-list" id="pickUnitList"></div>
     </div>
+  </div>
+</div>
+
+<!-- ======================= РЕДАКТОР БЛОКА ДАШБОРДА ======================= -->
+<div class="form-modal" id="dashEditModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3 id="dashEditTitle">—</h3><div class="form-sub">Данные дашборда РОП · сохраняются в базу</div></div>
+      <button class="icon-btn" id="dashEditClose">✕</button>
+    </header>
+    <form id="dashEditForm" class="form-body">
+      <input type="hidden" id="dashEditSection">
+      <input type="hidden" id="dashEditId">
+      <div id="dashEditBody"></div>
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button type="button" class="btn" id="dashEditCancel">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 
