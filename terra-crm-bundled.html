@@ -1948,20 +1948,88 @@ body{
   box-shadow:0 1px 2px rgba(0,0,0,.15);
 }
 
+/* ============================================================
+   ЛЕВОЕ МЕНЮ ОТДЕЛОВ (сайдбар вместо верхних вкладок)
+   ============================================================ */
+body{ padding-left:238px; }
+
+.tabs{
+  position:fixed; top:0; left:0; bottom:0; width:238px; z-index:75;
+  display:flex; flex-direction:column; align-items:stretch; gap:3px;
+  padding:16px 12px 14px;
+  background:var(--bg-2);
+  border-right:1px solid var(--line); border-bottom:0;
+  overflow-y:auto;
+}
+/* Логотип в шапке сайдбара */
+.tabs .brand{
+  display:flex; align-items:center; gap:11px;
+  padding:6px 8px 15px; margin-bottom:6px;
+  border-bottom:1px solid var(--line);
+}
+.tabs .nav-label{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.12em;
+  color:var(--brown-soft); padding:6px 12px 6px; margin-top:2px;
+}
+
+/* Пункты меню — вертикальные, иконка + подпись */
+.tab{
+  display:flex; align-items:center; gap:12px;
+  padding:11px 12px; border-radius:10px;
+  font-size:14px; font-weight:600; color:var(--brown-soft);
+  text-align:left; position:relative; width:100%;
+  transition:.14s;
+}
+.tab .licon{ color:var(--brown-soft); flex-shrink:0; transition:.14s; }
+.tab:hover{ background:var(--line-soft); color:var(--brown); }
+.tab:hover .licon{ color:var(--brown); }
+.tab.active{ background:#F3E7E1; color:var(--terra); font-family:inherit; }
+.tab.active .licon{ color:var(--terra); }
+/* Активный акцент — вертикальная охристая полоса слева (заменяет нижнее подчёркивание) */
+.tab.active::after{
+  content:''; position:absolute; left:0; right:auto; top:9px; bottom:9px;
+  width:3px; height:auto; border-radius:0 3px 3px 0;
+  background:var(--terra);
+}
+
+/* Верхняя панель без бренда: поиск слева, утилиты справа */
+.topbar{ padding-left:24px; }
+.search-wrap{ margin-left:0; }
+.cal-launcher{ margin-left:auto; }
+
+/* Фирменный подвал — центрируем в области контента */
+.site-footer{ margin-left:0; }
+
+/* Узкие экраны: сворачиваем сайдбар до иконок */
+@media (max-width:1080px){
+  body{ padding-left:66px; }
+  .tabs{ width:66px; padding:14px 8px; }
+  .tabs .brand-name, .tabs .brand-sub, .tabs .nav-label, .tab span{ display:none; }
+  .tabs .brand{ justify-content:center; padding:6px 0 12px; }
+  .tab{ justify-content:center; padding:12px 0; }
+  .tab.active::after{ top:7px; bottom:7px; }
+}
+
+/* Продолжаем маркизу над сайдбаром — единая линия по всей ширине */
+.tabs{ padding-top:26px; }
+.tabs::before{
+  content:''; position:fixed; top:0; left:0; width:238px; height:12px; z-index:76;
+  background:var(--awning); background-size:auto 24px; background-position:0 -6px;
+}
+.tabs::after{
+  content:''; position:fixed; top:12px; left:0; width:238px; height:7px; z-index:76;
+  background:var(--valance) repeat-x; background-size:28px 7px;
+}
+@media (max-width:1080px){
+  .tabs::before, .tabs::after{ width:66px; }
+}
+
 </style>
 </head>
 <body>
 
 <!-- ======================= ШАПКА ======================= -->
 <header class="topbar">
-  <div class="brand">
-    <div class="brand-mark"><span class="brand-flag"></span></div>
-    <div>
-      <div class="brand-name">ИТАЛИКА</div>
-      <div class="brand-sub" id="brandSub">Жилой квартал · CRM</div>
-    </div>
-  </div>
-
   <div class="search-wrap">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     <input id="globalSearch" placeholder="Поиск: клиент, телефон, № квартиры…" autocomplete="off">
@@ -2001,10 +2069,30 @@ body{
 
 <!-- ======================= ВКЛАДКИ ======================= -->
 <nav class="tabs" id="tabs">
-  <button class="tab active" data-view="chess">Шахматка</button>
-  <button class="tab" data-view="clients">Профиль клиента</button>
-  <button class="tab" data-view="funnel">Воронка и статистика</button>
-  <button class="tab" data-view="dashboard">Дашборд РОП</button>
+  <div class="brand">
+    <div class="brand-mark"><span class="brand-flag"></span></div>
+    <div>
+      <div class="brand-name">ИТАЛИКА</div>
+      <div class="brand-sub" id="brandSub">Жилой квартал · CRM</div>
+    </div>
+  </div>
+  <div class="nav-label">Отделы</div>
+  <button class="tab active" data-view="chess">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/></svg>
+    <span>Шахматка</span>
+  </button>
+  <button class="tab" data-view="clients">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.7-3.8 3.7-5.6 7.5-5.6s6.8 1.8 7.5 5.6"/></svg>
+    <span>Профиль клиента</span>
+  </button>
+  <button class="tab" data-view="funnel">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5h17l-6.2 7.4v5.4l-4.6 2.4v-7.8Z"/></svg>
+    <span>Воронка и статистика</span>
+  </button>
+  <button class="tab" data-view="dashboard">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M10 20V10"/></svg>
+    <span>Дашборд РОП</span>
+  </button>
 </nav>
 
 <!-- ============ ВКЛАДКА 1: ШАХМАТКА ============ -->
