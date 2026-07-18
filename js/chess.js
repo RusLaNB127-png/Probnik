@@ -662,7 +662,7 @@ function openPanel(id){
                 const c = getClient(s.clientId);
                 const ss = SHOW_STATUSES[s.status];
                 return `<div class="person-row" style="border-left:3px solid ${ss.color}">
-                  <div style="font-family:'Fraunces',serif; font-size:15px; font-weight:600; min-width:74px;">${s.time}</div>
+                  <div style="font-family:Georgia,serif; font-size:15px; font-weight:600; min-width:74px;">${s.time}</div>
                   <div class="meta">
                     <b>${c ? c.name : 'Клиент'}</b>
                     <span>${fmtDateRu(s.date)} · ${mgrName(s.managerId)} · ${ss.label}</span>

@@ -4,36 +4,43 @@
    ============================================================ */
 
 :root{
-  /* Базовая палитра — «средиземноморье»: песок, терракота, море, олива */
-  --bg:          #F5EDDF;   /* тёплый песок */
-  --bg-2:        #FCF8EE;   /* карточки/панели — светлая керамика */
-  --sand:        #EADFCB;   /* песочный */
-  --beige:       #DFD0B6;   /* бежевый */
-  --terra:       #C2683E;   /* терракота / кирпичный */
-  --terra-dark:  #A8512C;
-  --terra-ink:   #8E3F1F;   /* тёмная терракота для акцентов */
-  --sea:         #2E5E73;   /* глубокий морской синий */
-  --sea-dark:    #234B5D;   /* тёмное море — serif-заголовки */
-  --sea-soft:    #6B92BC;   /* светлое море */
-  --olive:       #7C8B5F;   /* олива */
-  --brown:       #3B2A20;   /* глубокий коричневый — текст */
-  --brown-soft:  #82705F;   /* вторичный текст */
-  --line:        #E4D8C1;   /* линии/границы */
-  --line-soft:   #F0E8D6;
+  /* ============================================================
+     ФИРМЕННАЯ ПАЛИТРА ЖК «ИТАЛИКА» (по брендбуку)
+     Красная охра · лесной зелёный · белый лён · тёмный марсала.
+     Имена --sea* сохранены для совместимости, но теперь это ЗЕЛЁНЫЙ.
+     ============================================================ */
+  --bg:          #F2F1EF;   /* белый лён — фон */
+  --bg-2:        #FBFAF8;   /* карточки/панели */
+  --sand:        #E6E3DC;   /* светлый песочно-льняной */
+  --beige:       #D6D2C7;   /* бежево-серый */
+  --terra:       #9D3413;   /* КРАСНАЯ ОХРА — основной фирменный */
+  --terra-dark:  #83290D;
+  --terra-ink:   #511210;   /* тёмный марсала — глубокий акцент */
+  --sea:         #3B6831;   /* лесной зелёный (акцент из флага) */
+  --sea-dark:    #003419;   /* глубокий лесной зелёный — заголовки */
+  --sea-soft:    #5C8150;   /* светлый зелёный */
+  --olive:       #3B6831;   /* зелёный из флага */
+  --brown:       #241A16;   /* тёмный, почти чёрный — текст */
+  --brown-soft:  #766E66;   /* вторичный текст */
+  --line:        #E2DED6;   /* линии/границы */
+  --line-soft:   #ECE9E2;
 
-  /* Статусы помещений */
-  --st-free:     #7C9B6E;
-  --st-booked:   #E0A458;
-  --st-show:     #6B92BC;
-  --st-contract: #C2683E;
-  --st-sold:     #7A4A36;
-  --st-unavail:  #B7AB9B;
+  /* Статусы помещений (функциональные, различимые) */
+  --st-free:     #3B6831;   /* зелёный — свободно (бренд) */
+  --st-booked:   #C79A3E;   /* охристо-золотой — бронь */
+  --st-show:     #4E7C93;   /* приглушённый сине-зелёный — показ */
+  --st-contract: #9D3413;   /* красная охра — договор (бренд) */
+  --st-sold:     #511210;   /* тёмный марсала — продано */
+  --st-unavail:  #B2ADA2;   /* серый — недоступно */
 
-  --shadow-sm: 0 1px 2px rgba(120,80,50,.05), 0 3px 10px rgba(120,80,50,.055);
-  --shadow-md: 0 6px 22px rgba(120,80,50,.11), 0 2px 6px rgba(120,80,50,.06);
-  --shadow-lg: 0 28px 64px rgba(80,52,34,.24);
+  --shadow-sm: 0 1px 2px rgba(40,26,18,.05), 0 3px 10px rgba(40,26,18,.05);
+  --shadow-md: 0 6px 22px rgba(40,26,18,.1), 0 2px 6px rgba(40,26,18,.06);
+  --shadow-lg: 0 28px 64px rgba(30,16,10,.26);
   --radius: 12px;
   --radius-sm: 9px;
+
+  /* Фирменный паттерн «маркиза» (итальянская тканевая маркиза) */
+  --awning: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Crect width='20' height='24' fill='%239D3413'/%3E%3Cpath d='M3 0h6v13a3 3 0 0 1-6 0Z' fill='%23511210'/%3E%3Cpath d='M13 0h6v13a3 3 0 0 1-6 0Z' fill='%236E1C12'/%3E%3C/svg%3E");
 }
 
 *{ box-sizing:border-box; }
@@ -41,9 +48,8 @@ html,body{ margin:0; padding:0; }
 body{
   font-family:'Inter',system-ui,sans-serif;
   background:
-    radial-gradient(1100px 560px at 88% -8%, rgba(46,94,115,.075), transparent 60%),
-    radial-gradient(900px 520px at -5% 4%, rgba(194,104,62,.06), transparent 55%),
-    radial-gradient(700px 420px at 45% 108%, rgba(124,139,95,.07), transparent 60%),
+    radial-gradient(1100px 560px at 88% -8%, rgba(157,52,19,.05), transparent 60%),
+    radial-gradient(800px 500px at -5% 4%, rgba(0,52,25,.045), transparent 55%),
     var(--bg);
   background-attachment:fixed;
   color:var(--brown);
@@ -51,7 +57,7 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,h4{ font-family:'Fraunces',Georgia,serif; font-weight:600; margin:0; color:var(--brown); letter-spacing:-.015em; }
+h1,h2,h3,h4{ font-family:Georgia,'Times New Roman',serif; font-weight:700; margin:0; color:var(--sea-dark); letter-spacing:-.005em; }
 button{ font-family:inherit; cursor:pointer; }
 input,select{ font-family:inherit; }
 ::selection{ background:var(--terra); color:#fff; }
@@ -69,10 +75,10 @@ input,select{ font-family:inherit; }
 .brand-mark{
   width:34px; height:34px; border-radius:9px;
   background:linear-gradient(140deg,var(--terra),var(--terra-dark));
-  display:grid; place-items:center; color:#fff; font-family:'Fraunces',serif;
+  display:grid; place-items:center; color:#fff; font-family:Georgia,'Times New Roman',serif;
   font-weight:700; font-size:20px; box-shadow:var(--shadow-sm);
 }
-.brand-name{ font-family:'Fraunces',serif; font-weight:600; font-size:19px; line-height:1; }
+.brand-name{ font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:19px; line-height:1; }
 .brand-sub{ font-size:11px; color:var(--brown-soft); letter-spacing:.04em; text-transform:uppercase; }
 
 .obj-switch{ display:flex; gap:4px; background:var(--sand); padding:4px; border-radius:11px; margin-left:6px; }
@@ -190,7 +196,7 @@ input,select{ font-family:inherit; }
 .mini-card h4{ font-size:13px; margin-bottom:11px; }
 .mini-stat{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:13px; border-bottom:1px solid var(--line-soft); }
 .mini-stat:last-child{ border-bottom:0; }
-.mini-stat b{ font-family:'Fraunces',serif; font-size:15px; }
+.mini-stat b{ font-family:Georgia,'Times New Roman',serif; font-size:15px; }
 
 /* ---------- Карточка объекта (центральная модалка) ---------- */
 .scrim{ position:fixed; inset:0; background:rgba(59,42,32,.5); backdrop-filter:blur(4px); z-index:128; opacity:0; pointer-events:none; transition:.2s; }
@@ -209,7 +215,7 @@ input,select{ font-family:inherit; }
 .panel-head{
   padding:20px 22px; border-bottom:1px solid var(--line);
   display:flex; justify-content:space-between; align-items:flex-start;
-  background:linear-gradient(135deg, #FFF7EC, #F4E4CB);
+  background:linear-gradient(135deg, #FBFAF7, #F0EAE2);
 }
 .panel-head .close{ border:0; background:rgba(255,255,255,.55); width:32px; height:32px; border-radius:8px; color:var(--brown); display:grid; place-items:center; transition:.12s; }
 .panel-head .close:hover{ background:#fff; color:var(--terra); }
@@ -218,7 +224,7 @@ input,select{ font-family:inherit; }
 .status-pill .dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.85); }
 .kv{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0; }
 .kv .k{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--brown-soft); }
-.kv .v{ font-size:16px; font-weight:600; font-family:'Fraunces',serif; margin-top:2px; }
+.kv .v{ font-size:16px; font-weight:600; font-family:Georgia,'Times New Roman',serif; margin-top:2px; }
 .kv .full{ grid-column:span 2; }
 .panel-section-title{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--brown-soft); font-weight:700; margin:18px 0 9px; }
 .person-row{ display:flex; align-items:center; gap:11px; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:11px 13px; }
@@ -279,13 +285,13 @@ input,select{ font-family:inherit; }
 .funnel-bar{ height:46px; border-radius:9px; display:flex; align-items:center; padding:0 16px; color:#fff; font-weight:600; transition:.2s; margin:0 auto; }
 .funnel-bar:hover{ filter:brightness(1.06); }
 .funnel-bar .label{ font-size:13.5px; }
-.funnel-bar .count{ margin-left:auto; font-family:'Fraunces',serif; font-size:17px; }
+.funnel-bar .count{ margin-left:auto; font-family:Georgia,'Times New Roman',serif; font-size:17px; }
 .funnel-conv{ text-align:center; font-size:11px; color:var(--brown-soft); margin-top:2px; }
 
 .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
 .kpi{ background:var(--bg-2); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-sm); }
 .kpi .label{ font-size:12px; color:var(--brown-soft); text-transform:uppercase; letter-spacing:.04em; }
-.kpi .val{ font-family:'Fraunces',serif; font-size:28px; font-weight:600; margin-top:6px; line-height:1; }
+.kpi .val{ font-family:Georgia,'Times New Roman',serif; font-size:28px; font-weight:600; margin-top:6px; line-height:1; }
 .kpi .trend{ font-size:12px; margin-top:7px; font-weight:600; }
 .trend.up{ color:var(--st-free); } .trend.down{ color:var(--terra); }
 
@@ -300,7 +306,7 @@ input,select{ font-family:inherit; }
 
 /* ---------- Дашборд РОП: режим администратора ---------- */
 .dash-admin{
-  background:linear-gradient(135deg, #FFF7EC, #F6EAD2);
+  background:linear-gradient(135deg, #FBFAF7, #F6EAD2);
   border:1px solid #E2CDA8;
   border-radius:22px 22px var(--radius) var(--radius);
   padding:16px 20px; margin-bottom:20px;
@@ -319,18 +325,18 @@ input,select{ font-family:inherit; }
   border-radius:8px; padding:8px 10px; font-size:13.5px; color:var(--brown); outline:none;
   text-transform:none; letter-spacing:0; font-weight:400;
 }
-.dash-admin-fields input:focus{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(46,94,115,.1); }
+.dash-admin-fields input:focus{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(59,104,49,.1); }
 .dash-admin-hint{ font-size:12px; color:var(--brown-soft); margin-top:10px; }
 
 /* Кнопка «добавить» в блоках */
 .dash-add{
   display:inline-flex; align-items:center; gap:6px;
-  border:1px dashed var(--sea); background:rgba(46,94,115,.06);
+  border:1px dashed var(--sea); background:rgba(59,104,49,.06);
   color:var(--sea-dark); font-weight:600; font-size:12.5px;
   padding:8px 12px; border-radius:9px; margin-bottom:12px; width:100%;
   justify-content:center; transition:.14s;
 }
-.dash-add:hover{ background:rgba(46,94,115,.12); border-style:solid; }
+.dash-add:hover{ background:rgba(59,104,49,.12); border-style:solid; }
 
 /* Кнопки редактирования строки */
 .dash-row{ position:relative; }
@@ -355,7 +361,7 @@ input,select{ font-family:inherit; }
 .line-list .li{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
 .line-list .li:last-child{ border-bottom:0; }
 .line-list .li .nm{ flex:1; }
-.line-list .li .pct{ font-weight:700; font-family:'Fraunces',serif; }
+.line-list .li .pct{ font-weight:700; font-family:Georgia,'Times New Roman',serif; }
 .line-list .li .mini-track{ width:90px; height:7px; background:var(--sand); border-radius:5px; overflow:hidden; }
 .line-list .li .mini-track i{ display:block; height:100%; background:var(--terra); }
 
@@ -367,11 +373,11 @@ input,select{ font-family:inherit; }
 .plan-ring{ display:flex; align-items:center; gap:22px; }
 .ring{ position:relative; width:128px; height:128px; flex-shrink:0; }
 .ring .pct{ position:absolute; inset:0; display:grid; place-items:center; text-align:center; }
-.ring .pct b{ font-family:'Fraunces',serif; font-size:30px; line-height:1; display:block; }
+.ring .pct b{ font-family:Georgia,'Times New Roman',serif; font-size:30px; line-height:1; display:block; }
 .ring .pct span{ font-size:11px; color:var(--brown-soft); }
 .plan-meta .row{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
 .plan-meta .row:last-child{ border-bottom:0; }
-.plan-meta .row b{ font-family:'Fraunces',serif; font-size:15px; }
+.plan-meta .row b{ font-family:Georgia,'Times New Roman',serif; font-size:15px; }
 
 table.tbl{ width:100%; border-collapse:collapse; font-size:13px; }
 table.tbl th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--brown-soft); font-weight:700; padding:9px 10px; border-bottom:1px solid var(--line); }
@@ -435,7 +441,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 .cal-launcher{
   display:flex; align-items:center; gap:11px;
   padding:7px 14px 7px 9px;
-  background:linear-gradient(135deg, #FBF2E3, #F4E4CB);
+  background:linear-gradient(135deg, #FAF8F4, #F0EAE2);
   border:1px solid #E2CDA8;
   border-radius:13px;
   cursor:pointer;
@@ -461,11 +467,11 @@ table.tbl tr:hover td{ background:var(--sand); }
   border-radius:20px;
   font-size:11px; font-weight:700;
   display:grid; place-items:center;
-  border:2px solid #FBF2E3;
+  border:2px solid #FAF8F4;
   box-shadow:0 1px 3px rgba(122,74,54,.2);
 }
 .cal-launcher-body{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; }
-.cal-launcher-title{ font-family:'Fraunces',serif; font-weight:600; font-size:14px; color:var(--brown); }
+.cal-launcher-title{ font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:14px; color:var(--brown); }
 .cal-launcher-sub{ font-size:11px; color:var(--brown-soft); margin-top:2px; }
 
 /* ============================================================
@@ -476,7 +482,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   box-shadow:0 2px 8px rgba(194,104,62,.32);
 }
 .admin-panel{
-  background:linear-gradient(135deg, #FFF7EC, #F6EAD2);
+  background:linear-gradient(135deg, #FBFAF7, #F6EAD2);
   border:1px solid #E2CDA8;
   border-radius:var(--radius);
   padding:18px 20px;
@@ -504,7 +510,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   border-radius:11px;
   padding:12px 14px;
 }
-.admin-corp-name{ font-weight:700; font-family:'Fraunces',serif; font-size:14px; margin-bottom:9px; }
+.admin-corp-name{ font-weight:700; font-family:Georgia,'Times New Roman',serif; font-size:14px; margin-bottom:9px; }
 .admin-stepper{
   display:flex; align-items:center; justify-content:space-between;
   padding:6px 0;
@@ -520,7 +526,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   transition:.12s;
 }
 .admin-stepper button:hover{ border-color:var(--terra); color:var(--terra); }
-.admin-stepper .val{ min-width:32px; text-align:center; font-weight:700; font-family:'Fraunces',serif; font-size:15px; }
+.admin-stepper .val{ min-width:32px; text-align:center; font-weight:700; font-family:Georgia,'Times New Roman',serif; font-size:15px; }
 .admin-panel-foot{
   margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;
 }
@@ -612,7 +618,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   display:flex; align-items:center; justify-content:space-between;
   padding:18px 24px;
   border-bottom:1px solid var(--line);
-  background:linear-gradient(135deg, #FFF7EC, #F4E4CB);
+  background:linear-gradient(135deg, #FBFAF7, #F0EAE2);
 }
 .cal-shell-title{ display:flex; align-items:center; gap:14px; }
 .cal-shell-mark{
@@ -634,7 +640,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 
 /* Левая колонка */
 .cal-side{
-  background:linear-gradient(180deg, #FBF2E3, #F7EAD0);
+  background:linear-gradient(180deg, #FAF8F4, #F1EBE3);
   border-right:1px solid var(--line);
   padding:20px;
   overflow-y:auto;
@@ -645,7 +651,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:10px;
 }
-.cal-mini-title{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:var(--brown); text-transform:capitalize; }
+.cal-mini-title{ font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:15px; color:var(--brown); text-transform:capitalize; }
 .cal-nav-btn{
   width:28px; height:28px; border-radius:8px;
   border:1px solid var(--line); background:#fff; color:var(--brown);
@@ -699,7 +705,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 }
 .cal-stat-body{ flex:1; min-width:0; }
 .cal-stat-label{ font-size:11px; color:var(--brown-soft); text-transform:uppercase; letter-spacing:.04em; }
-.cal-stat-value{ font-family:'Fraunces',serif; font-size:20px; font-weight:600; color:var(--brown); line-height:1.15; margin-top:1px; }
+.cal-stat-value{ font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:600; color:var(--brown); line-height:1.15; margin-top:1px; }
 .cal-stat-value.warn{ color:var(--terra-dark); }
 .cal-stat-value.muted{ color:var(--brown-soft); }
 .cal-stat-next{
@@ -710,7 +716,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   margin-bottom:2px;
 }
 .cal-stat-next .lbl{ font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.06em; }
-.cal-stat-next .val{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-top:2px; }
+.cal-stat-next .val{ font-family:Georgia,'Times New Roman',serif; font-size:17px; font-weight:600; margin-top:2px; }
 .cal-stat-next .meta{ font-size:11.5px; opacity:.92; margin-top:3px; }
 
 .cal-quick{ background:rgba(255,255,255,.7); border-radius:13px; padding:14px; }
@@ -739,7 +745,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   display:flex; align-items:center; justify-content:space-between;
   background:#fff;
 }
-.cal-day-date{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; }
+.cal-day-date{ font-family:Georgia,'Times New Roman',serif; font-size:22px; font-weight:600; }
 .cal-day-meta{ font-size:13px; color:var(--brown-soft); margin-top:2px; }
 .cal-day-nav{ display:flex; gap:6px; }
 
@@ -774,7 +780,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 }
 .cal-event:hover{ transform:translateY(-1px); box-shadow:0 4px 14px rgba(74,53,42,.18); }
 .cal-event .ev-time{ font-size:11.5px; font-weight:700; opacity:.95; letter-spacing:.02em; }
-.cal-event .ev-title{ font-family:'Fraunces',serif; font-size:15px; font-weight:600; line-height:1.2; }
+.cal-event .ev-title{ font-family:Georgia,'Times New Roman',serif; font-size:15px; font-weight:600; line-height:1.2; }
 .cal-event .ev-meta{ font-size:11.5px; opacity:.92; line-height:1.3; }
 .cal-event .ev-comment{ font-size:11.5px; opacity:.85; line-height:1.35; margin-top:2px; font-style:italic; }
 .cal-event .ev-status{
@@ -791,7 +797,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   color:var(--brown-soft);
   font-size:14px;
 }
-.cal-day-empty .big{ font-family:'Fraunces',serif; font-size:18px; color:var(--brown); margin-bottom:8px; }
+.cal-day-empty .big{ font-family:Georgia,'Times New Roman',serif; font-size:18px; color:var(--brown); margin-bottom:8px; }
 
 /* ============================================================
    ФОРМЫ (показ / помещение)
@@ -818,7 +824,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   padding:18px 22px;
   border-bottom:1px solid var(--line);
   display:flex; align-items:center; justify-content:space-between;
-  background:linear-gradient(135deg, #FFF7EC, #F4E4CB);
+  background:linear-gradient(135deg, #FBFAF7, #F0EAE2);
 }
 .form-head h3{ font-size:18px; }
 .form-sub{ font-size:12.5px; color:var(--brown-soft); margin-top:3px; }
@@ -858,7 +864,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   border-radius:8px; padding:0 11px 0 0;
   transition:.12s;
 }
-.range-unit:focus-within{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(46,94,115,.1); }
+.range-unit:focus-within{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(59,104,49,.1); }
 .range-unit input{
   border:0 !important; background:transparent !important;
   box-shadow:none !important; border-radius:8px;
@@ -985,7 +991,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 .cc-field-2{ grid-column:span 2; }
 
 .cc-block-title{
-  font-family:'Fraunces',serif;
+  font-family:Georgia,'Times New Roman',serif;
   font-size:15px; font-weight:600;
   margin:18px 0 11px;
   display:flex; align-items:center; gap:8px;
@@ -1006,7 +1012,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   width:8px; height:36px; border-radius:4px;
   flex-shrink:0;
 }
-.unit-card-mini .ucm-num{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; min-width:60px; }
+.unit-card-mini .ucm-num{ font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:15px; min-width:60px; }
 .unit-card-mini .ucm-meta{ flex:1; min-width:0; font-size:12.5px; color:var(--brown-soft); }
 .unit-card-mini .ucm-meta b{ color:var(--brown); font-size:13.5px; display:block; font-family:inherit; font-weight:600; }
 .unit-card-mini .ucm-actions{ display:flex; gap:6px; flex-shrink:0; }
@@ -1027,7 +1033,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 .unit-segment:hover{ border-color:var(--terra); }
 .unit-segment.active{ border-color:var(--terra); background:#FBE3D3; }
 .unit-segment .seg-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--brown-soft); }
-.unit-segment .seg-value{ font-family:'Fraunces',serif; font-size:24px; font-weight:600; margin-top:3px; line-height:1; color:var(--brown); }
+.unit-segment .seg-value{ font-family:Georgia,'Times New Roman',serif; font-size:24px; font-weight:600; margin-top:3px; line-height:1; color:var(--brown); }
 .unit-segment.active .seg-value{ color:var(--terra-dark); }
 
 /* Карточки задач */
@@ -1147,7 +1153,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   background:var(--bg);
 }
 .form-section-title{
-  font-family:'Fraunces',serif;
+  font-family:Georgia,'Times New Roman',serif;
   font-size:14px; font-weight:600;
   margin-bottom:10px;
   color:var(--terra-dark);
@@ -1169,7 +1175,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 .pick-unit-item:hover{ background:var(--sand); }
 .pick-unit-item:last-child{ border-bottom:0; }
 .pick-unit-item .pu-st{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.pick-unit-item .pu-num{ font-family:'Fraunces',serif; font-weight:600; font-size:14px; min-width:54px; }
+.pick-unit-item .pu-num{ font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:14px; min-width:54px; }
 .pick-unit-item .pu-meta{ flex:1; font-size:12.5px; color:var(--brown-soft); }
 .pick-unit-item .pu-meta b{ display:block; color:var(--brown); font-weight:600; font-size:13px; font-family:inherit; }
 
@@ -1284,7 +1290,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   border-bottom:1px dashed var(--line);
 }
 .floor-plan-title{
-  font-family:'Fraunces',serif; font-size:22px; font-weight:600;
+  font-family:Georgia,'Times New Roman',serif; font-size:22px; font-weight:600;
   color:var(--terra-ink); letter-spacing:-.01em;
 }
 .floor-plan-sub{
@@ -1293,7 +1299,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 .floor-plan-stats{
   display:flex; gap:14px; font-size:12px; color:var(--brown-soft);
 }
-.floor-plan-stats b{ color:var(--brown); font-size:14px; font-family:'Fraunces',serif; }
+.floor-plan-stats b{ color:var(--brown); font-size:14px; font-family:Georgia,'Times New Roman',serif; }
 
 /* — SVG-план этажа — */
 .floor-plan-canvas{ width:100%; overflow-x:auto; }
@@ -1314,8 +1320,8 @@ table.tbl tr:hover td{ background:var(--sand); }
 .fp-apt-fill{ fill-opacity:.16; transition:fill-opacity .15s; }
 .fp-apt-wall{ fill:none; stroke:var(--brown); stroke-width:1.6; }
 .fp-part{ stroke:var(--brown-soft); stroke-width:1; stroke-dasharray:3 3; opacity:.55; }
-.fp-window{ stroke:#6B92BC; stroke-width:3.4; stroke-linecap:round; }
-.fp-apt-num{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; fill:var(--brown); }
+.fp-window{ stroke:#4E7C93; stroke-width:3.4; stroke-linecap:round; }
+.fp-apt-num{ font-family:Georgia,'Times New Roman',serif; font-size:17px; font-weight:600; fill:var(--brown); }
 .fp-apt-area{ font-family:'Inter',sans-serif; font-size:12px; fill:var(--brown-soft); font-weight:600; }
 .fp-apt-kind{ font-family:'Inter',sans-serif; font-size:10px; fill:var(--brown-soft); text-transform:uppercase; letter-spacing:.04em; }
 .fp-apt-view{ font-size:15px; }
@@ -1351,7 +1357,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   opacity:0; transition:opacity .12s;
 }
 .floor-tooltip.show{ opacity:1; }
-.floor-tooltip .ft-num{ font-family:'Fraunces',serif; font-size:14px; font-weight:600; margin-bottom:4px; }
+.floor-tooltip .ft-num{ font-family:Georgia,'Times New Roman',serif; font-size:14px; font-weight:600; margin-bottom:4px; }
 .floor-tooltip .ft-row{ display:flex; justify-content:space-between; gap:18px; opacity:.85; }
 .floor-tooltip .ft-status{
   display:inline-block; margin-top:6px; padding:2px 7px; border-radius:5px;
@@ -1395,7 +1401,7 @@ table.tbl tr:hover td{ background:var(--sand); }
   border-radius:6px 6px 0 0;
 }
 .facade-name{
-  text-align:center; font-family:'Fraunces',serif;
+  text-align:center; font-family:Georgia,'Times New Roman',serif;
   color:#4A3526; font-size:13px; font-weight:600;
   margin-bottom:10px; letter-spacing:.05em;
 }
@@ -1637,42 +1643,57 @@ table.tbl tr:hover td{ background:var(--sand); }
 }
 
 /* ============================================================
-   ТЕМА «СРЕДИЗЕМНОМОРЬЕ» — фирменный слой поверх базовых стилей.
-   Тёплый песок, глубокий морской синий, олива, арочные формы,
-   керамические плашки, волна-кикер у заголовков.
+   ФИРМЕННЫЙ СТИЛЬ ЖК «ИТАЛИКА» (по брендбуку)
+   Красная охра · лесной зелёный · белый лён · Georgia · маркиза.
    ============================================================ */
 
-/* — Трёхцветная «керамическая» полоса над всем приложением — */
+/* — Фирменный паттерн «маркиза» над всем приложением — */
 .topbar{
-  border-top:3px solid transparent;
-  border-image:linear-gradient(90deg,
-    var(--terra) 0 34%, var(--sea) 34% 67%, var(--olive) 67% 100%) 1;
-  background:rgba(252,248,238,.88);
+  border-top:0;
+  background:rgba(251,250,248,.92);
+  position:relative;
 }
+.topbar::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:9px;
+  background:var(--awning); background-size:auto 100%; opacity:.95;
+}
+/* Логотип: марка-плитка охры с флажком-триколором */
 .brand-mark{
-  border-radius:12px 12px 5px 5px;   /* арка */
-  background:linear-gradient(150deg, var(--sea), var(--sea-dark));
-  box-shadow:0 4px 12px rgba(35,75,93,.3), inset 0 1px 0 rgba(255,255,255,.22);
+  border-radius:9px;
+  background:linear-gradient(150deg, var(--terra), var(--terra-dark));
+  box-shadow:0 4px 12px rgba(157,52,19,.3), inset 0 1px 0 rgba(255,255,255,.22);
+  display:grid; place-items:center;
 }
-.brand-name{ font-size:20px; letter-spacing:-.02em; color:var(--sea-dark); }
-.brand-sub{ letter-spacing:.14em; }
+.brand-flag{
+  width:20px; height:13px; border-radius:2px; display:block;
+  background:linear-gradient(90deg,
+    #3B6831 0 33.3%, #F2F1EF 33.3% 66.6%, #9D3413 66.6% 100%);
+  box-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.brand-name{
+  font-family:Georgia,'Times New Roman',serif; font-weight:400;
+  font-size:19px; letter-spacing:.18em; color:var(--sea-dark);
+}
+.brand-sub{ letter-spacing:.1em; }
 
-/* — Вкладки: море + терракотовое подчёркивание — */
-.tabs{ background:rgba(252,248,238,.7); gap:4px; }
+/* — Вкладки: активная — Georgia, зелёная, охристое подчёркивание — */
+.tabs{ background:rgba(251,250,248,.75); gap:4px; }
 .tab{ font-size:13.5px; letter-spacing:.01em; padding:16px 18px; }
-.tab.active{ font-family:'Fraunces',serif; font-weight:600; letter-spacing:0; color:var(--sea-dark); }
+.tab.active{ font-family:Georgia,'Times New Roman',serif; font-weight:700; letter-spacing:0; color:var(--sea-dark); }
 .tab.active::after{ height:3px; left:16px; right:16px;
   background:linear-gradient(90deg, var(--terra), var(--terra-dark)); }
 
-/* — Заголовок раздела: морской serif + волна-кикер — */
+/* — Заголовок раздела: зелёный Georgia + флажок-триколор — */
 .view-head h2{
-  font-size:34px; line-height:1.05; letter-spacing:-.025em;
+  font-size:33px; line-height:1.08; letter-spacing:-.01em;
   color:var(--sea-dark);
 }
 .view-head h2::before{
   content:''; display:block;
-  width:58px; height:8px; margin-bottom:10px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='8' viewBox='0 0 18 8'%3E%3Cpath d='M0 6 Q4.5 0 9 6 T18 6' fill='none' stroke='%23C2683E' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+  width:54px; height:6px; margin-bottom:12px; border-radius:2px;
+  background:linear-gradient(90deg,
+    var(--sea) 0 33.3%, #F2F1EF 33.3% 66.6%, var(--terra) 66.6% 100%);
+  box-shadow:inset 0 0 0 1px var(--line);
 }
 .view-head p{ font-size:13.5px; max-width:70ch; }
 
@@ -1695,8 +1716,8 @@ table.tbl tr:hover td{ background:var(--sand); }
 .kpi::before{
   content:''; position:absolute; top:0; left:0; right:0; height:3px;
   background:linear-gradient(90deg,
-    var(--terra) 0 34%, var(--sea) 34% 67%, var(--olive) 67% 100%);
-  opacity:.75;
+    var(--sea) 0 33.3%, #F2F1EF 33.3% 66.6%, var(--terra) 66.6% 100%);
+  opacity:.9;
 }
 .kpi .label{ letter-spacing:.08em; }
 .kpi .val{ font-size:32px; letter-spacing:-.02em; color:var(--sea-dark); }
@@ -1704,7 +1725,7 @@ table.tbl tr:hover td{ background:var(--sand); }
 /* — Шахматка: керамические ячейки, серифные номера — */
 .chess-scroll{ padding:20px; border-radius:22px 22px var(--radius) var(--radius); }
 .chess-corp-title{
-  font-family:'Fraunces',serif; font-weight:600; font-size:15px;
+  font-family:Georgia,'Times New Roman',serif; font-weight:600; font-size:15px;
   text-transform:none; letter-spacing:0; color:var(--sea-dark);
   padding-bottom:6px; border-bottom:1px solid var(--line-soft);
 }
@@ -1713,13 +1734,13 @@ table.tbl tr:hover td{ background:var(--sand); }
   border:1px solid rgba(59,42,32,.08);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 1px 2px rgba(74,53,42,.08);
 }
-.cell .num{ font-family:'Fraunces',serif; font-size:14px; font-weight:600; letter-spacing:-.01em; }
-.cell:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(46,94,115,.22), inset 0 1px 0 rgba(255,255,255,.3); filter:brightness(1.04) saturate(1.05); }
+.cell .num{ font-family:Georgia,'Times New Roman',serif; font-size:14px; font-weight:600; letter-spacing:-.01em; }
+.cell:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(59,104,49,.22), inset 0 1px 0 rgba(255,255,255,.3); filter:brightness(1.04) saturate(1.05); }
 .cell.sel{ outline:2.5px solid var(--sea-dark); outline-offset:2px; }
-.floor-label{ font-family:'Fraunces',serif; font-size:12.5px; color:var(--brown-soft); }
+.floor-label{ font-family:Georgia,'Times New Roman',serif; font-size:12.5px; color:var(--brown-soft); }
 
 /* — Сводка справа — */
-.mini-card h4{ font-family:'Fraunces',serif; font-size:14px; letter-spacing:-.01em; color:var(--sea-dark); }
+.mini-card h4{ font-family:Georgia,'Times New Roman',serif; font-size:14px; letter-spacing:-.01em; color:var(--sea-dark); }
 .mini-card h4::before{
   content:''; display:inline-block; width:6px; height:6px; margin-right:8px;
   border-radius:1.5px; background:var(--olive); transform:rotate(45deg) translateY(-1px);
@@ -1764,12 +1785,12 @@ table.tbl tr:hover td{ background:var(--sand); }
 .floor-plan-title{ color:var(--sea-dark); }
 .cal-shell-mark{ background:linear-gradient(135deg, var(--sea), var(--sea-dark)); box-shadow:0 4px 14px rgba(35,75,93,.32); }
 .cal-mini-day.selected{ background:var(--sea); }
-.cal-mini-day.today{ background:rgba(46,94,115,.14); color:var(--sea-dark); }
+.cal-mini-day.today{ background:rgba(59,104,49,.14); color:var(--sea-dark); }
 .cal-mini-day.has-shows::after{ background:var(--terra); }
 
 /* — Тосты и поиск: море — */
 .toast{ background:var(--sea-dark); }
-.search-wrap input:focus{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(46,94,115,.13); }
+.search-wrap input:focus{ border-color:var(--sea); box-shadow:0 0 0 3px rgba(59,104,49,.13); }
 .sr-kind{ background:var(--sea); }
 
 /* — Тонкая настройка воронки/дашборда — */

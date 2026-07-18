@@ -154,7 +154,7 @@ function renderDashboard(){
   // ---- Прогноз выручки ----
   document.getElementById('forecast').innerHTML = `
     <div style="text-align:center;padding:8px 0 14px;">
-      <div style="font-family:'Fraunces',serif;font-size:34px;color:var(--terra-dark);line-height:1;">${forecast} млн ₽</div>
+      <div style="font-family:Georgia,serif;font-size:34px;color:var(--terra-dark);line-height:1;">${forecast} млн ₽</div>
       <div style="font-size:12px;color:var(--brown-soft);margin-top:6px;">прогноз на конец месяца</div>
     </div>
     <div class="hbar"><div class="top"><span>Подтверждённые сделки</span><b>${fact} млн</b></div><div class="track"><div class="fill" style="width:${forecast?fact/forecast*100:0}%"></div></div></div>
@@ -182,7 +182,7 @@ function renderDashboard(){
     (admin ? `<div style="grid-column:1/-1;">${addBtn('aiRecs','Добавить рекомендацию')}</div>` : '') +
     (d.aiRecs.length ? d.aiRecs.map(a=>`
       <div class="dash-row" style="background:rgba(255,255,255,.55);border:1px solid #E8CBAE;border-radius:11px;padding:15px;">
-        <b style="font-family:'Fraunces',serif;font-size:14.5px;color:var(--terra-dark);display:block;margin-bottom:7px;">${escapeHtml(a.title)} ${rowCtrls('aiRecs',a.id)}</b>
+        <b style="font-family:Georgia,serif;font-size:14.5px;color:var(--terra-dark);display:block;margin-bottom:7px;">${escapeHtml(a.title)} ${rowCtrls('aiRecs',a.id)}</b>
         <p style="margin:0;font-size:12.5px;line-height:1.55;color:var(--brown);">${escapeHtml(a.text||'')}</p>
       </div>`).join('') : `<div style="grid-column:1/-1;">${emptyState('Нет рекомендаций', admin)}</div>`);
 

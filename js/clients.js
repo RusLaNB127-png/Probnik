@@ -409,7 +409,7 @@ function renderTabShows(pane, c){
 
     ${nextShow ? `<div style="background:linear-gradient(135deg, var(--terra), var(--terra-dark)); color:#fff; border-radius:11px; padding:14px 16px; margin-bottom:16px;">
       <div class="ic-inline" style="font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">${icon('clock',12)} Ближайший показ</div>
-      <div style="font-family:'Fraunces',serif; font-size:18px; font-weight:600; margin-top:3px;">
+      <div style="font-family:Georgia,serif; font-size:18px; font-weight:600; margin-top:3px;">
         ${fmtDateRu(nextShow.date)} · ${nextShow.time}${getUnit(nextShow.unitId)?' · '+getUnit(nextShow.unitId).displayNum:''}
       </div>
       <div style="font-size:12.5px; opacity:.92; margin-top:3px;">${mgrName(nextShow.managerId)} · ${SHOW_STATUSES[nextShow.status].label}</div>
