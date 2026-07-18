@@ -932,6 +932,7 @@ function toggleAdminMode(){
   renderAdminPanel();
   renderChess();
   renderDashboard();
+  renderChecklist();
   toast(state.adminMode ? 'Режим администратора включён' : 'Режим продаж');
 }
 

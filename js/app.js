@@ -137,6 +137,7 @@ function init(){
   renderClientCard();
   renderFunnel();
   renderDashboard();
+  renderChecklist();
   renderNotifs();
   initCalendar();
   initUnitForm();

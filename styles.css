@@ -2013,3 +2013,81 @@ body{ padding-left:238px; }
 @media (max-width:1080px){
   .tabs::before, .tabs::after{ width:66px; }
 }
+
+/* ============================================================
+   ВКЛАДКА «ЧЕК-ЛИСТ ОП»
+   ============================================================ */
+.cl-grid{ display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start; }
+
+/* Команда — карточки сотрудников */
+.cl-team-card{
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:22px 22px var(--radius) var(--radius);
+  padding:16px; box-shadow:var(--shadow-sm); position:sticky; top:78px;
+}
+.cl-team-title{ font-size:15px; margin-bottom:12px; }
+.cl-team{ display:flex; flex-direction:column; gap:8px; }
+.cl-emp{
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  padding:10px 11px; border:1px solid var(--line); border-radius:12px;
+  background:var(--bg); cursor:pointer; transition:.14s; position:relative;
+}
+.cl-emp:hover{ border-color:var(--sea); }
+.cl-emp.active{ border-color:var(--terra); background:#F3E7E1; }
+.cl-emp .avatar{ width:38px; height:38px; font-size:13px; flex-shrink:0; }
+.cl-emp-meta{ flex:1; min-width:0; }
+.cl-emp-meta b{ display:block; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl-emp-meta span{ font-size:11.5px; color:var(--brown-soft); }
+.cl-emp-ring{ flex-shrink:0; }
+
+/* Основной чек-лист */
+.cl-main-card{
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:22px 22px var(--radius) var(--radius);
+  padding:22px; box-shadow:var(--shadow-sm);
+}
+.cl-body-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.cl-body-head h3{ font-size:19px; }
+.cl-body-sub{ font-size:12.5px; color:var(--brown-soft); margin-top:2px; }
+.cl-progress{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.cl-progress .track{ flex:1; height:10px; background:var(--sand); border-radius:6px; overflow:hidden; }
+.cl-progress .fill{ height:100%; border-radius:6px; background:linear-gradient(90deg, var(--terra), var(--terra-dark)); transition:width .4s; }
+.cl-progress .fill.full{ background:linear-gradient(90deg, var(--sea), var(--sea-dark)); }
+.cl-progress b{ font-family:Georgia,serif; font-size:17px; color:var(--sea-dark); min-width:42px; text-align:right; }
+
+.cl-section{ margin-bottom:18px; }
+.cl-section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:7px; margin-bottom:8px; border-bottom:1px solid var(--line-soft); }
+.cl-section-head h4{ font-size:14px; color:var(--sea-dark); display:flex; align-items:center; gap:8px; }
+.cl-section-count{ font-size:11px; font-weight:700; color:var(--brown-soft); background:var(--sand); padding:1px 8px; border-radius:20px; }
+.cl-sec-ctrls, .cl-item-ctrls{ display:inline-flex; gap:4px; flex-shrink:0; }
+.cl-cbtn{
+  width:24px; height:24px; border-radius:7px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--brown-soft);
+  display:inline-grid; place-items:center; transition:.12s; padding:0; cursor:pointer;
+}
+.cl-cbtn:hover{ border-color:var(--sea); color:var(--sea); }
+.cl-cbtn.del:hover{ border-color:var(--terra); color:var(--terra); }
+
+.cl-items{ display:flex; flex-direction:column; gap:3px; }
+.cl-item{
+  display:flex; align-items:center; gap:11px;
+  padding:9px 10px; border-radius:9px; transition:.12s;
+}
+.cl-item:hover{ background:var(--line-soft); }
+.cl-check{
+  width:22px; height:22px; flex-shrink:0; border-radius:6px;
+  border:1.8px solid var(--beige); background:var(--bg);
+  display:grid; place-items:center; cursor:pointer; transition:.14s; color:#fff; padding:0;
+}
+.cl-check:hover{ border-color:var(--sea); }
+.cl-check.on{ background:var(--sea); border-color:var(--sea); }
+.cl-item-title{ flex:1; font-size:13.5px; cursor:pointer; line-height:1.4; }
+.cl-item.done .cl-item-title{ color:var(--brown-soft); text-decoration:line-through; text-decoration-color:var(--beige); }
+.cl-section-empty{ font-size:12.5px; color:var(--brown-soft); padding:8px 10px; }
+
+@media (max-width:900px){
+  .cl-grid{ grid-template-columns:1fr; }
+  .cl-team-card{ position:static; }
+  .cl-team{ flex-direction:row; flex-wrap:wrap; }
+  .cl-emp{ flex:1 1 220px; }
+}

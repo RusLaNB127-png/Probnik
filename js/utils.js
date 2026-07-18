@@ -158,6 +158,8 @@ const state = {
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
   dash:            null,              // данные дашборда РОП (редактируемые, в базе)
+  checklist:       null,             // чек-лист ОП: { sections, progress } (в базе)
+  checklistMgr:    'm1',             // выбранный сотрудник в чек-листе
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -172,6 +174,7 @@ function saveState(){
       clients:        state.clients,
       favorites:      [...state.favorites],
       dash:           state.dash,
+      checklist:      state.checklist,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -229,6 +232,7 @@ function loadState(){
     state.clients        = (data.clients && data.clients.length ? data.clients : JSON.parse(JSON.stringify(DEFAULT_CLIENTS))).map(migrateClient);
     state.favorites      = new Set(data.favorites || []);
     state.dash           = normalizeDash(data.dash);
+    state.checklist      = normalizeChecklist(data.checklist);
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -243,8 +247,73 @@ function resetToDefaults(){
   state.clients        = JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
   state.favorites      = new Set();
   state.dash           = emptyDash();
+  state.checklist      = defaultChecklist();
   saveState();
 }
+
+/* ============================================================
+   ЧЕК-ЛИСТ СОТРУДНИКА ОП — данные в базе, шаблон общий,
+   прогресс индивидуальный по каждому сотруднику.
+   ============================================================ */
+function defaultChecklist(){
+  return { sections: JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)), progress: {} };
+}
+function normalizeChecklist(c){
+  if(!c || !Array.isArray(c.sections)) return defaultChecklist();
+  return { sections: c.sections, progress: (c.progress && typeof c.progress==='object') ? c.progress : {} };
+}
+function checklistData(){ if(!state.checklist) state.checklist = defaultChecklist(); return state.checklist; }
+
+// Все пункты (плоско) — для подсчёта прогресса
+function checklistAllItems(){
+  return checklistData().sections.reduce((a,s)=>a.concat(s.items||[]), []);
+}
+// Прогресс сотрудника: сколько отмечено / всего, и %
+function checklistStats(mgrId){
+  const items = checklistAllItems();
+  const done = (checklistData().progress[mgrId]) || {};
+  const doneCount = items.filter(it=>done[it.id]).length;
+  return { total: items.length, done: doneCount, pct: items.length ? Math.round(doneCount/items.length*100) : 0 };
+}
+function checklistIsDone(mgrId, itemId){
+  const p = checklistData().progress[mgrId];
+  return !!(p && p[itemId]);
+}
+function checklistToggle(mgrId, itemId){
+  const cl = checklistData();
+  if(!cl.progress[mgrId]) cl.progress[mgrId] = {};
+  if(cl.progress[mgrId][itemId]) delete cl.progress[mgrId][itemId];
+  else cl.progress[mgrId][itemId] = true;
+  saveState();
+}
+function checklistResetMgr(mgrId){ checklistData().progress[mgrId] = {}; saveState(); }
+// Управление шаблоном (админ)
+function checklistAddSection(title){
+  checklistData().sections.push({ id: uid('sec'), title: title||'Новый раздел', items: [] });
+  saveState();
+}
+function checklistRenameSection(secId, title){
+  const s = checklistData().sections.find(x=>x.id===secId); if(s) s.title = title; saveState();
+}
+function checklistRemoveSection(secId){
+  const cl = checklistData();
+  cl.sections = cl.sections.filter(s=>s.id!==secId);
+  saveState();
+}
+function checklistAddItem(secId, title){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  if(s){ s.items.push({ id: uid('ci'), title: title||'Новый пункт' }); saveState(); }
+}
+function checklistUpdateItem(secId, itemId, title){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  const it = s && s.items.find(i=>i.id===itemId);
+  if(it){ it.title = title; saveState(); }
+}
+function checklistRemoveItem(secId, itemId){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  if(s){ s.items = s.items.filter(i=>i.id!==itemId); saveState(); }
+}
+function checklistLoadDefault(){ state.checklist = defaultChecklist(); saveState(); }
 
 /* ============================================================
    ДАШБОРД РОП — данные в базе, редактируемые в админ-режиме
@@ -759,6 +828,7 @@ const ICON_PATHS = {
   clock:     '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   doc:       '<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/>',
   swap:      '<path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/>',
+  clipboard: '<rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/>',
   // Виды из окна (монохром)
   waves:     '<path d="M3 8c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 13c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 18c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0"/>',
   mountain:  '<path d="M3 19l6-11 4 6.5 2.5-3.5L21 19Z"/>',

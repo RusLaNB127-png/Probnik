@@ -2024,6 +2024,84 @@ body{ padding-left:238px; }
   .tabs::before, .tabs::after{ width:66px; }
 }
 
+/* ============================================================
+   ВКЛАДКА «ЧЕК-ЛИСТ ОП»
+   ============================================================ */
+.cl-grid{ display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start; }
+
+/* Команда — карточки сотрудников */
+.cl-team-card{
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:22px 22px var(--radius) var(--radius);
+  padding:16px; box-shadow:var(--shadow-sm); position:sticky; top:78px;
+}
+.cl-team-title{ font-size:15px; margin-bottom:12px; }
+.cl-team{ display:flex; flex-direction:column; gap:8px; }
+.cl-emp{
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  padding:10px 11px; border:1px solid var(--line); border-radius:12px;
+  background:var(--bg); cursor:pointer; transition:.14s; position:relative;
+}
+.cl-emp:hover{ border-color:var(--sea); }
+.cl-emp.active{ border-color:var(--terra); background:#F3E7E1; }
+.cl-emp .avatar{ width:38px; height:38px; font-size:13px; flex-shrink:0; }
+.cl-emp-meta{ flex:1; min-width:0; }
+.cl-emp-meta b{ display:block; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cl-emp-meta span{ font-size:11.5px; color:var(--brown-soft); }
+.cl-emp-ring{ flex-shrink:0; }
+
+/* Основной чек-лист */
+.cl-main-card{
+  background:var(--bg-2); border:1px solid var(--line);
+  border-radius:22px 22px var(--radius) var(--radius);
+  padding:22px; box-shadow:var(--shadow-sm);
+}
+.cl-body-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.cl-body-head h3{ font-size:19px; }
+.cl-body-sub{ font-size:12.5px; color:var(--brown-soft); margin-top:2px; }
+.cl-progress{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.cl-progress .track{ flex:1; height:10px; background:var(--sand); border-radius:6px; overflow:hidden; }
+.cl-progress .fill{ height:100%; border-radius:6px; background:linear-gradient(90deg, var(--terra), var(--terra-dark)); transition:width .4s; }
+.cl-progress .fill.full{ background:linear-gradient(90deg, var(--sea), var(--sea-dark)); }
+.cl-progress b{ font-family:Georgia,serif; font-size:17px; color:var(--sea-dark); min-width:42px; text-align:right; }
+
+.cl-section{ margin-bottom:18px; }
+.cl-section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:7px; margin-bottom:8px; border-bottom:1px solid var(--line-soft); }
+.cl-section-head h4{ font-size:14px; color:var(--sea-dark); display:flex; align-items:center; gap:8px; }
+.cl-section-count{ font-size:11px; font-weight:700; color:var(--brown-soft); background:var(--sand); padding:1px 8px; border-radius:20px; }
+.cl-sec-ctrls, .cl-item-ctrls{ display:inline-flex; gap:4px; flex-shrink:0; }
+.cl-cbtn{
+  width:24px; height:24px; border-radius:7px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--brown-soft);
+  display:inline-grid; place-items:center; transition:.12s; padding:0; cursor:pointer;
+}
+.cl-cbtn:hover{ border-color:var(--sea); color:var(--sea); }
+.cl-cbtn.del:hover{ border-color:var(--terra); color:var(--terra); }
+
+.cl-items{ display:flex; flex-direction:column; gap:3px; }
+.cl-item{
+  display:flex; align-items:center; gap:11px;
+  padding:9px 10px; border-radius:9px; transition:.12s;
+}
+.cl-item:hover{ background:var(--line-soft); }
+.cl-check{
+  width:22px; height:22px; flex-shrink:0; border-radius:6px;
+  border:1.8px solid var(--beige); background:var(--bg);
+  display:grid; place-items:center; cursor:pointer; transition:.14s; color:#fff; padding:0;
+}
+.cl-check:hover{ border-color:var(--sea); }
+.cl-check.on{ background:var(--sea); border-color:var(--sea); }
+.cl-item-title{ flex:1; font-size:13.5px; cursor:pointer; line-height:1.4; }
+.cl-item.done .cl-item-title{ color:var(--brown-soft); text-decoration:line-through; text-decoration-color:var(--beige); }
+.cl-section-empty{ font-size:12.5px; color:var(--brown-soft); padding:8px 10px; }
+
+@media (max-width:900px){
+  .cl-grid{ grid-template-columns:1fr; }
+  .cl-team-card{ position:static; }
+  .cl-team{ flex-direction:row; flex-wrap:wrap; }
+  .cl-emp{ flex:1 1 220px; }
+}
+
 </style>
 </head>
 <body>
@@ -2092,6 +2170,10 @@ body{ padding-left:238px; }
   <button class="tab" data-view="dashboard">
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M10 20V10"/></svg>
     <span>Дашборд РОП</span>
+  </button>
+  <button class="tab" data-view="checklist">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/></svg>
+    <span>Чек-лист ОП</span>
   </button>
 </nav>
 
@@ -2303,6 +2385,24 @@ body{ padding-left:238px; }
       <div class="card-sub">Где проседает воронка, кого дожать, какие объекты зависают</div>
       <div class="grid-3" id="aiRecs"></div>
     </div>
+  </div>
+</main>
+
+<!-- ============ ВКЛАДКА 5: ЧЕК-ЛИСТ ОП ============ -->
+<main class="view" id="view-checklist">
+  <div class="view-head"><div><h2>Чек-лист сотрудника ОП</h2><p id="clSub">Общий чек-лист отдела продаж</p></div></div>
+
+  <!-- Панель редактирования (в режиме администратора) -->
+  <div class="dash-admin" id="clAdminBar" style="display:none;"></div>
+
+  <div class="cl-grid">
+    <!-- Команда: сотрудники с прогрессом -->
+    <aside class="cl-team-card">
+      <h3 class="cl-team-title">Сотрудники ОП</h3>
+      <div class="cl-team" id="clTeam"></div>
+    </aside>
+    <!-- Чек-лист выбранного сотрудника -->
+    <section class="cl-main-card" id="clBody"></section>
   </div>
 </main>
 
@@ -3110,6 +3210,39 @@ const DEFAULT_SHOWS_SEED = [
   { clientId:'c1', unitIdx:0,   managerId:'m1', dayOffset:0, time:'18:00', status:'planned',   comment:'Дополнительный осмотр вечером' },
 ];
 
+/* ============================================================
+   ЧЕК-ЛИСТ СОТРУДНИКА ОП — общий шаблон по умолчанию
+   Каждый сотрудник отмечает свой прогресс индивидуально.
+   ============================================================ */
+const DEFAULT_CHECKLIST = [
+  { id:'sec-daily', title:'Ежедневно', items:[
+    { id:'ci-1', title:'Проверить новые лиды и распределить' },
+    { id:'ci-2', title:'Обзвонить клиентов на этапе «Показ назначен»' },
+    { id:'ci-3', title:'Актуализировать статусы помещений в шахматке' },
+    { id:'ci-4', title:'Занести итоги звонков и встреч в CRM' },
+    { id:'ci-5', title:'Проверить и закрыть просроченные задачи' },
+  ]},
+  { id:'sec-client', title:'Работа с клиентом', items:[
+    { id:'ci-6',  title:'Связаться в течение 15 минут после заявки' },
+    { id:'ci-7',  title:'Выявить потребность: бюджет, площадь, вид, срок' },
+    { id:'ci-8',  title:'Подобрать 2–3 варианта в шахматке' },
+    { id:'ci-9',  title:'Назначить показ или онлайн-презентацию' },
+    { id:'ci-10', title:'Отправить подборку и планировки' },
+    { id:'ci-11', title:'Зафиксировать и отработать возражения' },
+  ]},
+  { id:'sec-deal', title:'Сделка и документы', items:[
+    { id:'ci-12', title:'Согласовать условия брони с клиентом' },
+    { id:'ci-13', title:'Оформить бронь в CRM' },
+    { id:'ci-14', title:'Собрать пакет документов клиента' },
+    { id:'ci-15', title:'Подготовить и подписать договор' },
+    { id:'ci-16', title:'Передать сделку в бухгалтерию / юр. отдел' },
+  ]},
+  { id:'sec-growth', title:'Развитие', items:[
+    { id:'ci-17', title:'Запросить рекомендацию у довольного клиента' },
+    { id:'ci-18', title:'Обновить знания по акциям, ценам и планировкам' },
+  ]},
+];
+
 </script>
 <script>
 /* ============================================================
@@ -3272,6 +3405,8 @@ const state = {
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
   dash:            null,              // данные дашборда РОП (редактируемые, в базе)
+  checklist:       null,             // чек-лист ОП: { sections, progress } (в базе)
+  checklistMgr:    'm1',             // выбранный сотрудник в чек-листе
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -3286,6 +3421,7 @@ function saveState(){
       clients:        state.clients,
       favorites:      [...state.favorites],
       dash:           state.dash,
+      checklist:      state.checklist,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -3343,6 +3479,7 @@ function loadState(){
     state.clients        = (data.clients && data.clients.length ? data.clients : JSON.parse(JSON.stringify(DEFAULT_CLIENTS))).map(migrateClient);
     state.favorites      = new Set(data.favorites || []);
     state.dash           = normalizeDash(data.dash);
+    state.checklist      = normalizeChecklist(data.checklist);
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -3357,8 +3494,73 @@ function resetToDefaults(){
   state.clients        = JSON.parse(JSON.stringify(DEFAULT_CLIENTS));
   state.favorites      = new Set();
   state.dash           = emptyDash();
+  state.checklist      = defaultChecklist();
   saveState();
 }
+
+/* ============================================================
+   ЧЕК-ЛИСТ СОТРУДНИКА ОП — данные в базе, шаблон общий,
+   прогресс индивидуальный по каждому сотруднику.
+   ============================================================ */
+function defaultChecklist(){
+  return { sections: JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)), progress: {} };
+}
+function normalizeChecklist(c){
+  if(!c || !Array.isArray(c.sections)) return defaultChecklist();
+  return { sections: c.sections, progress: (c.progress && typeof c.progress==='object') ? c.progress : {} };
+}
+function checklistData(){ if(!state.checklist) state.checklist = defaultChecklist(); return state.checklist; }
+
+// Все пункты (плоско) — для подсчёта прогресса
+function checklistAllItems(){
+  return checklistData().sections.reduce((a,s)=>a.concat(s.items||[]), []);
+}
+// Прогресс сотрудника: сколько отмечено / всего, и %
+function checklistStats(mgrId){
+  const items = checklistAllItems();
+  const done = (checklistData().progress[mgrId]) || {};
+  const doneCount = items.filter(it=>done[it.id]).length;
+  return { total: items.length, done: doneCount, pct: items.length ? Math.round(doneCount/items.length*100) : 0 };
+}
+function checklistIsDone(mgrId, itemId){
+  const p = checklistData().progress[mgrId];
+  return !!(p && p[itemId]);
+}
+function checklistToggle(mgrId, itemId){
+  const cl = checklistData();
+  if(!cl.progress[mgrId]) cl.progress[mgrId] = {};
+  if(cl.progress[mgrId][itemId]) delete cl.progress[mgrId][itemId];
+  else cl.progress[mgrId][itemId] = true;
+  saveState();
+}
+function checklistResetMgr(mgrId){ checklistData().progress[mgrId] = {}; saveState(); }
+// Управление шаблоном (админ)
+function checklistAddSection(title){
+  checklistData().sections.push({ id: uid('sec'), title: title||'Новый раздел', items: [] });
+  saveState();
+}
+function checklistRenameSection(secId, title){
+  const s = checklistData().sections.find(x=>x.id===secId); if(s) s.title = title; saveState();
+}
+function checklistRemoveSection(secId){
+  const cl = checklistData();
+  cl.sections = cl.sections.filter(s=>s.id!==secId);
+  saveState();
+}
+function checklistAddItem(secId, title){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  if(s){ s.items.push({ id: uid('ci'), title: title||'Новый пункт' }); saveState(); }
+}
+function checklistUpdateItem(secId, itemId, title){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  const it = s && s.items.find(i=>i.id===itemId);
+  if(it){ it.title = title; saveState(); }
+}
+function checklistRemoveItem(secId, itemId){
+  const s = checklistData().sections.find(x=>x.id===secId);
+  if(s){ s.items = s.items.filter(i=>i.id!==itemId); saveState(); }
+}
+function checklistLoadDefault(){ state.checklist = defaultChecklist(); saveState(); }
 
 /* ============================================================
    ДАШБОРД РОП — данные в базе, редактируемые в админ-режиме
@@ -3873,6 +4075,7 @@ const ICON_PATHS = {
   clock:     '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   doc:       '<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/>',
   swap:      '<path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/>',
+  clipboard: '<rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/>',
   // Виды из окна (монохром)
   waves:     '<path d="M3 8c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 13c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 18c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0"/>',
   mountain:  '<path d="M3 19l6-11 4 6.5 2.5-3.5L21 19Z"/>',
@@ -4853,6 +5056,7 @@ function toggleAdminMode(){
   renderAdminPanel();
   renderChess();
   renderDashboard();
+  renderChecklist();
   toast(state.adminMode ? 'Режим администратора включён' : 'Режим продаж');
 }
 
@@ -6325,6 +6529,168 @@ function initDashEdit(){
 </script>
 <script>
 /* ============================================================
+   ВКЛАДКА «ЧЕК-ЛИСТ ОП»
+   Общий шаблон чек-листа (редактируется в админ-режиме),
+   прогресс отмечается индивидуально по каждому сотруднику.
+   Данные — в state.checklist (в базе).
+   ============================================================ */
+
+// Мини-кольцо прогресса
+function clRing(pct, size=42){
+  const r = size/2 - 4, c = 2*Math.PI*r, off = c*(1 - Math.min(pct,100)/100);
+  const col = pct>=100 ? 'var(--st-free)' : 'var(--terra)';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--sand)" stroke-width="4"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text x="${size/2}" y="${size/2+3.5}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--brown)">${pct}</text>
+  </svg>`;
+}
+
+function renderChecklist(){
+  const admin = state.adminMode;
+  const cl = checklistData();
+  if(!MANAGERS.find(m=>m.id===state.checklistMgr)) state.checklistMgr = MANAGERS[0].id;
+  const mgrId = state.checklistMgr;
+  const mgr = MANAGERS.find(m=>m.id===mgrId);
+
+  // Средний прогресс по отделу
+  const avg = Math.round(MANAGERS.reduce((s,m)=>s+checklistStats(m.id).pct,0) / (MANAGERS.length||1));
+  document.getElementById('clSub').textContent =
+    `Общий чек-лист отдела продаж · ${MANAGERS.length} сотрудников · средняя готовность ${avg}%`;
+
+  // ---- Панель администратора ----
+  const bar = document.getElementById('clAdminBar');
+  if(admin){
+    bar.style.display = 'block';
+    bar.innerHTML = `
+      <div class="dash-admin-head">
+        <h4 class="ic-inline">${icon('gear',15)} Редактирование чек-листа <span class="badge-admin">Админ</span></h4>
+        <div class="dash-admin-actions">
+          <button class="btn btn-sm ic-inline" id="clAddSection">${icon('plus',14)} Раздел</button>
+          <button class="btn btn-sm" id="clLoadDefault">Шаблон по умолчанию</button>
+        </div>
+      </div>
+      <div class="dash-admin-hint">Шаблон общий для всех сотрудников. Прогресс каждый отмечает у себя. Изменения сохраняются в базу.</div>`;
+  } else {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+  }
+
+  // ---- Команда: карточки сотрудников с прогрессом ----
+  document.getElementById('clTeam').innerHTML = MANAGERS.map(m=>{
+    const st = checklistStats(m.id);
+    return `<button class="cl-emp ${m.id===mgrId?'active':''}" data-mgr="${m.id}">
+      <div class="avatar">${m.short}</div>
+      <div class="cl-emp-meta"><b>${escapeHtml(m.name)}</b><span>${st.done} из ${st.total}</span></div>
+      <div class="cl-emp-ring">${clRing(st.pct)}</div>
+    </button>`;
+  }).join('');
+
+  // ---- Чек-лист выбранного сотрудника ----
+  const st = checklistStats(mgrId);
+  document.getElementById('clBody').innerHTML = `
+    <div class="cl-body-head">
+      <div>
+        <h3>Чек-лист · ${escapeHtml(mgr.name)}</h3>
+        <div class="cl-body-sub">${st.done} из ${st.total} пунктов выполнено</div>
+      </div>
+      <button class="btn btn-sm" id="clResetMgr">Сбросить отметки</button>
+    </div>
+    <div class="cl-progress">
+      <div class="track"><div class="fill ${st.pct>=100?'full':''}" style="width:${st.pct}%"></div></div>
+      <b>${st.pct}%</b>
+    </div>
+    ${cl.sections.length ? cl.sections.map(sec=>{
+      const secDone = (sec.items||[]).filter(it=>checklistIsDone(mgrId,it.id)).length;
+      return `<div class="cl-section">
+        <div class="cl-section-head">
+          <h4>${escapeHtml(sec.title)} <span class="cl-section-count">${secDone}/${(sec.items||[]).length}</span></h4>
+          ${admin ? `<span class="cl-sec-ctrls">
+            <button class="cl-cbtn" data-add-item="${sec.id}" title="Добавить пункт">${icon('plus',12)}</button>
+            <button class="cl-cbtn" data-ren-sec="${sec.id}" title="Переименовать раздел">${icon('edit',12)}</button>
+            <button class="cl-cbtn del" data-del-sec="${sec.id}" title="Удалить раздел">${icon('close',12)}</button>
+          </span>` : ''}
+        </div>
+        <div class="cl-items">
+          ${(sec.items||[]).map(it=>{
+            const done = checklistIsDone(mgrId, it.id);
+            return `<div class="cl-item ${done?'done':''}">
+              <button class="cl-check ${done?'on':''}" data-toggle="${it.id}" aria-pressed="${done}">${done?icon('check',13):''}</button>
+              <span class="cl-item-title" data-toggle="${it.id}">${escapeHtml(it.title)}</span>
+              ${admin ? `<span class="cl-item-ctrls">
+                <button class="cl-cbtn" data-edit-item="${it.id}" data-sec="${sec.id}" title="Изменить">${icon('edit',12)}</button>
+                <button class="cl-cbtn del" data-del-item="${it.id}" data-sec="${sec.id}" title="Удалить">${icon('close',12)}</button>
+              </span>` : ''}
+            </div>`;
+          }).join('') || `<div class="cl-section-empty">В разделе пока нет пунктов${admin?' — добавьте «＋»':''}</div>`}
+        </div>
+      </div>`;
+    }).join('') : `<div class="dash-empty">Чек-лист пуст${admin?' — добавьте раздел':''}</div>`}
+  `;
+
+  wireChecklist();
+}
+
+function wireChecklist(){
+  // Выбор сотрудника
+  document.querySelectorAll('#clTeam [data-mgr]').forEach(b=>b.onclick = ()=>{
+    state.checklistMgr = b.dataset.mgr;
+    renderChecklist();
+  });
+  // Переключение пунктов
+  document.querySelectorAll('#clBody [data-toggle]').forEach(el=>el.onclick = ()=>{
+    checklistToggle(state.checklistMgr, el.dataset.toggle);
+    renderChecklist();
+  });
+  // Сброс отметок сотрудника
+  const reset = document.getElementById('clResetMgr');
+  if(reset) reset.onclick = ()=>{
+    const mgr = MANAGERS.find(m=>m.id===state.checklistMgr);
+    if(confirm('Снять все отметки у сотрудника «'+mgr.name+'»?')){
+      checklistResetMgr(state.checklistMgr); renderChecklist(); toast('Отметки сброшены');
+    }
+  };
+
+  if(!state.adminMode) return;
+  // Админ: разделы и пункты
+  const addSec = document.getElementById('clAddSection');
+  if(addSec) addSec.onclick = ()=>{
+    const t = prompt('Название нового раздела:');
+    if(t && t.trim()){ checklistAddSection(t.trim()); renderChecklist(); toast('Раздел добавлен'); }
+  };
+  const loadDef = document.getElementById('clLoadDefault');
+  if(loadDef) loadDef.onclick = ()=>{
+    if(confirm('Загрузить шаблон чек-листа по умолчанию? Текущий шаблон и все отметки будут заменены.')){
+      checklistLoadDefault(); renderChecklist(); toast('Шаблон загружен');
+    }
+  };
+  document.querySelectorAll('[data-add-item]').forEach(b=>b.onclick = ()=>{
+    const t = prompt('Текст нового пункта:');
+    if(t && t.trim()){ checklistAddItem(b.dataset.addItem, t.trim()); renderChecklist(); }
+  });
+  document.querySelectorAll('[data-ren-sec]').forEach(b=>b.onclick = ()=>{
+    const s = checklistData().sections.find(x=>x.id===b.dataset.renSec);
+    const t = prompt('Название раздела:', s ? s.title : '');
+    if(t && t.trim()){ checklistRenameSection(b.dataset.renSec, t.trim()); renderChecklist(); }
+  });
+  document.querySelectorAll('[data-del-sec]').forEach(b=>b.onclick = ()=>{
+    if(confirm('Удалить раздел вместе со всеми пунктами?')){ checklistRemoveSection(b.dataset.delSec); renderChecklist(); toast('Раздел удалён'); }
+  });
+  document.querySelectorAll('[data-edit-item]').forEach(b=>b.onclick = ()=>{
+    const sec = checklistData().sections.find(x=>x.id===b.dataset.sec);
+    const it = sec && sec.items.find(i=>i.id===b.dataset.editItem);
+    const t = prompt('Текст пункта:', it ? it.title : '');
+    if(t && t.trim()){ checklistUpdateItem(b.dataset.sec, b.dataset.editItem, t.trim()); renderChecklist(); }
+  });
+  document.querySelectorAll('[data-del-item]').forEach(b=>b.onclick = ()=>{
+    if(confirm('Удалить пункт?')){ checklistRemoveItem(b.dataset.sec, b.dataset.delItem); renderChecklist(); }
+  });
+}
+
+</script>
+<script>
+/* ============================================================
    КАЛЕНДАРЬ ПОКАЗОВ — ПОЛНОЭКРАННЫЙ + ФОРМА ПОКАЗА
    ============================================================ */
 
@@ -6857,6 +7223,7 @@ function init(){
   renderClientCard();
   renderFunnel();
   renderDashboard();
+  renderChecklist();
   renderNotifs();
   initCalendar();
   initUnitForm();
