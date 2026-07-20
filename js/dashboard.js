@@ -186,6 +186,10 @@ function renderDashboard(){
         <p style="margin:0;font-size:12.5px;line-height:1.55;color:var(--brown);">${escapeHtml(a.text||'')}</p>
       </div>`).join('') : `<div style="grid-column:1/-1;">${emptyState('Нет рекомендаций', admin)}</div>`);
 
+  // ---- Общий чек-лист сотрудников (трекер задач) ----
+  const clHost = document.getElementById('dashChecklist');
+  if(clHost && typeof renderChecklistTracker === 'function') renderChecklistTracker(clHost);
+
   wireDashAdmin();
 }
 

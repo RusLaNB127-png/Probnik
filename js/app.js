@@ -143,6 +143,38 @@ function init(){
   initUnitForm();
   initLightbox();
   initDashEdit();
+  initTaskModal();
+  initUserSwitch();
   renderCalLauncher();
 }
 init();
+
+/* ---------- Учётная запись: переключатель роли ---------- */
+function renderUserSwitch(){
+  const u = currentUser();
+  document.getElementById('userAvatar').textContent = u.short;
+  document.getElementById('userName').textContent = u.name;
+  document.getElementById('userRole').textContent = u.role;
+  const menu = document.getElementById('userMenu');
+  menu.innerHTML = USERS.map(x=>`
+    <button class="user-menu-item ${x.id===currentUserId()?'active':''}" data-user="${x.id}">
+      <span class="avatar">${x.short}</span>
+      <span class="um-meta"><b>${x.name}</b><span>${x.role}</span></span>
+      ${x.id===currentUserId()?'<span class="um-check">'+icon('check',15)+'</span>':''}
+    </button>`).join('');
+  menu.querySelectorAll('[data-user]').forEach(b=>b.onclick=()=>{
+    setCurrentUser(b.dataset.user);
+    menu.classList.remove('show');
+    renderUserSwitch(); renderChecklist(); renderDashboard();
+    toast('Вы вошли как '+currentUser().name);
+  });
+}
+function initUserSwitch(){
+  renderUserSwitch();
+  const btn = document.getElementById('userBtn');
+  const menu = document.getElementById('userMenu');
+  btn.onclick = (e)=>{ e.stopPropagation(); menu.classList.toggle('show'); };
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.user-switch')) menu.classList.remove('show');
+  });
+}

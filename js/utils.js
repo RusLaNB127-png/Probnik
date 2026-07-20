@@ -158,8 +158,8 @@ const state = {
   calendarDate:    isoDate(TODAY),    // выбранная дата в большом календаре
   calendarMonth:   { y: TODAY.getFullYear(), m: TODAY.getMonth() },
   dash:            null,              // данные дашборда РОП (редактируемые, в базе)
-  checklist:       null,             // чек-лист ОП: { sections, progress } (в базе)
-  checklistMgr:    'm1',             // выбранный сотрудник в чек-листе
+  checklist:       null,             // чек-лист ОП: { tasks:[...] } (в базе)
+  currentUser:     'rop',            // активная учётная запись (роль)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -175,6 +175,7 @@ function saveState(){
       favorites:      [...state.favorites],
       dash:           state.dash,
       checklist:      state.checklist,
+      currentUser:    state.currentUser,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -233,6 +234,7 @@ function loadState(){
     state.favorites      = new Set(data.favorites || []);
     state.dash           = normalizeDash(data.dash);
     state.checklist      = normalizeChecklist(data.checklist);
+    state.currentUser    = data.currentUser || 'rop';
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -252,68 +254,73 @@ function resetToDefaults(){
 }
 
 /* ============================================================
-   ЧЕК-ЛИСТ СОТРУДНИКА ОП — данные в базе, шаблон общий,
-   прогресс индивидуальный по каждому сотруднику.
+   ЧЕК-ЛИСТ ОП — задачи со статусами (в базе).
+   Каждая задача закреплена за сотрудником (ответственным).
    ============================================================ */
-function defaultChecklist(){
-  return { sections: JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)), progress: {} };
+function defaultTasks(){
+  return DEFAULT_TASKS_SEED.map(t=>({
+    id:        uid('tsk'),
+    title:     t.title,
+    due:       isoDate(addDays(TODAY, t.dayOffset)),
+    managerId: t.managerId,
+    status:    t.status || 'planned',
+    comment:   t.comment || '',
+    createdAt: Date.now(), updatedAt: Date.now(),
+  }));
 }
+function defaultChecklist(){ return { tasks: defaultTasks() }; }
 function normalizeChecklist(c){
-  if(!c || !Array.isArray(c.sections)) return defaultChecklist();
-  return { sections: c.sections, progress: (c.progress && typeof c.progress==='object') ? c.progress : {} };
+  // Новый формат — { tasks:[...] }. Старый (sections/progress) отбрасываем.
+  if(c && Array.isArray(c.tasks)) return { tasks: c.tasks };
+  return defaultChecklist();
 }
-function checklistData(){ if(!state.checklist) state.checklist = defaultChecklist(); return state.checklist; }
-
-// Все пункты (плоско) — для подсчёта прогресса
-function checklistAllItems(){
-  return checklistData().sections.reduce((a,s)=>a.concat(s.items||[]), []);
+function checklistData(){
+  if(!state.checklist || !Array.isArray(state.checklist.tasks)) state.checklist = defaultChecklist();
+  return state.checklist;
 }
-// Прогресс сотрудника: сколько отмечено / всего, и %
-function checklistStats(mgrId){
-  const items = checklistAllItems();
-  const done = (checklistData().progress[mgrId]) || {};
-  const doneCount = items.filter(it=>done[it.id]).length;
-  return { total: items.length, done: doneCount, pct: items.length ? Math.round(doneCount/items.length*100) : 0 };
+function tasksAll(){ return checklistData().tasks; }
+function tasksFor(mgrId){ return tasksAll().filter(t=>t.managerId===mgrId); }
+function taskStats(mgrId){
+  const arr = tasksFor(mgrId);
+  const by = s => arr.filter(t=>t.status===s).length;
+  const today = isoDate(TODAY);
+  const overdue = arr.filter(t=>t.status!=='done' && t.due && t.due < today).length;
+  return {
+    total: arr.length, done: by('done'), inProgress: by('in_progress'),
+    planned: by('planned'), failed: by('failed'), overdue,
+    pct: arr.length ? Math.round(by('done')/arr.length*100) : 0,
+  };
 }
-function checklistIsDone(mgrId, itemId){
-  const p = checklistData().progress[mgrId];
-  return !!(p && p[itemId]);
+function taskAdd(data){
+  const t = {
+    id: uid('tsk'),
+    title: data.title || 'Новая задача',
+    due: data.due || '',
+    managerId: data.managerId || MANAGERS[0].id,
+    status: data.status || 'planned',
+    comment: data.comment || '',
+    createdAt: Date.now(), updatedAt: Date.now(),
+  };
+  tasksAll().push(t); saveState(); return t;
 }
-function checklistToggle(mgrId, itemId){
-  const cl = checklistData();
-  if(!cl.progress[mgrId]) cl.progress[mgrId] = {};
-  if(cl.progress[mgrId][itemId]) delete cl.progress[mgrId][itemId];
-  else cl.progress[mgrId][itemId] = true;
+function taskUpdate(id, patch){
+  const t = tasksAll().find(x=>x.id===id);
+  if(t){ Object.assign(t, patch); t.updatedAt = Date.now(); }
   saveState();
 }
-function checklistResetMgr(mgrId){ checklistData().progress[mgrId] = {}; saveState(); }
-// Управление шаблоном (админ)
-function checklistAddSection(title){
-  checklistData().sections.push({ id: uid('sec'), title: title||'Новый раздел', items: [] });
-  saveState();
-}
-function checklistRenameSection(secId, title){
-  const s = checklistData().sections.find(x=>x.id===secId); if(s) s.title = title; saveState();
-}
-function checklistRemoveSection(secId){
-  const cl = checklistData();
-  cl.sections = cl.sections.filter(s=>s.id!==secId);
-  saveState();
-}
-function checklistAddItem(secId, title){
-  const s = checklistData().sections.find(x=>x.id===secId);
-  if(s){ s.items.push({ id: uid('ci'), title: title||'Новый пункт' }); saveState(); }
-}
-function checklistUpdateItem(secId, itemId, title){
-  const s = checklistData().sections.find(x=>x.id===secId);
-  const it = s && s.items.find(i=>i.id===itemId);
-  if(it){ it.title = title; saveState(); }
-}
-function checklistRemoveItem(secId, itemId){
-  const s = checklistData().sections.find(x=>x.id===secId);
-  if(s){ s.items = s.items.filter(i=>i.id!==itemId); saveState(); }
+function taskRemove(id){
+  const a = tasksAll(); const i = a.findIndex(x=>x.id===id);
+  if(i>=0) a.splice(i,1); saveState();
 }
 function checklistLoadDefault(){ state.checklist = defaultChecklist(); saveState(); }
+function checklistClear(){ state.checklist = { tasks: [] }; saveState(); }
+
+/* ---------- Текущая учётная запись (роль) ---------- */
+function currentUserId(){ return state.currentUser || 'rop'; }
+function currentUser(){ return getUser(currentUserId()); }
+function isRop(){ return currentUserId() === 'rop'; }
+function canManageTasks(){ return isRop() || state.adminMode; }
+function setCurrentUser(id){ state.currentUser = id; saveState(); }
 
 /* ============================================================
    ДАШБОРД РОП — данные в базе, редактируемые в админ-режиме

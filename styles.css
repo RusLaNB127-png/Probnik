@@ -2091,3 +2091,96 @@ body{ padding-left:238px; }
   .cl-team{ flex-direction:row; flex-wrap:wrap; }
   .cl-emp{ flex:1 1 220px; }
 }
+
+/* ============================================================
+   ЧЕК-ЛИСТ ОП — задачи, статусы, отсеки, трекер, учётка
+   ============================================================ */
+/* Переключатель учётной записи */
+.user-switch{ position:relative; flex-shrink:0; }
+.user-btn{
+  display:flex; align-items:center; gap:9px; padding:4px 9px 4px 4px;
+  border:1px solid var(--line); border-radius:13px; background:var(--bg-2);
+  color:var(--brown); transition:.14s; max-width:210px;
+}
+.user-btn:hover{ border-color:var(--terra); }
+.user-btn .avatar{ width:34px; height:34px; font-size:12px; flex-shrink:0; }
+.user-btn-meta{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; min-width:0; }
+.user-btn-meta b{ font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+.user-btn-meta span{ font-size:10.5px; color:var(--brown-soft); }
+.user-menu{
+  position:absolute; top:52px; right:0; width:280px; z-index:95;
+  background:var(--bg-2); border:1px solid var(--line); border-radius:14px;
+  box-shadow:var(--shadow-lg); overflow:hidden; display:none; padding:6px;
+}
+.user-menu.show{ display:block; animation:fade .16s ease; }
+.user-menu-item{
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  padding:9px 10px; border-radius:10px; background:transparent; transition:.12s;
+}
+.user-menu-item:hover{ background:var(--line-soft); }
+.user-menu-item.active{ background:#F3E7E1; }
+.user-menu-item .avatar{ width:34px; height:34px; font-size:12px; }
+.um-meta{ flex:1; min-width:0; }
+.um-meta b{ display:block; font-size:13px; }
+.um-meta span{ font-size:11.5px; color:var(--brown-soft); }
+.um-check{ color:var(--terra); display:grid; place-items:center; }
+
+/* Заголовок вкладки с действием справа */
+#view-checklist .view-head{ align-items:center; }
+
+/* Полоса статистики (личный вид) */
+.tsk-stats-bar{ display:flex; gap:18px; flex-wrap:wrap; align-items:center; margin-bottom:18px; padding-bottom:14px; border-bottom:1px dashed var(--line); }
+.tsk-stat{ font-size:12.5px; color:var(--brown-soft); }
+.tsk-stat b{ font-family:Georgia,serif; font-size:16px; margin-right:3px; }
+.tsk-stat-pct{ display:flex; align-items:center; gap:9px; margin-left:auto; font-family:Georgia,serif; font-weight:700; color:var(--sea-dark); }
+.tsk-stat-pct .track{ width:120px; height:8px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.tsk-stat-pct .fill{ height:100%; background:linear-gradient(90deg,var(--sea),var(--sea-dark)); border-radius:5px; }
+
+/* Таблица задач */
+.tsk-tbl-wrap{ overflow-x:auto; }
+.tsk-tbl{ min-width:720px; }
+.tsk-tbl th{ white-space:nowrap; }
+.tsk-tbl td{ vertical-align:middle; }
+.tsk-num{ color:var(--brown-soft); font-weight:600; }
+.tsk-title{ font-weight:600; }
+.tsk-due{ white-space:nowrap; color:var(--brown-soft); }
+.tsk-due.overdue{ color:var(--terra-dark); font-weight:700; }
+.tsk-owner{ color:var(--brown-soft); white-space:nowrap; }
+.tsk-comment{ color:var(--brown-soft); font-size:12.5px; max-width:260px; }
+.tsk-comment.editable{ cursor:pointer; border-radius:6px; }
+.tsk-comment.editable:hover{ background:var(--line-soft); }
+.tsk-add-comment{ color:var(--sea); font-weight:600; opacity:.75; }
+.tsk-empty{ color:var(--brown-soft); text-align:center; padding:16px; }
+.tsk-actions{ white-space:nowrap; text-align:right; }
+
+/* Статус: селект и плашка */
+.tsk-status-sel{
+  border:1.4px solid var(--sc); color:var(--sc); background:var(--bg-2);
+  border-radius:20px; padding:4px 8px; font-size:12px; font-weight:600;
+  font-family:inherit; cursor:pointer; outline:none;
+}
+.tsk-pill{ display:inline-block; background:var(--sc); color:#fff; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
+
+/* Отсеки сотрудников (общий вид) */
+.cl-compartment{ border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--bg-2); margin-bottom:20px; box-shadow:var(--shadow-sm); }
+.cl-comp-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid var(--line); background:linear-gradient(135deg,#FBFAF7,#F0EAE2); }
+.cl-comp-title{ display:flex; align-items:center; gap:11px; }
+.cl-comp-title .avatar{ width:38px; height:38px; font-size:13px; }
+.cl-comp-title b{ font-family:Georgia,serif; font-size:15px; color:var(--sea-dark); display:block; }
+.cl-comp-title span{ font-size:11.5px; color:var(--brown-soft); }
+.cl-comp-stats{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.tsk-mini{ font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--sand); color:var(--brown); }
+.tsk-mini.done{ background:#E3EEDD; color:#3B6831; }
+.tsk-mini.work{ background:#F6EBCF; color:#8a6d2a; }
+.tsk-mini.over{ background:#FBE3D3; color:var(--terra-dark); }
+.cl-comp-pct{ font-family:Georgia,serif; font-weight:700; font-size:16px; color:var(--sea-dark); }
+.cl-compartment .tsk-tbl-wrap{ padding:6px 8px 8px; }
+.cl-compartment .tsk-tbl{ min-width:640px; }
+
+/* Трекер в дашборде */
+.tsk-tracker{ width:100%; }
+.tsk-tracker th, .tsk-tracker td{ text-align:center; }
+.tsk-tracker th:first-child, .tsk-tracker td:first-child{ text-align:left; }
+.tsk-track{ height:9px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.tsk-fill{ height:100%; background:linear-gradient(90deg,var(--terra),var(--terra-dark)); border-radius:5px; }
+.tsk-fill.full{ background:linear-gradient(90deg,var(--sea),var(--sea-dark)); }

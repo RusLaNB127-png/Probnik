@@ -325,34 +325,33 @@ const DEFAULT_SHOWS_SEED = [
 ];
 
 /* ============================================================
-   ЧЕК-ЛИСТ СОТРУДНИКА ОП — общий шаблон по умолчанию
-   Каждый сотрудник отмечает свой прогресс индивидуально.
+   УЧЁТНЫЕ ЗАПИСИ ПЛАТФОРМЫ (для входа под своей ролью)
    ============================================================ */
-const DEFAULT_CHECKLIST = [
-  { id:'sec-daily', title:'Ежедневно', items:[
-    { id:'ci-1', title:'Проверить новые лиды и распределить' },
-    { id:'ci-2', title:'Обзвонить клиентов на этапе «Показ назначен»' },
-    { id:'ci-3', title:'Актуализировать статусы помещений в шахматке' },
-    { id:'ci-4', title:'Занести итоги звонков и встреч в CRM' },
-    { id:'ci-5', title:'Проверить и закрыть просроченные задачи' },
-  ]},
-  { id:'sec-client', title:'Работа с клиентом', items:[
-    { id:'ci-6',  title:'Связаться в течение 15 минут после заявки' },
-    { id:'ci-7',  title:'Выявить потребность: бюджет, площадь, вид, срок' },
-    { id:'ci-8',  title:'Подобрать 2–3 варианта в шахматке' },
-    { id:'ci-9',  title:'Назначить показ или онлайн-презентацию' },
-    { id:'ci-10', title:'Отправить подборку и планировки' },
-    { id:'ci-11', title:'Зафиксировать и отработать возражения' },
-  ]},
-  { id:'sec-deal', title:'Сделка и документы', items:[
-    { id:'ci-12', title:'Согласовать условия брони с клиентом' },
-    { id:'ci-13', title:'Оформить бронь в CRM' },
-    { id:'ci-14', title:'Собрать пакет документов клиента' },
-    { id:'ci-15', title:'Подготовить и подписать договор' },
-    { id:'ci-16', title:'Передать сделку в бухгалтерию / юр. отдел' },
-  ]},
-  { id:'sec-growth', title:'Развитие', items:[
-    { id:'ci-17', title:'Запросить рекомендацию у довольного клиента' },
-    { id:'ci-18', title:'Обновить знания по акциям, ценам и планировкам' },
-  ]},
+const ROP_USER = { id:'rop', name:'Анна Соколова', short:'АС', role:'Руководитель ОП' };
+const USERS = [ ROP_USER, ...MANAGERS.map(m=>({ id:m.id, name:m.name, short:m.short, role:'Менеджер ОП' })) ];
+function getUser(id){ return USERS.find(u=>u.id===id) || ROP_USER; }
+
+/* ============================================================
+   ЧЕК-ЛИСТ СОТРУДНИКОВ ОП — задачи со статусами
+   Колонки: №, задача, срок, ответственный, статус, комментарий.
+   ============================================================ */
+const TASK_STATUSES = {
+  planned:     { label:'Запланировано', color:'#4E7C93' },
+  in_progress: { label:'В работе',      color:'#C79A3E' },
+  done:        { label:'Выполнено',     color:'#3B6831' },
+  failed:      { label:'Не выполнено',  color:'#9D3413' },
+};
+const TASK_STATUS_ORDER = ['planned','in_progress','done','failed'];
+
+// Задачи по умолчанию (dayOffset относительно «сегодня» → дата)
+const DEFAULT_TASKS_SEED = [
+  { title:'Обзвонить новых лидов с Авито',        managerId:'m1', dayOffset:0,  status:'in_progress', comment:'' },
+  { title:'Подготовить подборку для С. Морозова', managerId:'m1', dayOffset:1,  status:'planned',     comment:'2-комн, вид на парк' },
+  { title:'Выставить счёт по брони №88',          managerId:'m1', dayOffset:2,  status:'planned',     comment:'' },
+  { title:'Провести показ №7 с Е. Гавриловой',    managerId:'m2', dayOffset:0,  status:'planned',     comment:'' },
+  { title:'Собрать документы по брони',           managerId:'m2', dayOffset:-1, status:'done',        comment:'Переданы юристу' },
+  { title:'Отработать возражения по цене',        managerId:'m3', dayOffset:2,  status:'in_progress', comment:'' },
+  { title:'Актуализировать статусы в шахматке',   managerId:'m3', dayOffset:-1, status:'failed',      comment:'Не успел, перенести' },
+  { title:'Подготовить договор для А. Лунёвой',   managerId:'m4', dayOffset:1,  status:'planned',     comment:'' },
+  { title:'Онлайн-презентация для инвесторов',    managerId:'m4', dayOffset:3,  status:'planned',     comment:'Группа из 3 человек' },
 ];
