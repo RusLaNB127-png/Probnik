@@ -59,23 +59,58 @@ function renderChecklist(){
     head.textContent = 'Общий чек-лист ОП';
     document.getElementById('clSub').textContent =
       `Вы вошли как ${u.name} · ${u.role}. Задачи всех сотрудников разбиты по отсекам. Тот же трекер — в Дашборде РОП.`;
-    actions.innerHTML = `<button class="btn btn-primary ic-inline" id="clAddTask">${icon('plus',15)} Новая задача</button>`;
+    actions.innerHTML = `
+      <button class="btn ic-inline" id="clExport">${icon('download',15)} Выгрузить в Excel</button>
+      <button class="btn btn-primary ic-inline" id="clAddTask">${icon('plus',15)} Новая задача</button>`;
     renderGeneralChecklist(content, { manage:true });
     document.getElementById('clAddTask').onclick = ()=>openTaskModal(null, null);
+    document.getElementById('clExport').onclick = exportChecklistExcel;
   } else {
     head.textContent = 'Мои задачи';
     const st = taskStats(u.id);
     document.getElementById('clSub').textContent =
       `${u.name} · ${u.role} · ${st.total} задач · выполнено ${st.done}${st.overdue?` · просрочено ${st.overdue}`:''}`;
-    actions.innerHTML = `<button class="btn btn-primary ic-inline" id="clAddTask">${icon('plus',15)} Добавить задачу</button>`;
+    actions.innerHTML = `
+      <button class="btn ic-inline" id="clExport">${icon('download',15)} Выгрузить в Excel</button>
+      <button class="btn btn-primary ic-inline" id="clAddTask">${icon('plus',15)} Добавить задачу</button>`;
     content.innerHTML = `
       <div class="cl-main-card">
         ${taskStatsBar(u.id)}
         ${taskTableHTML(tasksFor(u.id), { showOwner:true, canEdit:true })}
       </div>`;
     document.getElementById('clAddTask').onclick = ()=>openTaskModal(null, u.id);
+    document.getElementById('clExport').onclick = exportChecklistExcel;
     wireTaskTable(content);
   }
+}
+
+/* ---------- Выгрузка чек-листа в Excel ---------- */
+function exportChecklistExcel(){
+  const rop = isRop();
+  // Наименование файла = заголовок, отображаемый в самом чек-листе
+  const heading = (document.querySelector('#view-checklist .view-head h2')||{}).textContent || 'Чек-лист ОП';
+  const title = heading.trim();
+
+  // Для РОП — все задачи по отсекам (в порядке сотрудников), для сотрудника — только свои
+  let tasks = [];
+  if(rop){ MANAGERS.forEach(m=> tasksFor(m.id).forEach(t=>tasks.push(t))); }
+  else   { tasks = tasksFor(currentUserId()); }
+
+  const header = ['№','Задача','Дата окончания','Ответственный','Статус','Комментарий'];
+  const rows = [header];
+  tasks.forEach((t,i)=>rows.push([
+    i+1,
+    t.title,
+    t.due ? fmtDateRu(t.due) : '',
+    mgrName(t.managerId),
+    (TASK_STATUSES[t.status]||{}).label || t.status,
+    t.comment || '',
+  ]));
+
+  const sheetName = rop ? 'Чек-лист ОП' : currentUser().name;
+  const blob = buildXlsx(sheetName, rows);
+  downloadBlob(blob, sanitizeFilename(title) + '.xlsx');
+  toast('Файл «' + title + '.xlsx» выгружен');
 }
 
 // Полоска статистики (для личного вида)

@@ -836,6 +836,7 @@ const ICON_PATHS = {
   doc:       '<path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/>',
   swap:      '<path d="M7 8h13M7 8l3-3M7 8l3 3M17 16H4M17 16l-3-3M17 16l-3 3"/>',
   clipboard: '<rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/>',
+  download:  '<path d="M12 3v12M12 15l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 20h16"/>',
   // Виды из окна (монохром)
   waves:     '<path d="M3 8c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 13c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0M3 18c1.5-1.8 3.5-1.8 5 0s3.5 1.8 5 0 3.5-1.8 5 0"/>',
   mountain:  '<path d="M3 19l6-11 4 6.5 2.5-3.5L21 19Z"/>',
@@ -878,4 +879,100 @@ function toast(msg){
   t.innerHTML = icon('check',15)+' '+msg;
   t.classList.add('show'); clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* ============================================================
+   ВЫГРУЗКА В EXCEL (.xlsx) — без внешних библиотек.
+   Собираем валидный OOXML-архив (ZIP, метод store) вручную,
+   чтобы работало офлайн в собранном HTML.
+   ============================================================ */
+function _crc32(u8){
+  let crc = ~0;
+  for(let i=0;i<u8.length;i++){
+    crc ^= u8[i];
+    for(let j=0;j<8;j++) crc = (crc>>>1) ^ (0xEDB88320 & -(crc & 1));
+  }
+  return (~crc) >>> 0;
+}
+function _zipStore(files){
+  const enc = new TextEncoder();
+  const u16 = v => [v&255,(v>>>8)&255];
+  const u32 = v => [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+  const parts = [], central = [];
+  let offset = 0;
+  files.forEach(f=>{
+    const name = enc.encode(f.name);
+    const data = f.data;
+    const crc = _crc32(data), size = data.length;
+    const local = new Uint8Array([].concat(
+      u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+      u32(crc), u32(size), u32(size), u16(name.length), u16(0)
+    ));
+    parts.push(local, name, data);
+    central.push(new Uint8Array([].concat(
+      u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+      u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0),
+      u32(0), u32(offset)
+    )), name);
+    offset += local.length + name.length + size;
+  });
+  let cenSize = 0; central.forEach(c=>cenSize += c.length);
+  const eocd = new Uint8Array([].concat(
+    u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length),
+    u32(cenSize), u32(offset), u16(0)
+  ));
+  return new Blob([...parts, ...central, eocd],
+    { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+// rows: массив массивов; первая строка — заголовок (жирный)
+function buildXlsx(sheetName, rows){
+  const enc = new TextEncoder();
+  const xmlEsc = s => String(s==null?'':s)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const colLetter = n => { let s=''; n++; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26);} return s; };
+  const safeSheet = (sheetName||'Лист').replace(/[:\\\/?*\[\]]/g,' ').slice(0,31) || 'Лист';
+
+  const body = rows.map((row, ri)=>{
+    const cells = row.map((val, ci)=>{
+      const ref = colLetter(ci)+(ri+1);
+      const st = ri===0 ? ' s="1"' : '';
+      return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(val)}</t></is></c>`;
+    }).join('');
+    return `<row r="${ri+1}">${cells}</row>`;
+  }).join('');
+  const cols = `<cols><col min="1" max="1" width="5"/><col min="2" max="2" width="46"/><col min="3" max="3" width="16"/><col min="4" max="4" width="22"/><col min="5" max="5" width="18"/><col min="6" max="6" width="44"/></cols>`;
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${cols}<sheetData>${body}</sheetData></worksheet>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xmlEsc(safeSheet)}" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`;
+
+  const e = s => enc.encode(s);
+  return _zipStore([
+    { name:'[Content_Types].xml',        data:e(contentTypes) },
+    { name:'_rels/.rels',                data:e(rels) },
+    { name:'xl/workbook.xml',            data:e(workbook) },
+    { name:'xl/_rels/workbook.xml.rels', data:e(wbRels) },
+    { name:'xl/styles.xml',              data:e(styles) },
+    { name:'xl/worksheets/sheet1.xml',   data:e(sheet) },
+  ]);
+}
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 120);
+}
+function sanitizeFilename(name){
+  return String(name||'файл').replace(/[\/\\:*?"<>|]/g,' ').replace(/\s+/g,' ').trim() || 'файл';
 }
