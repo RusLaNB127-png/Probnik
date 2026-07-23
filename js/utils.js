@@ -160,6 +160,7 @@ const state = {
   dash:            null,              // данные дашборда РОП (редактируемые, в базе)
   checklist:       null,             // чек-лист ОП: { tasks:[...] } (в базе)
   currentUser:     'rop',            // активная учётная запись (роль)
+  activity:        [],               // живой журнал действий (авто-события)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -176,6 +177,7 @@ function saveState(){
       dash:           state.dash,
       checklist:      state.checklist,
       currentUser:    state.currentUser,
+      activity:       state.activity,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -235,6 +237,7 @@ function loadState(){
     state.dash           = normalizeDash(data.dash);
     state.checklist      = normalizeChecklist(data.checklist);
     state.currentUser    = data.currentUser || 'rop';
+    state.activity       = Array.isArray(data.activity) ? data.activity : [];
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -250,6 +253,7 @@ function resetToDefaults(){
   state.favorites      = new Set();
   state.dash           = emptyDash();
   state.checklist      = defaultChecklist();
+  state.activity       = [];
   saveState();
 }
 
@@ -305,7 +309,13 @@ function taskAdd(data){
 }
 function taskUpdate(id, patch){
   const t = tasksAll().find(x=>x.id===id);
-  if(t){ Object.assign(t, patch); t.updatedAt = Date.now(); }
+  if(t){
+    const wasDone = t.status==='done';
+    Object.assign(t, patch); t.updatedAt = Date.now();
+    if(patch.status==='done' && !wasDone){
+      logActivity({ type:'task', icon:'check', text:'Задача выполнена: '+t.title, who:t.managerId });
+    }
+  }
   saveState();
 }
 function taskRemove(id){
@@ -321,6 +331,61 @@ function currentUser(){ return getUser(currentUserId()); }
 function isRop(){ return currentUserId() === 'rop'; }
 function canManageTasks(){ return isRop() || state.adminMode; }
 function setCurrentUser(id){ state.currentUser = id; saveState(); }
+
+/* ============================================================
+   ЖИВОЙ ЖУРНАЛ ДЕЙСТВИЙ + АВТОЗАДАЧИ
+   Центральные события (бронь, показ, сделка, новый клиент,
+   выполненная задача) пишутся в state.activity и порождают
+   автозадачи в чек-листе ответственного менеджера.
+   ============================================================ */
+function logActivity(ev){
+  if(!Array.isArray(state.activity)) state.activity = [];
+  state.activity.unshift({
+    id:   uid('act'),
+    ts:   Date.now(),
+    type: ev.type || 'note',
+    icon: ev.icon || 'doc',
+    text: ev.text || '',
+    who:  ev.who || '',
+  });
+  if(state.activity.length > 80) state.activity.length = 80;
+  saveState();
+  if(typeof refreshLive === 'function') refreshLive();
+}
+// Автозадача с защитой от дублей по ключу источника
+function autoTask(srcKey, data){
+  if(!srcKey) return;
+  if(tasksAll().some(t=>t.srcKey===srcKey)) return;
+  const t = taskAdd(data);
+  t.srcKey = srcKey;
+  saveState();
+  return t;
+}
+// Относительное время («5 мин назад», «2 ч назад», дата)
+function timeAgo(ts){
+  const diff = Math.max(0, Date.now()-ts), min = Math.floor(diff/60000);
+  if(min < 1)  return 'только что';
+  if(min < 60) return min+' мин назад';
+  const h = Math.floor(min/60);
+  if(h < 24)   return h+' ч назад';
+  const d = new Date(ts);
+  return isoDate(d).split('-').reverse().slice(0,2).join('.');
+}
+// Реакция на смену статуса помещения
+function onUnitStatusChange(u, from, to){
+  const label = (STATUSES[to]||{}).label || to;
+  const icons = { booked:'clock', contract:'doc', sold:'check', free:'home', show:'eye', unavailable:'close' };
+  logActivity({ type:'status', icon: icons[to]||'home',
+    text: `${u.displayNum} · ${u.corp}: статус «${label}»`, who: u.managerId });
+  if(to==='booked')
+    autoTask('book:'+u.id, { title:`Оформить договор — ${u.displayNum} (${u.corp})`,
+      managerId:u.managerId, due: isoDate(addDays(TODAY,3)), status:'planned',
+      comment:'Автозадача: помещение забронировано' });
+  if(to==='contract')
+    autoTask('deal:'+u.id, { title:`Собрать документы — ${u.displayNum} (${u.corp})`,
+      managerId:u.managerId, due: isoDate(addDays(TODAY,2)), status:'planned',
+      comment:'Автозадача: оформление сделки' });
+}
 
 /* ============================================================
    ДАШБОРД РОП — данные в базе, редактируемые в админ-режиме
@@ -455,6 +520,7 @@ function createClient(data){
   state.clients.push(client);
   logInteraction(client.id, 'created', 'Создан клиент · источник: '+client.source);
   saveState();
+  logActivity({ type:'lead', icon:'user', text:'Новый клиент: '+client.name+' · '+client.source, who: client.mgr });
   return client;
 }
 
@@ -611,8 +677,10 @@ function unitsForClient(clientId){
 function updateUnit(id, patch){
   const u = getUnit(id);
   if(!u) return;
+  const prevStatus = u.status;
   Object.assign(u, patch, { updatedAt: Date.now() });
   saveState();
+  if(patch.status && patch.status !== prevStatus) onUnitStatusChange(u, prevStatus, patch.status);
 }
 
 function deleteUnit(id){
@@ -773,6 +841,14 @@ function createShow(data){
   };
   state.shows.push(show);
   saveState();
+  const cl = getClient(show.clientId), un = getUnit(show.unitId);
+  logActivity({ type:'show', icon:'eye',
+    text:`Назначен показ${cl?' · '+cl.name:''}${un?' · '+un.displayNum:''} на ${fmtDateRu(show.date)} ${show.time||''}`.trim(),
+    who: show.managerId });
+  autoTask('show:'+show.id, {
+    title:`Провести показ${cl?' — '+cl.name:''}${un?' ('+un.displayNum+')':''}`,
+    managerId: show.managerId, due: show.date, status:'planned',
+    comment:'Автозадача: назначен показ' + (show.time?' в '+show.time:'') });
   return show;
 }
 

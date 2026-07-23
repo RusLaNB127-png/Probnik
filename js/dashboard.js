@@ -169,13 +169,14 @@ function renderDashboard(){
       <div class="track" style="position:relative;"><div style="position:absolute;left:${(+p.plan||0)/pfMax*100}%;top:-3px;height:16px;width:2px;background:var(--brown);opacity:.4;"></div>
       <div class="fill" style="width:${(+p.fact||0)/pfMax*100}%"></div></div></div>`).join('') : emptyState('Нет объектов', admin));
 
-  // ---- Журнал действий ----
+  // ---- Живой журнал действий (авто-события) ----
+  const feed = Array.isArray(state.activity) ? state.activity : [];
   document.getElementById('actionLog').innerHTML =
-    (admin ? addBtn('log','Добавить запись') : '') +
-    (d.log.length ? d.log.map(l=>`
-      <div class="log-item dash-row"><div class="ic">${icon(LOG_ICON[l.icon]||'doc',15)}</div>
-        <div style="flex:1;"><div><b>${escapeHtml(l.who)}</b> ${escapeHtml(l.action||'')}</div></div>
-        <div class="tm">${escapeHtml(l.time||'')}</div>${rowCtrls('log',l.id)}</div>`).join('') : emptyState('Журнал пуст', admin));
+    feed.length ? feed.slice(0,40).map(a=>`
+      <div class="log-item"><div class="ic">${icon(a.icon||'doc',15)}</div>
+        <div style="flex:1;"><div>${a.who?`<b>${escapeHtml(mgrName(a.who))}</b> · `:''}${escapeHtml(a.text||'')}</div></div>
+        <div class="tm">${timeAgo(a.ts)}</div></div>`).join('')
+      : emptyState('Пока нет событий — они появятся при бронях, показах и сделках', false);
 
   // ---- AI рекомендации ----
   document.getElementById('aiRecs').innerHTML =

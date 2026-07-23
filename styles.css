@@ -2184,3 +2184,10 @@ body{ padding-left:238px; }
 .tsk-track{ height:9px; background:var(--sand); border-radius:5px; overflow:hidden; }
 .tsk-fill{ height:100%; background:linear-gradient(90deg,var(--terra),var(--terra-dark)); border-radius:5px; }
 .tsk-fill.full{ background:linear-gradient(90deg,var(--sea),var(--sea-dark)); }
+
+/* Живые уведомления */
+.notif-item .ic.ic-over{ background:#FBE3D3; color:var(--terra-dark); }
+.notif-empty{ padding:18px 16px; text-align:center; color:var(--brown-soft); font-size:13px; }
+/* Живой журнал: элемент без контролов редактирования */
+#actionLog .log-item{ display:flex; align-items:center; gap:11px; }
+#actionLog .log-item .tm{ font-size:11px; color:var(--brown-soft); white-space:nowrap; }

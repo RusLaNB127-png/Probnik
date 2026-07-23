@@ -19,11 +19,44 @@ document.getElementById('newClientBtn').onclick = ()=>openClientForm(null);
 /* ---------- Закрытие боковой панели по клику на затемнение ---------- */
 document.getElementById('scrim').onclick = closePanel;
 
-/* ---------- Уведомления ---------- */
+/* ---------- Уведомления (динамические, по роли) ---------- */
 function renderNotifs(){
-  document.getElementById('notifBadge').textContent = NOTIFS.length;
-  document.getElementById('notifList').innerHTML = NOTIFS.map(([t,d])=>`
-    <div class="notif-item"><div class="ic">!</div><div class="nb"><b>${t}</b><span>${d}</span></div></div>`).join('');
+  const rop = isRop(), uid = currentUserId();
+  const today = isoDate(TODAY), tomorrow = isoDate(addDays(TODAY,1));
+  const items = [];
+
+  // Показы сегодня и завтра
+  state.shows.filter(s=>s.status==='planned' && (rop || s.managerId===uid)).forEach(s=>{
+    if(s.date===today || s.date===tomorrow){
+      const c = getClient(s.clientId), u = getUnit(s.unitId);
+      items.push({ icon:'eye', when:s.date+'0',
+        title:(s.date===today?'Показ сегодня':'Показ завтра')+(s.time?' · '+s.time:''),
+        sub:(c?c.name:'—')+(u?' · '+u.displayNum:'')+(rop?' · '+mgrName(s.managerId):'') });
+    }
+  });
+  // Задачи: просроченные и на сегодня
+  tasksAll().filter(t=>t.status!=='done' && t.due && (rop || t.managerId===uid)).forEach(t=>{
+    if(t.due < today) items.push({ icon:'alert', when:t.due+'0', overdue:true,
+      title:'Просрочена задача', sub:t.title+(rop?' · '+mgrName(t.managerId):'') });
+    else if(t.due===today) items.push({ icon:'clock', when:t.due+'1',
+      title:'Задача на сегодня', sub:t.title+(rop?' · '+mgrName(t.managerId):'') });
+  });
+  items.sort((a,b)=> a.when<b.when?-1 : a.when>b.when?1 : 0);
+
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = items.length;
+  badge.style.display = items.length ? '' : 'none';
+  document.getElementById('notifList').innerHTML = items.length
+    ? items.map(n=>`<div class="notif-item"><div class="ic ${n.overdue?'ic-over':''}">${icon(n.icon,15)}</div>
+        <div class="nb"><b>${escapeHtml(n.title)}</b><span>${escapeHtml(n.sub)}</span></div></div>`).join('')
+    : `<div class="notif-empty">Нет новых уведомлений</div>`;
+}
+
+// Обновить «живые» блоки после события (журнал, задачи, уведомления)
+function refreshLive(){
+  if(typeof renderDashboard === 'function') renderDashboard();
+  if(typeof renderChecklist === 'function') renderChecklist();
+  renderNotifs();
 }
 document.getElementById('notifBtn').onclick = (e)=>{
   e.stopPropagation();
@@ -165,7 +198,7 @@ function renderUserSwitch(){
   menu.querySelectorAll('[data-user]').forEach(b=>b.onclick=()=>{
     setCurrentUser(b.dataset.user);
     menu.classList.remove('show');
-    renderUserSwitch(); renderChecklist(); renderDashboard();
+    renderUserSwitch(); renderChecklist(); renderDashboard(); renderNotifs();
     toast('Вы вошли как '+currentUser().name);
   });
 }
