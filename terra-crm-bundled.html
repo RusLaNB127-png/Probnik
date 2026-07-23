@@ -7359,6 +7359,18 @@ function initDashEdit(){
    РОП видит общий чек-лист по всем «отсекам» + трекер в дашборде.
    ============================================================ */
 
+// Мини-кольцо прогресса сотрудника
+function clRing(pct, size=42){
+  const r = size/2 - 4, c = 2*Math.PI*r, off = c*(1 - Math.min(pct,100)/100);
+  const col = pct>=100 ? 'var(--st-free)' : 'var(--terra)';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--sand)" stroke-width="4"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text x="${size/2}" y="${size/2+3.5}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--brown)">${pct}</text>
+  </svg>`;
+}
+
 function statusPill(status){
   const s = TASK_STATUSES[status] || TASK_STATUSES.planned;
   return `<span class="tsk-pill" style="--sc:${s.color}">${s.label}</span>`;
@@ -7412,12 +7424,12 @@ function renderChecklist(){
   if(rop){
     head.textContent = 'Общий чек-лист ОП';
     document.getElementById('clSub').textContent =
-      `Вы вошли как ${u.name} · ${u.role}. Задачи всех сотрудников разбиты по отсекам. Тот же трекер — в Дашборде РОП.`;
+      `Вы вошли как ${u.name} · ${u.role}. Выберите сотрудника слева, чтобы открыть его чек-лист. Общий трекер — в Дашборде РОП.`;
     actions.innerHTML = `
       <button class="btn ic-inline" id="clExport">${icon('download',15)} Выгрузить в Excel</button>
       <button class="btn btn-primary ic-inline" id="clAddTask">${icon('plus',15)} Новая задача</button>`;
-    renderGeneralChecklist(content, { manage:true });
-    document.getElementById('clAddTask').onclick = ()=>openTaskModal(null, null);
+    renderRopChecklist(content);
+    document.getElementById('clAddTask').onclick = ()=>openTaskModal(null, state.checklistMgr || null);
     document.getElementById('clExport').onclick = exportChecklistExcel;
   } else {
     head.textContent = 'Мои задачи';
@@ -7507,6 +7519,49 @@ function renderGeneralChecklist(host, opts){
   if(manage){
     host.querySelectorAll('[data-add-for]').forEach(b=>b.onclick = ()=>openTaskModal(null, b.dataset.addFor));
   }
+}
+
+// РОП: список сотрудников слева + чек-лист выбранного справа
+function renderRopChecklist(content){
+  if(!MANAGERS.find(m=>m.id===state.checklistMgr)) state.checklistMgr = MANAGERS.length ? MANAGERS[0].id : '';
+  content.innerHTML = `
+    <div class="cl-grid">
+      <aside class="cl-team-card">
+        <h3 class="cl-team-title">Сотрудники ОП</h3>
+        <div class="cl-team" id="clEmpList"></div>
+      </aside>
+      <section class="cl-main-card" id="clRopBody"></section>
+    </div>`;
+
+  const sel = state.checklistMgr;
+  document.getElementById('clEmpList').innerHTML = MANAGERS.map(m=>{
+    const st = taskStats(m.id);
+    return `<button class="cl-emp ${m.id===sel?'active':''}" data-mgr="${m.id}">
+      <div class="avatar">${m.short||mkShort(m.name)}</div>
+      <div class="cl-emp-meta"><b>${escapeHtml(m.name)}</b>
+        <span>${st.done}/${st.total}${st.overdue?` · ${st.overdue} просроч.`:''}</span></div>
+      <div class="cl-emp-ring">${clRing(st.pct)}</div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('#clEmpList [data-mgr]').forEach(b=>b.onclick = ()=>{
+    state.checklistMgr = b.dataset.mgr;
+    renderRopChecklist(content);
+  });
+
+  const body = document.getElementById('clRopBody');
+  const mgr = MANAGERS.find(m=>m.id===sel);
+  if(!mgr){ body.innerHTML = `<div class="dash-empty">Нет сотрудников</div>`; return; }
+  const st = taskStats(sel);
+  body.innerHTML = `
+    <div class="cl-body-head">
+      <div><h3>${escapeHtml(mgr.name)}</h3>
+        <div class="cl-body-sub">${st.done} из ${st.total} выполнено${st.overdue?` · ${st.overdue} просрочено`:''}</div></div>
+      <button class="btn btn-sm ic-inline" id="clAddForSel">${icon('plus',14)} Задача</button>
+    </div>
+    ${taskStatsBar(sel)}
+    ${taskTableHTML(tasksFor(sel), { showOwner:false, canEdit:true })}`;
+  document.getElementById('clAddForSel').onclick = ()=>openTaskModal(null, sel);
+  wireTaskTable(body);
 }
 
 // Общий трекер для дашборда РОП
