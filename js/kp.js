@@ -144,6 +144,12 @@ function generateKP(unitId){
 function initKP(){
   const modal = document.getElementById('kpModal');
   document.getElementById('kpClose').onclick = ()=>modal.classList.remove('show');
-  document.getElementById('kpPrint').onclick = ()=>window.print();
+  document.getElementById('kpPrint').onclick = ()=>{
+    document.body.classList.add('printing-kp');
+    const cleanup = ()=>{ document.body.classList.remove('printing-kp'); window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(cleanup, 1500);
+    window.print();
+  };
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('show'); });
 }

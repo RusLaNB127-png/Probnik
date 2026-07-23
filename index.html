@@ -325,7 +325,10 @@
 <main class="view" id="view-analytics">
   <div class="view-head">
     <div><h2>Аналитика платформы</h2><p>Сводка по объекту, продажам, воронке, менеджерам и ценам — из реальных данных</p></div>
-    <button class="btn ic-inline" id="anExport">Выгрузить в Excel</button>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="anPrint">Печать / PDF</button>
+      <button class="btn ic-inline" id="anExport">Выгрузить в Excel</button>
+    </div>
   </div>
 
   <div class="filters an-filters" id="anFilters"></div>
@@ -339,6 +342,8 @@
 
     <div class="card col-6"><h3>Воронка лидов</h3><div class="card-sub">Число клиентов, дошедших до этапа</div><div id="anFunnel2"></div></div>
     <div class="card col-6"><h3>Источники лидов</h3><div class="card-sub">Лиды и сделки по каналам</div><div id="anSources"></div></div>
+
+    <div class="card col-12"><h3>Тепловая карта продаж</h3><div class="card-sub">Доля проданных по этажам и корпусам — светлые ячейки «зависают»</div><div id="anHeat"></div></div>
 
     <div class="card col-12"><h3>Рейтинг менеджеров</h3><div class="card-sub">Выручка, сделки, нагрузка, конверсия, задачи</div><div id="anLeaders"></div></div>
 

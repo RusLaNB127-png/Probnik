@@ -76,6 +76,43 @@ function chLine(points, opt){
     ${dots}${xlab}</svg>`;
 }
 
+/* ---------- Тепловая карта продаж ---------- */
+function anHeatColor(ratio){
+  const a=[240,232,216], b=[157,52,19];      // светлый песок → терракота
+  const c=a.map((x,i)=>Math.round(x+(b[i]-x)*ratio));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function renderHeatmap(host){
+  const us = anUnits();
+  const bld = BUILDINGS[state.building];
+  const corps = bld.corps.filter(c=> !anF().corp || c===anF().corp);
+  const maxFloor = Math.max(1, ...us.map(u=>u.floor));
+  const floors = []; for(let f=maxFloor; f>=1; f--) floors.push(f);
+
+  const head = `<tr><th class="an-heat-corner"></th>${corps.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
+  const body = floors.map(fl=>{
+    const cells = corps.map(c=>{
+      const cu = us.filter(u=>u.corp===c && u.floor===fl);
+      if(!cu.length) return `<td class="an-heat-empty"></td>`;
+      const sold = cu.filter(u=>u.status==='sold'||u.status==='contract').length;
+      const ratio = sold/cu.length;
+      const pct = Math.round(ratio*100);
+      return `<td class="an-heat-cell" style="background:${anHeatColor(ratio)};color:${ratio>0.5?'#fff':'#5C534B'}"
+        title="${c} · ${fl} эт.: продано ${sold} из ${cu.length}">${pct}%</td>`;
+    }).join('');
+    return `<tr><th class="an-heat-fl">${fl} эт.</th>${cells}</tr>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="an-heat-wrap"><table class="an-heat"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <div class="an-heat-legend">
+      <span>Зависает</span>
+      <span class="an-heat-scale"></span>
+      <span>Продано</span>
+      <span class="an-heat-note">Доля проданных и в договоре по этажу/корпусу</span>
+    </div>`;
+}
+
 /* ---------- Агрегации ---------- */
 function anPriceSeries(us){
   const map = {};
@@ -136,6 +173,9 @@ function renderAnalytics(){
     return { label:c, value:fu.length, display:fu.length+' · '+Math.round(fu.reduce((s,u)=>s+(+u.total||0),0))+' млн', color:'var(--st-free)' };
   });
   document.getElementById('anStock').innerHTML = chBars(freeByCorp);
+
+  // ---- Тепловая карта ----
+  renderHeatmap(document.getElementById('anHeat'));
 
   // ---- Воронка + источники ----
   const funnelRows = STAGES.map(st=>({ label:st, value: cls.filter(c=>STAGES.indexOf(c.stage) >= STAGES.indexOf(st)).length }));
@@ -206,6 +246,15 @@ function wireAnalytics(){
   if(usel) usel.onchange = ()=>{ state.analyticsUnit = usel.value; renderAnalytics(); };
   const exp = document.getElementById('anExport');
   if(exp) exp.onclick = exportAnalyticsExcel;
+  const pr = document.getElementById('anPrint');
+  if(pr) pr.onclick = printAnalytics;
+}
+function printAnalytics(){
+  document.body.classList.add('printing-analytics');
+  const cleanup = ()=>{ document.body.classList.remove('printing-analytics'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(cleanup, 1500);
+  window.print();
 }
 
 /* ---------- Выгрузка сводки в Excel ---------- */

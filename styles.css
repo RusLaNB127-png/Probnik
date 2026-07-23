@@ -2280,17 +2280,36 @@ body{ padding-left:238px; }
 @media (max-width:820px){ .kp-page{ width:100%; min-height:auto; padding:24px; } .kp-two,.kp-price-box{ grid-template-columns:1fr; } }
 
 /* --------- ПЕЧАТЬ: только буклет --------- */
+/* --------- ПЕЧАТЬ: коммерческое предложение --------- */
 @media print{
-  body{ background:#fff !important; padding:0 !important; }
-  body > *:not(.kp-overlay){ display:none !important; }
-  .kp-overlay{ display:block !important; position:static !important; background:#fff !important; inset:auto; }
-  .kp-toolbar{ display:none !important; }
-  .kp-pages{ padding:0; gap:0; display:block; overflow:visible; }
-  .kp-page{ box-shadow:none; width:auto; min-height:auto; padding:16mm 14mm;
-    page-break-after:always; break-after:page; }
-  .kp-page:last-child{ page-break-after:auto; break-after:auto; }
-  @page{ size:A4; margin:0; }
+  body.printing-kp{ background:#fff !important; padding:0 !important; }
+  body.printing-kp > *:not(.kp-overlay){ display:none !important; }
+  body.printing-kp .kp-overlay{ display:block !important; position:static !important; background:#fff !important; inset:auto; }
+  body.printing-kp .kp-toolbar{ display:none !important; }
+  body.printing-kp .kp-pages{ padding:0; gap:0; display:block; overflow:visible; }
+  body.printing-kp .kp-page{ box-shadow:none; width:auto; min-height:auto; padding:16mm 14mm;
+    page-break-after:always; break-after:page; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body.printing-kp .kp-page:last-child{ page-break-after:auto; break-after:auto; }
+  body.printing-kp{ }
 }
+
+/* --------- ПЕЧАТЬ: аналитический отчёт --------- */
+@media print{
+  body.printing-analytics{ background:#fff !important; padding:0 !important; }
+  body.printing-analytics > *:not(#view-analytics){ display:none !important; }
+  body.printing-analytics #view-analytics{ display:block !important; }
+  body.printing-analytics #anPrint, body.printing-analytics #anExport,
+  body.printing-analytics #anReset{ display:none !important; }
+  body.printing-analytics .an-filters{ display:flex !important; }
+  body.printing-analytics .card{ break-inside:avoid; box-shadow:none !important; border:1px solid #E2DED6; }
+  body.printing-analytics .an-bar-fill, body.printing-analytics .an-mini-fill,
+  body.printing-analytics .an-funnel-bar, body.printing-analytics .an-heat-cell,
+  body.printing-analytics svg, body.printing-analytics .an-leg span,
+  body.printing-analytics .kpi{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body.printing-analytics .view-head p{ display:none; }
+  body.printing-analytics #view-analytics{ padding:10mm 8mm !important; }
+}
+@page{ size:A4; margin:0; }
 
 /* ============================================================
    ВКЛАДКА «АНАЛИТИКА»
@@ -2346,3 +2365,17 @@ body{ padding-left:238px; }
 .an-unit-pick{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .an-unit-pick label{ font-size:12px; color:var(--brown-soft); }
 .an-unit-pick select{ max-width:340px; }
+
+/* Тепловая карта продаж */
+.an-heat-wrap{ overflow-x:auto; }
+.an-heat{ border-collapse:separate; border-spacing:3px; }
+.an-heat th{ font-size:11.5px; color:var(--brown-soft); font-weight:700; padding:4px 8px; background:transparent; }
+.an-heat-corner{ width:52px; }
+.an-heat-fl{ text-align:right; white-space:nowrap; }
+.an-heat-cell{ width:120px; height:30px; text-align:center; border-radius:6px;
+  font-size:12px; font-weight:700; }
+.an-heat-empty{ background:repeating-linear-gradient(45deg,#F4F1EC,#F4F1EC 4px,#EDE8E0 4px,#EDE8E0 8px); border-radius:6px; }
+.an-heat-legend{ display:flex; align-items:center; gap:10px; margin-top:14px; font-size:12px; color:var(--brown-soft); }
+.an-heat-scale{ width:120px; height:12px; border-radius:6px;
+  background:linear-gradient(90deg, rgb(240,232,216), rgb(157,52,19)); }
+.an-heat-note{ margin-left:auto; }

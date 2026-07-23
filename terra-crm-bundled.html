@@ -2290,17 +2290,36 @@ body{ padding-left:238px; }
 @media (max-width:820px){ .kp-page{ width:100%; min-height:auto; padding:24px; } .kp-two,.kp-price-box{ grid-template-columns:1fr; } }
 
 /* --------- ПЕЧАТЬ: только буклет --------- */
+/* --------- ПЕЧАТЬ: коммерческое предложение --------- */
 @media print{
-  body{ background:#fff !important; padding:0 !important; }
-  body > *:not(.kp-overlay){ display:none !important; }
-  .kp-overlay{ display:block !important; position:static !important; background:#fff !important; inset:auto; }
-  .kp-toolbar{ display:none !important; }
-  .kp-pages{ padding:0; gap:0; display:block; overflow:visible; }
-  .kp-page{ box-shadow:none; width:auto; min-height:auto; padding:16mm 14mm;
-    page-break-after:always; break-after:page; }
-  .kp-page:last-child{ page-break-after:auto; break-after:auto; }
-  @page{ size:A4; margin:0; }
+  body.printing-kp{ background:#fff !important; padding:0 !important; }
+  body.printing-kp > *:not(.kp-overlay){ display:none !important; }
+  body.printing-kp .kp-overlay{ display:block !important; position:static !important; background:#fff !important; inset:auto; }
+  body.printing-kp .kp-toolbar{ display:none !important; }
+  body.printing-kp .kp-pages{ padding:0; gap:0; display:block; overflow:visible; }
+  body.printing-kp .kp-page{ box-shadow:none; width:auto; min-height:auto; padding:16mm 14mm;
+    page-break-after:always; break-after:page; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body.printing-kp .kp-page:last-child{ page-break-after:auto; break-after:auto; }
+  body.printing-kp{ }
 }
+
+/* --------- ПЕЧАТЬ: аналитический отчёт --------- */
+@media print{
+  body.printing-analytics{ background:#fff !important; padding:0 !important; }
+  body.printing-analytics > *:not(#view-analytics){ display:none !important; }
+  body.printing-analytics #view-analytics{ display:block !important; }
+  body.printing-analytics #anPrint, body.printing-analytics #anExport,
+  body.printing-analytics #anReset{ display:none !important; }
+  body.printing-analytics .an-filters{ display:flex !important; }
+  body.printing-analytics .card{ break-inside:avoid; box-shadow:none !important; border:1px solid #E2DED6; }
+  body.printing-analytics .an-bar-fill, body.printing-analytics .an-mini-fill,
+  body.printing-analytics .an-funnel-bar, body.printing-analytics .an-heat-cell,
+  body.printing-analytics svg, body.printing-analytics .an-leg span,
+  body.printing-analytics .kpi{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body.printing-analytics .view-head p{ display:none; }
+  body.printing-analytics #view-analytics{ padding:10mm 8mm !important; }
+}
+@page{ size:A4; margin:0; }
 
 /* ============================================================
    ВКЛАДКА «АНАЛИТИКА»
@@ -2356,6 +2375,20 @@ body{ padding-left:238px; }
 .an-unit-pick{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .an-unit-pick label{ font-size:12px; color:var(--brown-soft); }
 .an-unit-pick select{ max-width:340px; }
+
+/* Тепловая карта продаж */
+.an-heat-wrap{ overflow-x:auto; }
+.an-heat{ border-collapse:separate; border-spacing:3px; }
+.an-heat th{ font-size:11.5px; color:var(--brown-soft); font-weight:700; padding:4px 8px; background:transparent; }
+.an-heat-corner{ width:52px; }
+.an-heat-fl{ text-align:right; white-space:nowrap; }
+.an-heat-cell{ width:120px; height:30px; text-align:center; border-radius:6px;
+  font-size:12px; font-weight:700; }
+.an-heat-empty{ background:repeating-linear-gradient(45deg,#F4F1EC,#F4F1EC 4px,#EDE8E0 4px,#EDE8E0 8px); border-radius:6px; }
+.an-heat-legend{ display:flex; align-items:center; gap:10px; margin-top:14px; font-size:12px; color:var(--brown-soft); }
+.an-heat-scale{ width:120px; height:12px; border-radius:6px;
+  background:linear-gradient(90deg, rgb(240,232,216), rgb(157,52,19)); }
+.an-heat-note{ margin-left:auto; }
 
 </style>
 </head>
@@ -2675,7 +2708,10 @@ body{ padding-left:238px; }
 <main class="view" id="view-analytics">
   <div class="view-head">
     <div><h2>Аналитика платформы</h2><p>Сводка по объекту, продажам, воронке, менеджерам и ценам — из реальных данных</p></div>
-    <button class="btn ic-inline" id="anExport">Выгрузить в Excel</button>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="anPrint">Печать / PDF</button>
+      <button class="btn ic-inline" id="anExport">Выгрузить в Excel</button>
+    </div>
   </div>
 
   <div class="filters an-filters" id="anFilters"></div>
@@ -2689,6 +2725,8 @@ body{ padding-left:238px; }
 
     <div class="card col-6"><h3>Воронка лидов</h3><div class="card-sub">Число клиентов, дошедших до этапа</div><div id="anFunnel2"></div></div>
     <div class="card col-6"><h3>Источники лидов</h3><div class="card-sub">Лиды и сделки по каналам</div><div id="anSources"></div></div>
+
+    <div class="card col-12"><h3>Тепловая карта продаж</h3><div class="card-sub">Доля проданных по этажам и корпусам — светлые ячейки «зависают»</div><div id="anHeat"></div></div>
 
     <div class="card col-12"><h3>Рейтинг менеджеров</h3><div class="card-sub">Выручка, сделки, нагрузка, конверсия, задачи</div><div id="anLeaders"></div></div>
 
@@ -7404,6 +7442,43 @@ function chLine(points, opt){
     ${dots}${xlab}</svg>`;
 }
 
+/* ---------- Тепловая карта продаж ---------- */
+function anHeatColor(ratio){
+  const a=[240,232,216], b=[157,52,19];      // светлый песок → терракота
+  const c=a.map((x,i)=>Math.round(x+(b[i]-x)*ratio));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function renderHeatmap(host){
+  const us = anUnits();
+  const bld = BUILDINGS[state.building];
+  const corps = bld.corps.filter(c=> !anF().corp || c===anF().corp);
+  const maxFloor = Math.max(1, ...us.map(u=>u.floor));
+  const floors = []; for(let f=maxFloor; f>=1; f--) floors.push(f);
+
+  const head = `<tr><th class="an-heat-corner"></th>${corps.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
+  const body = floors.map(fl=>{
+    const cells = corps.map(c=>{
+      const cu = us.filter(u=>u.corp===c && u.floor===fl);
+      if(!cu.length) return `<td class="an-heat-empty"></td>`;
+      const sold = cu.filter(u=>u.status==='sold'||u.status==='contract').length;
+      const ratio = sold/cu.length;
+      const pct = Math.round(ratio*100);
+      return `<td class="an-heat-cell" style="background:${anHeatColor(ratio)};color:${ratio>0.5?'#fff':'#5C534B'}"
+        title="${c} · ${fl} эт.: продано ${sold} из ${cu.length}">${pct}%</td>`;
+    }).join('');
+    return `<tr><th class="an-heat-fl">${fl} эт.</th>${cells}</tr>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="an-heat-wrap"><table class="an-heat"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <div class="an-heat-legend">
+      <span>Зависает</span>
+      <span class="an-heat-scale"></span>
+      <span>Продано</span>
+      <span class="an-heat-note">Доля проданных и в договоре по этажу/корпусу</span>
+    </div>`;
+}
+
 /* ---------- Агрегации ---------- */
 function anPriceSeries(us){
   const map = {};
@@ -7464,6 +7539,9 @@ function renderAnalytics(){
     return { label:c, value:fu.length, display:fu.length+' · '+Math.round(fu.reduce((s,u)=>s+(+u.total||0),0))+' млн', color:'var(--st-free)' };
   });
   document.getElementById('anStock').innerHTML = chBars(freeByCorp);
+
+  // ---- Тепловая карта ----
+  renderHeatmap(document.getElementById('anHeat'));
 
   // ---- Воронка + источники ----
   const funnelRows = STAGES.map(st=>({ label:st, value: cls.filter(c=>STAGES.indexOf(c.stage) >= STAGES.indexOf(st)).length }));
@@ -7534,6 +7612,15 @@ function wireAnalytics(){
   if(usel) usel.onchange = ()=>{ state.analyticsUnit = usel.value; renderAnalytics(); };
   const exp = document.getElementById('anExport');
   if(exp) exp.onclick = exportAnalyticsExcel;
+  const pr = document.getElementById('anPrint');
+  if(pr) pr.onclick = printAnalytics;
+}
+function printAnalytics(){
+  document.body.classList.add('printing-analytics');
+  const cleanup = ()=>{ document.body.classList.remove('printing-analytics'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(cleanup, 1500);
+  window.print();
 }
 
 /* ---------- Выгрузка сводки в Excel ---------- */
@@ -7711,7 +7798,13 @@ function generateKP(unitId){
 function initKP(){
   const modal = document.getElementById('kpModal');
   document.getElementById('kpClose').onclick = ()=>modal.classList.remove('show');
-  document.getElementById('kpPrint').onclick = ()=>window.print();
+  document.getElementById('kpPrint').onclick = ()=>{
+    document.body.classList.add('printing-kp');
+    const cleanup = ()=>{ document.body.classList.remove('printing-kp'); window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(cleanup, 1500);
+    window.print();
+  };
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('show'); });
 }
 
