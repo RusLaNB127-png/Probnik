@@ -186,6 +186,7 @@ const state = {
   checklist:       null,             // чек-лист ОП: { tasks:[...] } (в базе)
   currentUser:     'rop',            // активная учётная запись (роль)
   activity:        [],               // живой журнал действий (авто-события)
+  auth:            { users:null, sessionUid:null },  // учётные записи + сессия
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -203,6 +204,7 @@ function saveState(){
       checklist:      state.checklist,
       currentUser:    state.currentUser,
       activity:       state.activity,
+      auth:           { users: state.auth.users },
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -263,6 +265,7 @@ function loadState(){
     state.checklist      = normalizeChecklist(data.checklist);
     state.currentUser    = data.currentUser || 'rop';
     state.activity       = Array.isArray(data.activity) ? data.activity : [];
+    state.auth           = normalizeAuth(data.auth);
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -279,6 +282,7 @@ function resetToDefaults(){
   state.dash           = emptyDash();
   state.checklist      = defaultChecklist();
   state.activity       = [];
+  state.auth           = normalizeAuth(null);
   saveState();
 }
 
@@ -466,6 +470,8 @@ function dashLoadDemo(){ state.dash = demoDash(); saveState(); }
 // При старте: загружаем сохранённое или генерируем дефолт
 function initState(){
   if(!loadState()) resetToDefaults();
+  if(!state.auth || !Array.isArray(state.auth.users)) state.auth = normalizeAuth(null);
+  syncManagersFromAuth();               // дозаписать в MANAGERS добавленных сотрудников
   // совместимость со старым кодом
   state.units[state.building] = state.unitsList;
 }
@@ -1082,4 +1088,126 @@ function downloadBlob(blob, filename){
 }
 function sanitizeFilename(name){
   return String(name||'файл').replace(/[\/\\:*?"<>|]/g,' ').replace(/\s+/g,' ').trim() || 'файл';
+}
+
+/* ============================================================
+   АВТОРИЗАЦИЯ (демо-контур: клиентская, не защита от взлома).
+   Пароли — SHA-256 (синхронно, работает и на file://).
+   Структура готова к замене на реальный API.
+   ============================================================ */
+
+// Компактный SHA-256 (Geraint Luff), работает без crypto.subtle
+function sha256(ascii){
+  function rightRotate(v,a){ return (v>>>a)|(v<<(32-a)); }
+  var mathPow=Math.pow, maxWord=mathPow(2,32), i, j, result='';
+  var words=[], asciiBitLength=ascii.length*8;
+  var hash=sha256.h=sha256.h||[], k=sha256.k=sha256.k||[], primeCounter=k.length;
+  var isComposite={};
+  for(var candidate=2; primeCounter<64; candidate++){
+    if(!isComposite[candidate]){
+      for(i=0;i<313;i+=candidate){ isComposite[i]=candidate; }
+      hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;
+      k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0;
+    }
+  }
+  ascii+='\x80';
+  while(ascii.length%64-56) ascii+='\x00';
+  for(i=0;i<ascii.length;i++){
+    j=ascii.charCodeAt(i);
+    if(j>>8) return;
+    words[i>>2]|=j<<((3-i)%4)*8;
+  }
+  words[words.length]=((asciiBitLength/maxWord)|0);
+  words[words.length]=(asciiBitLength);
+  for(j=0;j<words.length;){
+    var w=words.slice(j,j+=16), oldHash=hash;
+    hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15], w2=w[i-2];
+      var a=hash[0], e=hash[4];
+      var temp1=hash[7]
+        +(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))
+        +((e&hash[5])^((~e)&hash[6]))+k[i]
+        +(w[i]=(i<16)?w[i]:(w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))
+          +w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0);
+      var temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))
+        +((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(temp1+temp2)|0].concat(hash);
+      hash[4]=(hash[4]+temp1)|0;
+    }
+    for(i=0;i<8;i++){ hash[i]=(hash[i]+oldHash[i])|0; }
+  }
+  for(i=0;i<8;i++){
+    for(j=3;j+1;j--){
+      var b=(hash[i]>>(j*8))&255;
+      result+=((b<16)?0:'')+b.toString(16);
+    }
+  }
+  return result;
+}
+function hashPassword(pw){
+  const bytes=new TextEncoder().encode('italika-salt::'+pw);
+  let bin=''; for(const b of bytes) bin+=String.fromCharCode(b);
+  return sha256(bin);
+}
+function mkShort(name){ return String(name||'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(); }
+
+const DEFAULT_PW = 'italika';
+const ROLE_PERMS = {
+  rop:     { dashboard:true,  analytics:true, admin:true,  allClients:true,  manageUsers:true  },
+  manager: { dashboard:false, analytics:true, admin:false, allClients:false, manageUsers:false },
+};
+
+function defaultAccounts(){
+  const h = hashPassword(DEFAULT_PW);
+  const list = [{ uid:'rop', name:ROP_USER.name, email:'rop@italika.ru', role:'rop', mgrId:null, active:true, hash:h }];
+  MANAGERS.forEach(m=> list.push({ uid:m.id, name:m.name, email:m.email||(m.id+'@italika.ru'), role:'manager', mgrId:m.id, active:true, hash:h }));
+  return list;
+}
+function normalizeAuth(a){
+  if(a && Array.isArray(a.users) && a.users.length) return { users:a.users };
+  return { users: defaultAccounts() };
+}
+// Дозаписать в MANAGERS сотрудников, добавленных РОП-ом (из аккаунтов)
+function syncManagersFromAuth(){
+  (state.auth.users||[]).filter(u=>u.role==='manager').forEach(u=>{
+    if(!MANAGERS.find(m=>m.id===u.mgrId))
+      MANAGERS.push({ id:u.mgrId, name:u.name, short:mkShort(u.name), phone:'', email:u.email });
+  });
+}
+function account(uid){ return (state.auth.users||[]).find(u=>u.uid===uid); }
+function authUser(){ return account(state.auth && state.auth.sessionUid); }
+function role(){ const u=authUser(); return u ? u.role : null; }
+function can(perm){ const r=role(); return r ? !!(ROLE_PERMS[r]||{})[perm] : false; }
+
+// Сессия (отдельно от основной базы; «запомнить меня» → localStorage, иначе sessionStorage)
+const SESSION_KEY='terra-session';
+function loadSessionUid(){ try{ return localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY) || null; }catch(e){ return null; } }
+function saveSessionUid(uid, remember){
+  try{ localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+    (remember?localStorage:sessionStorage).setItem(SESSION_KEY, uid); }catch(e){}
+}
+function clearSessionUid(){ try{ localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+function login(email, pw, remember){
+  const acc = (state.auth.users||[]).find(u=>u.email.toLowerCase()===String(email||'').trim().toLowerCase());
+  if(!acc)          return { ok:false, msg:'Пользователь с таким e-mail не найден' };
+  if(!acc.active)   return { ok:false, msg:'Учётная запись отключена' };
+  if(acc.hash !== hashPassword(pw)) return { ok:false, msg:'Неверный пароль' };
+  state.auth.sessionUid = acc.uid;
+  state.currentUser = acc.uid;
+  saveSessionUid(acc.uid, remember);
+  return { ok:true, acc };
+}
+function logout(){ state.auth.sessionUid=null; clearSessionUid(); }
+
+// Управление учётными записями (РОП)
+function userSetPassword(uid, pw){ const a=account(uid); if(a){ a.hash=hashPassword(pw||DEFAULT_PW); saveState(); } }
+function userSetActive(uid, active){ const a=account(uid); if(a && a.uid!=='rop'){ a.active=!!active; saveState(); } }
+function userAddManager(name, email, pw){
+  const id = 'm'+Date.now().toString(36).slice(-5);
+  MANAGERS.push({ id, name, short:mkShort(name), phone:'', email });
+  state.auth.users.push({ uid:id, name, email, role:'manager', mgrId:id, active:true, hash:hashPassword(pw||DEFAULT_PW) });
+  saveState();
+  return id;
 }

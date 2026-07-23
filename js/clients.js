@@ -14,6 +14,10 @@ function stageColor(stage){
 function filteredClients(){
   const f = state.clientFilters;
   let arr = clients().slice();
+  // Права: менеджер видит только своих клиентов
+  if(typeof can==='function' && !can('allClients') && typeof role==='function' && role()==='manager'){
+    arr = arr.filter(c => c.mgr === currentUserId());
+  }
   if(f.query){
     const q = f.query.toLowerCase();
     arr = arr.filter(c =>
@@ -32,6 +36,11 @@ function filteredClients(){
 // ---------- Список клиентов ----------
 function renderClientList(){
   const list = filteredClients();
+  // Если активный клиент не входит в видимый список — переключаемся на первого
+  if(list.length && !list.some(c=>c.id===state.activeClientId)){
+    state.activeClientId = list[0].id;
+    if(typeof renderClientCard==='function') renderClientCard();
+  }
   document.getElementById('clientCount').textContent = list.length+' из '+clients().length;
   const el = document.getElementById('clientList');
   if(!list.length){

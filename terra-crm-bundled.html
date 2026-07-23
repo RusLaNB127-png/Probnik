@@ -2390,9 +2390,86 @@ body{ padding-left:238px; }
   background:linear-gradient(90deg, rgb(240,232,216), rgb(157,52,19)); }
 .an-heat-note{ margin-left:auto; }
 
+/* ============================================================
+   АВТОРИЗАЦИЯ — экран входа, меню пользователя, учётные записи
+   ============================================================ */
+.auth-screen{ position:fixed; inset:0; z-index:400; display:none;
+  align-items:center; justify-content:center; padding:24px;
+  background:
+    var(--terrazzo),
+    radial-gradient(900px 500px at 80% -5%, rgba(157,52,19,.10), transparent 60%),
+    linear-gradient(160deg,#F6F1E9,#EDE6DA); }
+.auth-screen.show{ display:flex; }
+.auth-card{ width:100%; max-width:400px; background:var(--bg-2);
+  border:1px solid var(--line); border-radius:20px; padding:34px 32px;
+  box-shadow:0 24px 70px rgba(40,26,18,.22); position:relative; overflow:hidden; }
+.auth-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:9px;
+  background:var(--awning); background-size:auto 18px; }
+.auth-brand{ display:flex; align-items:center; gap:12px; margin:6px 0 22px; }
+.auth-mark{ width:44px; height:44px; border-radius:11px; display:grid; place-items:center;
+  background:linear-gradient(150deg,var(--terra),#83290D); }
+.auth-mark .brand-flag{ width:22px; height:14px; border-radius:2px;
+  background:linear-gradient(90deg,#3B6831 0 33.3%,#F2F1EF 33.3% 66.6%,#9D3413 66.6% 100%); }
+.auth-title{ font-family:Georgia,serif; font-size:24px; color:var(--sea-dark); margin:0 0 4px; }
+.auth-lead{ font-size:13px; color:var(--brown-soft); margin:0 0 20px; }
+.auth-form{ display:flex; flex-direction:column; gap:14px; }
+.auth-form label{ display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--brown-soft); font-weight:600; }
+.auth-form input[type=email], .auth-form input[type=password]{ padding:11px 13px; border:1px solid var(--line);
+  border-radius:10px; font-size:14px; background:var(--bg); color:var(--text); }
+.auth-form input:focus{ outline:none; border-color:var(--terra); }
+.auth-remember{ flex-direction:row !important; align-items:center; gap:8px; font-weight:500 !important; cursor:pointer; }
+.auth-remember input{ width:16px; height:16px; }
+.auth-submit{ margin-top:4px; justify-content:center; padding:12px; font-size:15px; }
+.auth-error{ color:var(--terra-dark); font-size:13px; min-height:16px; font-weight:600; }
+.auth-hint{ margin-top:20px; padding-top:16px; border-top:1px dashed var(--line);
+  font-size:11.5px; color:var(--brown-soft); line-height:1.7; }
+.auth-hint code{ background:var(--sand); padding:1px 6px; border-radius:5px; color:var(--terra-dark); font-weight:700; }
+
+/* Меню пользователя */
+.user-menu-head{ display:flex; align-items:center; gap:11px; padding:8px 10px 12px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+.user-menu-head .avatar{ width:38px; height:38px; font-size:13px; }
+.user-menu-head .um-meta b{ display:block; font-size:13.5px; }
+.user-menu-head .um-meta span{ font-size:11.5px; color:var(--brown-soft); }
+.user-menu-item#umLogout{ color:var(--terra-dark); }
+
+/* Учётные записи (РОП) */
+.users-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+.user-row{ display:flex; align-items:center; gap:12px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--bg); }
+.user-row.off{ opacity:.55; }
+.user-row-av{ width:38px; height:38px; border-radius:50%; background:var(--sea); color:#fff; display:grid; place-items:center; font-weight:700; font-size:13px; flex-shrink:0; }
+.user-row-meta{ flex:1; min-width:0; }
+.user-row-meta b{ display:block; font-size:13.5px; }
+.user-row-meta span{ font-size:11.5px; color:var(--brown-soft); }
+.user-row-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.user-row-tag{ font-size:10.5px; color:var(--brown-soft); background:var(--sand); padding:3px 9px; border-radius:20px; }
+.users-add{ border-top:1px dashed var(--line); padding-top:16px; }
+.users-add h4{ font-size:14px; margin-bottom:12px; }
+.users-add-form{ display:flex; gap:10px; flex-wrap:wrap; }
+.users-add-form input{ flex:1 1 150px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; background:var(--bg); }
+
 </style>
 </head>
 <body>
+
+<!-- ======================= ЭКРАН ВХОДА ======================= -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="auth-mark"><span class="brand-flag"></span></span>
+      <div><div class="brand-name">ИТАЛИКА</div><div class="brand-sub">Жилой квартал · CRM</div></div>
+    </div>
+    <h2 class="auth-title">Вход в систему</h2>
+    <p class="auth-lead">Введите e-mail и пароль вашей учётной записи</p>
+    <form id="authForm" class="auth-form" autocomplete="on">
+      <label>E-mail<input type="email" id="authEmail" autocomplete="username" placeholder="you@italika.ru"></label>
+      <label>Пароль<input type="password" id="authPass" autocomplete="current-password" placeholder="Пароль"></label>
+      <label class="auth-remember"><input type="checkbox" id="authRemember" checked> Запомнить меня</label>
+      <div class="auth-error" id="authError"></div>
+      <button type="submit" class="btn btn-primary auth-submit">Войти</button>
+    </form>
+    <div class="auth-hint" id="authHint"></div>
+  </div>
+</div>
 
 <!-- ======================= ШАПКА ======================= -->
 <header class="topbar">
@@ -3232,6 +3309,28 @@ body{ padding-left:238px; }
   </div>
 </div>
 
+<!-- ======================= УЧЁТНЫЕ ЗАПИСИ (РОП) ======================= -->
+<div class="form-modal" id="usersModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3>Учётные записи</h3><div class="form-sub">Сотрудники и доступ · только для руководителя</div></div>
+      <button class="icon-btn" id="usersClose">✕</button>
+    </header>
+    <div class="form-body">
+      <div id="usersList" class="users-list"></div>
+      <div class="users-add">
+        <h4>Добавить сотрудника</h4>
+        <form id="userAddForm" class="users-add-form">
+          <input type="text" id="uaName" placeholder="Имя сотрудника" required>
+          <input type="email" id="uaEmail" placeholder="e-mail" required>
+          <input type="text" id="uaPass" placeholder="Пароль (по умолч. italika)">
+          <button class="btn btn-primary" type="submit">Добавить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ======================= -->
 <div class="kp-overlay" id="kpModal">
   <div class="kp-toolbar">
@@ -3803,6 +3902,7 @@ const state = {
   checklist:       null,             // чек-лист ОП: { tasks:[...] } (в базе)
   currentUser:     'rop',            // активная учётная запись (роль)
   activity:        [],               // живой журнал действий (авто-события)
+  auth:            { users:null, sessionUid:null },  // учётные записи + сессия
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -3820,6 +3920,7 @@ function saveState(){
       checklist:      state.checklist,
       currentUser:    state.currentUser,
       activity:       state.activity,
+      auth:           { users: state.auth.users },
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -3880,6 +3981,7 @@ function loadState(){
     state.checklist      = normalizeChecklist(data.checklist);
     state.currentUser    = data.currentUser || 'rop';
     state.activity       = Array.isArray(data.activity) ? data.activity : [];
+    state.auth           = normalizeAuth(data.auth);
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -3896,6 +3998,7 @@ function resetToDefaults(){
   state.dash           = emptyDash();
   state.checklist      = defaultChecklist();
   state.activity       = [];
+  state.auth           = normalizeAuth(null);
   saveState();
 }
 
@@ -4083,6 +4186,8 @@ function dashLoadDemo(){ state.dash = demoDash(); saveState(); }
 // При старте: загружаем сохранённое или генерируем дефолт
 function initState(){
   if(!loadState()) resetToDefaults();
+  if(!state.auth || !Array.isArray(state.auth.users)) state.auth = normalizeAuth(null);
+  syncManagersFromAuth();               // дозаписать в MANAGERS добавленных сотрудников
   // совместимость со старым кодом
   state.units[state.building] = state.unitsList;
 }
@@ -4699,6 +4804,128 @@ function downloadBlob(blob, filename){
 }
 function sanitizeFilename(name){
   return String(name||'файл').replace(/[\/\\:*?"<>|]/g,' ').replace(/\s+/g,' ').trim() || 'файл';
+}
+
+/* ============================================================
+   АВТОРИЗАЦИЯ (демо-контур: клиентская, не защита от взлома).
+   Пароли — SHA-256 (синхронно, работает и на file://).
+   Структура готова к замене на реальный API.
+   ============================================================ */
+
+// Компактный SHA-256 (Geraint Luff), работает без crypto.subtle
+function sha256(ascii){
+  function rightRotate(v,a){ return (v>>>a)|(v<<(32-a)); }
+  var mathPow=Math.pow, maxWord=mathPow(2,32), i, j, result='';
+  var words=[], asciiBitLength=ascii.length*8;
+  var hash=sha256.h=sha256.h||[], k=sha256.k=sha256.k||[], primeCounter=k.length;
+  var isComposite={};
+  for(var candidate=2; primeCounter<64; candidate++){
+    if(!isComposite[candidate]){
+      for(i=0;i<313;i+=candidate){ isComposite[i]=candidate; }
+      hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;
+      k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0;
+    }
+  }
+  ascii+='\x80';
+  while(ascii.length%64-56) ascii+='\x00';
+  for(i=0;i<ascii.length;i++){
+    j=ascii.charCodeAt(i);
+    if(j>>8) return;
+    words[i>>2]|=j<<((3-i)%4)*8;
+  }
+  words[words.length]=((asciiBitLength/maxWord)|0);
+  words[words.length]=(asciiBitLength);
+  for(j=0;j<words.length;){
+    var w=words.slice(j,j+=16), oldHash=hash;
+    hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15], w2=w[i-2];
+      var a=hash[0], e=hash[4];
+      var temp1=hash[7]
+        +(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))
+        +((e&hash[5])^((~e)&hash[6]))+k[i]
+        +(w[i]=(i<16)?w[i]:(w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))
+          +w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0);
+      var temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))
+        +((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(temp1+temp2)|0].concat(hash);
+      hash[4]=(hash[4]+temp1)|0;
+    }
+    for(i=0;i<8;i++){ hash[i]=(hash[i]+oldHash[i])|0; }
+  }
+  for(i=0;i<8;i++){
+    for(j=3;j+1;j--){
+      var b=(hash[i]>>(j*8))&255;
+      result+=((b<16)?0:'')+b.toString(16);
+    }
+  }
+  return result;
+}
+function hashPassword(pw){
+  const bytes=new TextEncoder().encode('italika-salt::'+pw);
+  let bin=''; for(const b of bytes) bin+=String.fromCharCode(b);
+  return sha256(bin);
+}
+function mkShort(name){ return String(name||'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(); }
+
+const DEFAULT_PW = 'italika';
+const ROLE_PERMS = {
+  rop:     { dashboard:true,  analytics:true, admin:true,  allClients:true,  manageUsers:true  },
+  manager: { dashboard:false, analytics:true, admin:false, allClients:false, manageUsers:false },
+};
+
+function defaultAccounts(){
+  const h = hashPassword(DEFAULT_PW);
+  const list = [{ uid:'rop', name:ROP_USER.name, email:'rop@italika.ru', role:'rop', mgrId:null, active:true, hash:h }];
+  MANAGERS.forEach(m=> list.push({ uid:m.id, name:m.name, email:m.email||(m.id+'@italika.ru'), role:'manager', mgrId:m.id, active:true, hash:h }));
+  return list;
+}
+function normalizeAuth(a){
+  if(a && Array.isArray(a.users) && a.users.length) return { users:a.users };
+  return { users: defaultAccounts() };
+}
+// Дозаписать в MANAGERS сотрудников, добавленных РОП-ом (из аккаунтов)
+function syncManagersFromAuth(){
+  (state.auth.users||[]).filter(u=>u.role==='manager').forEach(u=>{
+    if(!MANAGERS.find(m=>m.id===u.mgrId))
+      MANAGERS.push({ id:u.mgrId, name:u.name, short:mkShort(u.name), phone:'', email:u.email });
+  });
+}
+function account(uid){ return (state.auth.users||[]).find(u=>u.uid===uid); }
+function authUser(){ return account(state.auth && state.auth.sessionUid); }
+function role(){ const u=authUser(); return u ? u.role : null; }
+function can(perm){ const r=role(); return r ? !!(ROLE_PERMS[r]||{})[perm] : false; }
+
+// Сессия (отдельно от основной базы; «запомнить меня» → localStorage, иначе sessionStorage)
+const SESSION_KEY='terra-session';
+function loadSessionUid(){ try{ return localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY) || null; }catch(e){ return null; } }
+function saveSessionUid(uid, remember){
+  try{ localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+    (remember?localStorage:sessionStorage).setItem(SESSION_KEY, uid); }catch(e){}
+}
+function clearSessionUid(){ try{ localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+function login(email, pw, remember){
+  const acc = (state.auth.users||[]).find(u=>u.email.toLowerCase()===String(email||'').trim().toLowerCase());
+  if(!acc)          return { ok:false, msg:'Пользователь с таким e-mail не найден' };
+  if(!acc.active)   return { ok:false, msg:'Учётная запись отключена' };
+  if(acc.hash !== hashPassword(pw)) return { ok:false, msg:'Неверный пароль' };
+  state.auth.sessionUid = acc.uid;
+  state.currentUser = acc.uid;
+  saveSessionUid(acc.uid, remember);
+  return { ok:true, acc };
+}
+function logout(){ state.auth.sessionUid=null; clearSessionUid(); }
+
+// Управление учётными записями (РОП)
+function userSetPassword(uid, pw){ const a=account(uid); if(a){ a.hash=hashPassword(pw||DEFAULT_PW); saveState(); } }
+function userSetActive(uid, active){ const a=account(uid); if(a && a.uid!=='rop'){ a.active=!!active; saveState(); } }
+function userAddManager(name, email, pw){
+  const id = 'm'+Date.now().toString(36).slice(-5);
+  MANAGERS.push({ id, name, short:mkShort(name), phone:'', email });
+  state.auth.users.push({ uid:id, name, email, role:'manager', mgrId:id, active:true, hash:hashPassword(pw||DEFAULT_PW) });
+  saveState();
+  return id;
 }
 
 </script>
@@ -5835,6 +6062,10 @@ function stageColor(stage){
 function filteredClients(){
   const f = state.clientFilters;
   let arr = clients().slice();
+  // Права: менеджер видит только своих клиентов
+  if(typeof can==='function' && !can('allClients') && typeof role==='function' && role()==='manager'){
+    arr = arr.filter(c => c.mgr === currentUserId());
+  }
   if(f.query){
     const q = f.query.toLowerCase();
     arr = arr.filter(c =>
@@ -5853,6 +6084,11 @@ function filteredClients(){
 // ---------- Список клиентов ----------
 function renderClientList(){
   const list = filteredClients();
+  // Если активный клиент не входит в видимый список — переключаемся на первого
+  if(list.length && !list.some(c=>c.id===state.activeClientId)){
+    state.activeClientId = list[0].id;
+    if(typeof renderClientCard==='function') renderClientCard();
+  }
   document.getElementById('clientCount').textContent = list.length+' из '+clients().length;
   const el = document.getElementById('clientList');
   if(!list.length){
@@ -7653,6 +7889,126 @@ function exportAnalyticsExcel(){
 </script>
 <script>
 /* ============================================================
+   АВТОРИЗАЦИЯ — экран входа, применение прав, управление
+   учётными записями (для РОП).
+   ============================================================ */
+
+function showLogin(){ document.getElementById('authScreen').classList.add('show'); }
+function hideLogin(){ document.getElementById('authScreen').classList.remove('show'); }
+
+// Применение прав текущей роли к интерфейсу
+function applyPermissions(){
+  const dashTab = document.querySelector('.tab[data-view="dashboard"]');
+  if(dashTab) dashTab.style.display = can('dashboard') ? '' : 'none';
+  const gear = document.getElementById('adminToggle');
+  if(gear) gear.style.display = can('admin') ? '' : 'none';
+  if(!can('admin') && state.adminMode){ state.adminMode = false; }
+  // Если менеджер стоит на скрытой вкладке — увести на шахматку
+  const active = document.querySelector('.tab.active');
+  if(active && active.dataset.view==='dashboard' && !can('dashboard')){
+    const chess = document.querySelector('.tab[data-view="chess"]'); if(chess) chess.click();
+  }
+}
+
+function initAuth(){
+  // Заполнить подсказку демо-доступов
+  const hint = document.getElementById('authHint');
+  if(hint){
+    hint.innerHTML = `<b>Демо-доступы</b> (пароль у всех: <code>${DEFAULT_PW}</code>)<br>` +
+      (state.auth.users||[]).filter(u=>u.active).map(u=>`${escapeHtml(u.email)} — ${u.role==='rop'?'РОП':'менеджер'}`).join('<br>');
+  }
+  // Восстановить сессию
+  const s = loadSessionUid();
+  const acc = s ? account(s) : null;
+  if(acc && acc.active){
+    state.auth.sessionUid = acc.uid;
+    state.currentUser = acc.uid;
+    hideLogin();
+  } else {
+    clearSessionUid();
+    showLogin();
+  }
+  bindAuthForm();
+  applyPermissions();
+  renderUserSwitch();
+
+  // Управление пользователями
+  document.getElementById('usersClose').onclick = ()=>document.getElementById('usersModal').classList.remove('show');
+  document.getElementById('userAddForm').onsubmit = e=>{
+    e.preventDefault();
+    const name=document.getElementById('uaName').value.trim();
+    const email=document.getElementById('uaEmail').value.trim();
+    const pw=document.getElementById('uaPass').value.trim();
+    if(!name||!email){ toast('Укажите имя и e-mail'); return; }
+    if((state.auth.users||[]).some(u=>u.email.toLowerCase()===email.toLowerCase())){ toast('E-mail уже используется'); return; }
+    userAddManager(name, email, pw);
+    document.getElementById('userAddForm').reset();
+    renderUsersList(); refreshLive();
+    toast('Сотрудник добавлен');
+  };
+}
+
+function bindAuthForm(){
+  const form = document.getElementById('authForm');
+  const err = document.getElementById('authError');
+  form.onsubmit = e=>{
+    e.preventDefault();
+    err.textContent='';
+    const res = login(
+      document.getElementById('authEmail').value,
+      document.getElementById('authPass').value,
+      document.getElementById('authRemember').checked
+    );
+    if(!res.ok){ err.textContent = res.msg; return; }
+    document.getElementById('authPass').value='';
+    hideLogin();
+    applyPermissions();
+    renderUserSwitch();
+    // Полный перерисов под новую роль
+    renderChess(); renderClientList(); renderClientCard();
+    renderDashboard(); renderChecklist(); renderAnalytics(); renderNotifs();
+    toast('Добро пожаловать, '+res.acc.name);
+  };
+}
+
+function doLogout(){
+  logout();
+  const menu=document.getElementById('userMenu'); if(menu) menu.classList.remove('show');
+  document.getElementById('authEmail').value='';
+  document.getElementById('authPass').value='';
+  document.getElementById('authError').textContent='';
+  showLogin();
+}
+
+function openUsersModal(){
+  renderUsersList();
+  document.getElementById('usersModal').classList.add('show');
+  const menu=document.getElementById('userMenu'); if(menu) menu.classList.remove('show');
+}
+function renderUsersList(){
+  const host=document.getElementById('usersList');
+  host.innerHTML = (state.auth.users||[]).map(u=>`
+    <div class="user-row ${u.active?'':'off'}">
+      <div class="user-row-av">${mkShort(u.name)}</div>
+      <div class="user-row-meta"><b>${escapeHtml(u.name)}</b><span>${escapeHtml(u.email)} · ${u.role==='rop'?'Руководитель':'Менеджер'}</span></div>
+      <div class="user-row-actions">
+        <button class="btn btn-sm" data-reset="${u.uid}">Сбросить пароль</button>
+        ${u.uid==='rop' ? '<span class="user-row-tag">основной</span>'
+          : `<button class="btn btn-sm" data-toggle="${u.uid}" style="${u.active?'color:var(--terra-dark);border-color:var(--terra-dark);':''}">${u.active?'Отключить':'Включить'}</button>`}
+      </div>
+    </div>`).join('');
+  host.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{
+    const pw = prompt('Новый пароль для сотрудника:');
+    if(pw && pw.trim()){ userSetPassword(b.dataset.reset, pw.trim()); toast('Пароль обновлён'); }
+  });
+  host.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{
+    const a=account(b.dataset.toggle); userSetActive(a.uid, !a.active); renderUsersList(); refreshLive();
+  });
+}
+
+</script>
+<script>
+/* ============================================================
    КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ПО КВАРТИРЕ (многостраничный буклет)
    Формируется из карточки помещения, печатается / сохраняется в PDF.
    Блоки: обложка · характеристики+планировка · финансы (ипотека,
@@ -8387,32 +8743,31 @@ function init(){
   initTaskModal();
   initUserSwitch();
   initKP();
+  initAuth();
   renderCalLauncher();
 }
 init();
 
-/* ---------- Учётная запись: переключатель роли ---------- */
+/* ---------- Учётная запись: профиль + выход ---------- */
 function renderUserSwitch(){
-  const u = currentUser();
-  document.getElementById('userAvatar').textContent = u.short;
-  document.getElementById('userName').textContent = u.name;
-  document.getElementById('userRole').textContent = u.role;
+  const acc = (typeof authUser==='function' && authUser()) || { name:'—', email:'', role:null };
+  const short = mkShort(acc.name);
+  const isRopRole = acc.role==='rop';
+  document.getElementById('userAvatar').textContent = short;
+  document.getElementById('userName').textContent = acc.name;
+  document.getElementById('userRole').textContent = isRopRole ? 'Руководитель ОП' : 'Менеджер ОП';
   const menu = document.getElementById('userMenu');
-  menu.innerHTML = USERS.map(x=>`
-    <button class="user-menu-item ${x.id===currentUserId()?'active':''}" data-user="${x.id}">
-      <span class="avatar">${x.short}</span>
-      <span class="um-meta"><b>${x.name}</b><span>${x.role}</span></span>
-      ${x.id===currentUserId()?'<span class="um-check">'+icon('check',15)+'</span>':''}
-    </button>`).join('');
-  menu.querySelectorAll('[data-user]').forEach(b=>b.onclick=()=>{
-    setCurrentUser(b.dataset.user);
-    menu.classList.remove('show');
-    renderUserSwitch(); renderChecklist(); renderDashboard(); renderNotifs();
-    toast('Вы вошли как '+currentUser().name);
-  });
+  menu.innerHTML = `
+    <div class="user-menu-head">
+      <span class="avatar">${short}</span>
+      <div class="um-meta"><b>${escapeHtml(acc.name)}</b><span>${escapeHtml(acc.email||'')}</span></div>
+    </div>
+    ${isRopRole ? `<button class="user-menu-item" id="umUsers">${icon('users',16)} Учётные записи</button>` : ''}
+    <button class="user-menu-item" id="umLogout">${icon('arrowRight',16)} Выйти</button>`;
+  const uu = document.getElementById('umUsers'); if(uu) uu.onclick = openUsersModal;
+  const lo = document.getElementById('umLogout'); if(lo) lo.onclick = doLogout;
 }
 function initUserSwitch(){
-  renderUserSwitch();
   const btn = document.getElementById('userBtn');
   const menu = document.getElementById('userMenu');
   btn.onclick = (e)=>{ e.stopPropagation(); menu.classList.toggle('show'); };

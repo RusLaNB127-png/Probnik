@@ -11,6 +11,26 @@
 </head>
 <body>
 
+<!-- ======================= ЭКРАН ВХОДА ======================= -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="auth-mark"><span class="brand-flag"></span></span>
+      <div><div class="brand-name">ИТАЛИКА</div><div class="brand-sub">Жилой квартал · CRM</div></div>
+    </div>
+    <h2 class="auth-title">Вход в систему</h2>
+    <p class="auth-lead">Введите e-mail и пароль вашей учётной записи</p>
+    <form id="authForm" class="auth-form" autocomplete="on">
+      <label>E-mail<input type="email" id="authEmail" autocomplete="username" placeholder="you@italika.ru"></label>
+      <label>Пароль<input type="password" id="authPass" autocomplete="current-password" placeholder="Пароль"></label>
+      <label class="auth-remember"><input type="checkbox" id="authRemember" checked> Запомнить меня</label>
+      <div class="auth-error" id="authError"></div>
+      <button type="submit" class="btn btn-primary auth-submit">Войти</button>
+    </form>
+    <div class="auth-hint" id="authHint"></div>
+  </div>
+</div>
+
 <!-- ======================= ШАПКА ======================= -->
 <header class="topbar">
   <div class="search-wrap">
@@ -849,6 +869,28 @@
   </div>
 </div>
 
+<!-- ======================= УЧЁТНЫЕ ЗАПИСИ (РОП) ======================= -->
+<div class="form-modal" id="usersModal">
+  <div class="form-shell">
+    <header class="form-head">
+      <div><h3>Учётные записи</h3><div class="form-sub">Сотрудники и доступ · только для руководителя</div></div>
+      <button class="icon-btn" id="usersClose">✕</button>
+    </header>
+    <div class="form-body">
+      <div id="usersList" class="users-list"></div>
+      <div class="users-add">
+        <h4>Добавить сотрудника</h4>
+        <form id="userAddForm" class="users-add-form">
+          <input type="text" id="uaName" placeholder="Имя сотрудника" required>
+          <input type="email" id="uaEmail" placeholder="e-mail" required>
+          <input type="text" id="uaPass" placeholder="Пароль (по умолч. italika)">
+          <button class="btn btn-primary" type="submit">Добавить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ======================= -->
 <div class="kp-overlay" id="kpModal">
   <div class="kp-toolbar">
@@ -879,6 +921,7 @@
 <script src="js/dashboard.js"></script>
 <script src="js/checklist.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/kp.js"></script>
 <script src="js/calendar.js"></script>
 <script src="js/app.js"></script>

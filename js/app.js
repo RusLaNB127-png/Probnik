@@ -181,32 +181,31 @@ function init(){
   initTaskModal();
   initUserSwitch();
   initKP();
+  initAuth();
   renderCalLauncher();
 }
 init();
 
-/* ---------- Учётная запись: переключатель роли ---------- */
+/* ---------- Учётная запись: профиль + выход ---------- */
 function renderUserSwitch(){
-  const u = currentUser();
-  document.getElementById('userAvatar').textContent = u.short;
-  document.getElementById('userName').textContent = u.name;
-  document.getElementById('userRole').textContent = u.role;
+  const acc = (typeof authUser==='function' && authUser()) || { name:'—', email:'', role:null };
+  const short = mkShort(acc.name);
+  const isRopRole = acc.role==='rop';
+  document.getElementById('userAvatar').textContent = short;
+  document.getElementById('userName').textContent = acc.name;
+  document.getElementById('userRole').textContent = isRopRole ? 'Руководитель ОП' : 'Менеджер ОП';
   const menu = document.getElementById('userMenu');
-  menu.innerHTML = USERS.map(x=>`
-    <button class="user-menu-item ${x.id===currentUserId()?'active':''}" data-user="${x.id}">
-      <span class="avatar">${x.short}</span>
-      <span class="um-meta"><b>${x.name}</b><span>${x.role}</span></span>
-      ${x.id===currentUserId()?'<span class="um-check">'+icon('check',15)+'</span>':''}
-    </button>`).join('');
-  menu.querySelectorAll('[data-user]').forEach(b=>b.onclick=()=>{
-    setCurrentUser(b.dataset.user);
-    menu.classList.remove('show');
-    renderUserSwitch(); renderChecklist(); renderDashboard(); renderNotifs();
-    toast('Вы вошли как '+currentUser().name);
-  });
+  menu.innerHTML = `
+    <div class="user-menu-head">
+      <span class="avatar">${short}</span>
+      <div class="um-meta"><b>${escapeHtml(acc.name)}</b><span>${escapeHtml(acc.email||'')}</span></div>
+    </div>
+    ${isRopRole ? `<button class="user-menu-item" id="umUsers">${icon('users',16)} Учётные записи</button>` : ''}
+    <button class="user-menu-item" id="umLogout">${icon('arrowRight',16)} Выйти</button>`;
+  const uu = document.getElementById('umUsers'); if(uu) uu.onclick = openUsersModal;
+  const lo = document.getElementById('umLogout'); if(lo) lo.onclick = doLogout;
 }
 function initUserSwitch(){
-  renderUserSwitch();
   const btn = document.getElementById('userBtn');
   const menu = document.getElementById('userMenu');
   btn.onclick = (e)=>{ e.stopPropagation(); menu.classList.toggle('show'); };
