@@ -56,6 +56,7 @@ function renderNotifs(){
 function refreshLive(){
   if(typeof renderDashboard === 'function') renderDashboard();
   if(typeof renderChecklist === 'function') renderChecklist();
+  if(typeof renderAnalytics === 'function') renderAnalytics();
   renderNotifs();
 }
 document.getElementById('notifBtn').onclick = (e)=>{
@@ -171,6 +172,7 @@ function init(){
   renderFunnel();
   renderDashboard();
   renderChecklist();
+  renderAnalytics();
   renderNotifs();
   initCalendar();
   initUnitForm();

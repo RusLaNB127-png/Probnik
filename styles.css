@@ -2291,3 +2291,58 @@ body{ padding-left:238px; }
   .kp-page:last-child{ page-break-after:auto; break-after:auto; }
   @page{ size:A4; margin:0; }
 }
+
+/* ============================================================
+   ВКЛАДКА «АНАЛИТИКА»
+   ============================================================ */
+#view-analytics .view-head{ align-items:center; }
+.an-filters{ margin-bottom:18px; align-items:end; }
+.an-filters .field{ min-width:150px; }
+.an-filters #anReset{ align-self:end; margin-bottom:2px; }
+.an-grid{ margin-top:4px; }
+.an-grid .card{ display:flex; flex-direction:column; }
+.an-grid .card h3{ font-size:15px; }
+.an-grid .card-sub{ margin-bottom:14px; }
+
+/* Донат статусов */
+.an-donut-wrap{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.an-donut{ position:relative; flex-shrink:0; }
+.an-donut-c{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.an-donut-c b{ font-family:Georgia,serif; font-size:26px; color:var(--brown); line-height:1; }
+.an-donut-c span{ font-size:11px; color:var(--brown-soft); }
+.an-legend{ display:flex; flex-direction:column; gap:6px; font-size:12.5px; }
+.an-leg{ display:flex; align-items:center; gap:8px; color:var(--brown); }
+.an-leg span{ width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+.an-leg b{ margin-left:auto; }
+
+/* Горизонтальные бары */
+.an-bars{ display:flex; flex-direction:column; gap:12px; }
+.an-bar-top{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px; }
+.an-bar-top b{ color:var(--brown-dark); }
+.an-bar-track{ height:9px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.an-bar-fill{ height:100%; border-radius:5px; transition:width .4s; }
+
+/* Воронка */
+.an-funnel{ display:flex; flex-direction:column; gap:7px; }
+.an-funnel-row{ display:flex; align-items:center; gap:10px; }
+.an-funnel-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:linear-gradient(90deg,var(--terra),var(--terra-dark)); color:#fff;
+  padding:8px 13px; border-radius:8px; font-size:12.5px; min-width:0; transition:width .4s; }
+.an-funnel-bar span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.an-funnel-bar b{ flex-shrink:0; }
+.an-funnel-conv{ font-size:11.5px; color:var(--brown-soft); width:38px; flex-shrink:0; }
+
+/* Линейный график */
+.an-line{ display:block; margin-top:4px; }
+.an-empty{ padding:22px; text-align:center; color:var(--brown-soft); font-size:13px; }
+
+/* Лидерборд */
+.an-lead-tbl th, .an-lead-tbl td{ text-align:center; white-space:nowrap; }
+.an-lead-tbl th:nth-child(2), .an-lead-tbl td:nth-child(2){ text-align:left; }
+.an-mini-track{ height:8px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.an-mini-fill{ height:100%; background:linear-gradient(90deg,var(--terra),var(--terra-dark)); border-radius:5px; }
+
+/* Выбор квартиры */
+.an-unit-pick{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.an-unit-pick label{ font-size:12px; color:var(--brown-soft); }
+.an-unit-pick select{ max-width:340px; }

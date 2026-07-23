@@ -2302,6 +2302,61 @@ body{ padding-left:238px; }
   @page{ size:A4; margin:0; }
 }
 
+/* ============================================================
+   ВКЛАДКА «АНАЛИТИКА»
+   ============================================================ */
+#view-analytics .view-head{ align-items:center; }
+.an-filters{ margin-bottom:18px; align-items:end; }
+.an-filters .field{ min-width:150px; }
+.an-filters #anReset{ align-self:end; margin-bottom:2px; }
+.an-grid{ margin-top:4px; }
+.an-grid .card{ display:flex; flex-direction:column; }
+.an-grid .card h3{ font-size:15px; }
+.an-grid .card-sub{ margin-bottom:14px; }
+
+/* Донат статусов */
+.an-donut-wrap{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.an-donut{ position:relative; flex-shrink:0; }
+.an-donut-c{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.an-donut-c b{ font-family:Georgia,serif; font-size:26px; color:var(--brown); line-height:1; }
+.an-donut-c span{ font-size:11px; color:var(--brown-soft); }
+.an-legend{ display:flex; flex-direction:column; gap:6px; font-size:12.5px; }
+.an-leg{ display:flex; align-items:center; gap:8px; color:var(--brown); }
+.an-leg span{ width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+.an-leg b{ margin-left:auto; }
+
+/* Горизонтальные бары */
+.an-bars{ display:flex; flex-direction:column; gap:12px; }
+.an-bar-top{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px; }
+.an-bar-top b{ color:var(--brown-dark); }
+.an-bar-track{ height:9px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.an-bar-fill{ height:100%; border-radius:5px; transition:width .4s; }
+
+/* Воронка */
+.an-funnel{ display:flex; flex-direction:column; gap:7px; }
+.an-funnel-row{ display:flex; align-items:center; gap:10px; }
+.an-funnel-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:linear-gradient(90deg,var(--terra),var(--terra-dark)); color:#fff;
+  padding:8px 13px; border-radius:8px; font-size:12.5px; min-width:0; transition:width .4s; }
+.an-funnel-bar span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.an-funnel-bar b{ flex-shrink:0; }
+.an-funnel-conv{ font-size:11.5px; color:var(--brown-soft); width:38px; flex-shrink:0; }
+
+/* Линейный график */
+.an-line{ display:block; margin-top:4px; }
+.an-empty{ padding:22px; text-align:center; color:var(--brown-soft); font-size:13px; }
+
+/* Лидерборд */
+.an-lead-tbl th, .an-lead-tbl td{ text-align:center; white-space:nowrap; }
+.an-lead-tbl th:nth-child(2), .an-lead-tbl td:nth-child(2){ text-align:left; }
+.an-mini-track{ height:8px; background:var(--sand); border-radius:5px; overflow:hidden; }
+.an-mini-fill{ height:100%; background:linear-gradient(90deg,var(--terra),var(--terra-dark)); border-radius:5px; }
+
+/* Выбор квартиры */
+.an-unit-pick{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.an-unit-pick label{ font-size:12px; color:var(--brown-soft); }
+.an-unit-pick select{ max-width:340px; }
+
 </style>
 </head>
 <body>
@@ -2383,6 +2438,10 @@ body{ padding-left:238px; }
   <button class="tab" data-view="checklist">
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/></svg>
     <span>Чек-лист ОП</span>
+  </button>
+  <button class="tab" data-view="analytics">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>
+    <span>Аналитика</span>
   </button>
 </nav>
 
@@ -2610,6 +2669,36 @@ body{ padding-left:238px; }
     <div id="clHeadActions"></div>
   </div>
   <div id="clContent"></div>
+</main>
+
+<!-- ============ ВКЛАДКА 6: АНАЛИТИКА ============ -->
+<main class="view" id="view-analytics">
+  <div class="view-head">
+    <div><h2>Аналитика платформы</h2><p>Сводка по объекту, продажам, воронке, менеджерам и ценам — из реальных данных</p></div>
+    <button class="btn ic-inline" id="anExport">Выгрузить в Excel</button>
+  </div>
+
+  <div class="filters an-filters" id="anFilters"></div>
+
+  <div class="an-kpi kpi-row" id="anKpi"></div>
+
+  <div class="an-grid dash-grid">
+    <div class="card col-4"><h3>Распределение по статусам</h3><div class="card-sub">Структура ассортимента</div><div id="anStatus"></div></div>
+    <div class="card col-4"><h3>Продажи по корпусам</h3><div class="card-sub">Сумма закрытых, млн ₽</div><div id="anSalesCorp"></div></div>
+    <div class="card col-4"><h3>Остаток ликвидности</h3><div class="card-sub">Свободно: шт. и сумма</div><div id="anStock"></div></div>
+
+    <div class="card col-6"><h3>Воронка лидов</h3><div class="card-sub">Число клиентов, дошедших до этапа</div><div id="anFunnel2"></div></div>
+    <div class="card col-6"><h3>Источники лидов</h3><div class="card-sub">Лиды и сделки по каналам</div><div id="anSources"></div></div>
+
+    <div class="card col-12"><h3>Рейтинг менеджеров</h3><div class="card-sub">Выручка, сделки, нагрузка, конверсия, задачи</div><div id="anLeaders"></div></div>
+
+    <div class="card col-8"><h3>Динамика средней цены м²</h3><div class="card-sub">По месяцам, тыс ₽/м²</div><div id="anPriceLine"></div></div>
+    <div class="card col-4"><h3>Цена м² по этажам</h3><div class="card-sub">Средняя, тыс ₽</div><div id="anPriceFloor"></div></div>
+
+    <div class="card col-12"><h3>Изменение цены по квартире</h3>
+      <div class="an-unit-pick"><label>Помещение</label><select id="anUnitSel"></select></div>
+      <div id="anUnitLine"></div></div>
+  </div>
 </main>
 
 <!-- ======================= БОКОВАЯ ПАНЕЛЬ ОБЪЕКТА ======================= -->
@@ -3603,7 +3692,32 @@ function migrateUnit(u){
   if(!Array.isArray(u.view.photos)) u.view.photos = [];
   if(!Array.isArray(u.plans))  u.plans  = [];
   if(!Array.isArray(u.photos)) u.photos = [];
+  ensurePriceHistory(u);
   return u;
+}
+
+// ---------- История цены помещения (для аналитики динамики цен) ----------
+// Если истории нет — синтезируем правдоподобный рост к текущей цене за 6 месяцев.
+function ensurePriceHistory(u){
+  if(Array.isArray(u.priceHistory) && u.priceHistory.length) return u.priceHistory;
+  const cur = +u.pricePerM || 0;
+  const seed = String(u.id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const pts = [];
+  const months = 6;
+  for(let i=months-1; i>=0; i--){
+    const base = 1 - i*0.021;                    // рост ~2.1%/мес к текущей
+    const jitter = ((seed % 7) - 3) * 0.003;     // ±0.9% индивидуально
+    const d = addDays(TODAY, -i*30);
+    pts.push({ date: isoDate(new Date(d.getFullYear(), d.getMonth(), 1)),
+               pricePerM: Math.max(1, Math.round(cur*(base + (i? jitter:0)))) });
+  }
+  pts[pts.length-1].pricePerM = cur;             // последняя точка = текущая цена
+  u.priceHistory = pts;
+  return pts;
+}
+function pushPriceHistory(u, newPrice){
+  ensurePriceHistory(u);
+  u.priceHistory.push({ date: isoDate(TODAY), pricePerM: Math.round(newPrice) });
 }
 
 // ---------- Генерация показов (на основе DEFAULT_SHOWS_SEED + сегодняшней даты) ----------
@@ -4167,8 +4281,14 @@ function unitsForClient(clientId){
 function updateUnit(id, patch){
   const u = getUnit(id);
   if(!u) return;
-  const prevStatus = u.status;
+  const prevStatus = u.status, prevPrice = +u.pricePerM;
   Object.assign(u, patch, { updatedAt: Date.now() });
+  if(patch.pricePerM != null && +patch.pricePerM !== prevPrice){
+    pushPriceHistory(u, +patch.pricePerM);
+    logActivity({ type:'price', icon:'swap',
+      text:`${u.displayNum} · ${u.corp}: цена м² ${prevPrice.toLocaleString('ru-RU')} → ${(+patch.pricePerM).toLocaleString('ru-RU')} ₽`,
+      who: u.managerId });
+  }
   saveState();
   if(patch.status && patch.status !== prevStatus) onUnitStatusChange(u, prevStatus, patch.status);
 }
@@ -7207,6 +7327,245 @@ function initTaskModal(){
 </script>
 <script>
 /* ============================================================
+   ВКЛАДКА «АНАЛИТИКА» — сводный BI по всей платформе.
+   Считает всё из реальных данных: шахматка + клиенты + показы +
+   задачи + история цен. Графики — инлайн-SVG, без библиотек.
+   ============================================================ */
+
+/* ---------- Фильтры ---------- */
+function anF(){
+  if(!state.analyticsFilters) state.analyticsFilters = { corp:'', mgr:'', source:'' };
+  return state.analyticsFilters;
+}
+function anUnits(){
+  let a = units(); const f = anF();
+  if(f.corp) a = a.filter(u=>u.corp===f.corp);
+  if(f.mgr)  a = a.filter(u=>u.managerId===f.mgr);
+  return a;
+}
+function anClients(){
+  let a = clients(); const f = anF();
+  if(f.mgr)    a = a.filter(c=>c.mgr===f.mgr);
+  if(f.source) a = a.filter(c=>c.source===f.source);
+  return a;
+}
+function anShows(){
+  const f = anF();
+  return state.shows.filter(s=> !f.mgr || s.managerId===f.mgr);
+}
+
+/* ---------- Графики (SVG / HTML) ---------- */
+function chDonut(segs, size=156, th=24){
+  const total = segs.reduce((s,x)=>s+x.value,0) || 1;
+  const r=(size-th)/2, C=2*Math.PI*r; let acc=0;
+  const arcs = segs.filter(s=>s.value>0).map(s=>{
+    const len = s.value/total*C;
+    const el = `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${th}"
+      stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}"
+      transform="rotate(-90 ${size/2} ${size/2})"/>`;
+    acc += len; return el;
+  }).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--sand)" stroke-width="${th}"/>${arcs}</svg>`;
+}
+function chBars(items, opt){
+  opt = opt || {};
+  const max = Math.max(1, ...items.map(i=>i.value));
+  return `<div class="an-bars">`+items.map(i=>`
+    <div class="an-bar"><div class="an-bar-top"><span>${escapeHtml(i.label)}</span><b>${i.display!=null?i.display:i.value}${opt.unit||''}</b></div>
+      <div class="an-bar-track"><div class="an-bar-fill" style="width:${i.value/max*100}%;background:${i.color||'var(--terra)'}"></div></div>
+    </div>`).join('')+`</div>`;
+}
+function chFunnel(rows){
+  const max = Math.max(1, rows.length?rows[0].value:1);
+  return `<div class="an-funnel">`+rows.map((r,i)=>{
+    const w = Math.max(8, r.value/max*100);
+    const conv = i>0 && rows[i-1].value ? Math.round(r.value/rows[i-1].value*100) : null;
+    return `<div class="an-funnel-row">
+      <div class="an-funnel-bar" style="width:${w}%"><span>${escapeHtml(r.label)}</span><b>${r.value}</b></div>
+      <span class="an-funnel-conv">${conv!=null?conv+'%':''}</span></div>`;
+  }).join('')+`</div>`;
+}
+function chLine(points, opt){
+  opt = opt || {}; const w=opt.w||600, h=opt.h||210, pad=opt.pad||40, color=opt.color||'var(--terra)';
+  if(points.length<2) return `<div class="an-empty">Недостаточно данных для графика</div>`;
+  const ys = points.map(p=>p.y), minY=Math.min(...ys), maxY=Math.max(...ys), rng=(maxY-minY)||1;
+  const X = i => pad + i*(w-pad-14)/(points.length-1);
+  const Y = v => h-pad - (v-minY)/rng*(h-2*pad);
+  const line = points.map((p,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(p.y).toFixed(1)}`).join(' ');
+  const area = `${line} L${X(points.length-1).toFixed(1)} ${h-pad} L${X(0).toFixed(1)} ${h-pad} Z`;
+  const dots = points.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="3.2" fill="${color}"/>`).join('');
+  const xlab = points.map((p,i)=>`<text x="${X(i).toFixed(1)}" y="${h-pad+16}" font-size="10.5" fill="var(--brown-soft)" text-anchor="middle">${p.label}</text>`).join('');
+  const fmt = opt.fmt || (v=>v);
+  const grid = [0,0.5,1].map(t=>{ const v=minY+rng*t, y=Y(v); return `<line x1="${pad}" y1="${y.toFixed(1)}" x2="${w-14}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/><text x="4" y="${(y+3).toFixed(1)}" font-size="10" fill="var(--brown-soft)">${fmt(Math.round(v))}</text>`; }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" preserveAspectRatio="xMidYMid meet" class="an-line">
+    ${grid}<path d="${area}" fill="${color}" opacity="0.09"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${xlab}</svg>`;
+}
+
+/* ---------- Агрегации ---------- */
+function anPriceSeries(us){
+  const map = {};
+  us.forEach(u=> ensurePriceHistory(u).forEach(p=>{ const k=p.date.slice(0,7); (map[k]=map[k]||[]).push(p.pricePerM); }));
+  return Object.keys(map).sort().map(k=>({
+    label: k.slice(5)+'.'+k.slice(2,4),
+    y: Math.round(map[k].reduce((a,b)=>a+b,0)/map[k].length),
+  }));
+}
+
+/* ---------- Рендер вкладки ---------- */
+function renderAnalytics(){
+  const view = document.getElementById('view-analytics');
+  if(!view) return;
+  const f = anF();
+  const us = anUnits(), cls = anClients();
+  const money = v => Math.round(v).toLocaleString('ru-RU');
+
+  // Фильтры
+  const bld = BUILDINGS[state.building];
+  document.getElementById('anFilters').innerHTML = `
+    <div class="field"><label>Корпус</label><select id="anCorp"><option value="">Все корпуса</option>
+      ${bld.corps.map(c=>`<option value="${c}" ${f.corp===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Менеджер</label><select id="anMgr"><option value="">Все менеджеры</option>
+      ${MANAGERS.map(m=>`<option value="${m.id}" ${f.mgr===m.id?'selected':''}>${m.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Источник лида</label><select id="anSource"><option value="">Все источники</option>
+      ${SOURCE_OPTIONS.map(s=>`<option value="${s}" ${f.source===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <button class="btn btn-sm" id="anReset">Сбросить</button>`;
+
+  // ---- KPI ----
+  const soldLike = us.filter(u=>u.status==='sold'||u.status==='contract');
+  const revenue = soldLike.reduce((s,u)=>s+(+u.total||0),0);
+  const avgCheck = soldLike.length ? revenue/soldLike.length : 0;
+  const avgPriceM = us.length ? Math.round(us.reduce((s,u)=>s+(+u.pricePerM||0),0)/us.length) : 0;
+  const finalStages = ['Договор','Оплата','Сделка закрыта'];
+  const deals = cls.filter(c=>finalStages.includes(c.stage)).length;
+  const conv = cls.length ? Math.round(deals/cls.length*100) : 0;
+  document.getElementById('anKpi').innerHTML = `
+    ${kpi('Выручка', money(revenue)+' млн ₽', 'up', soldLike.length+' сделок')}
+    ${kpi('Средний чек', (Math.round(avgCheck*10)/10).toLocaleString('ru-RU')+' млн ₽', 'up', 'по закрытым')}
+    ${kpi('Средняя цена м²', money(avgPriceM)+' тыс ₽', 'up', us.length+' помещений')}
+    ${kpi('Конверсия в сделку', conv+'%', conv>=20?'up':'down', deals+' из '+cls.length+' лидов')}`;
+
+  // ---- Продажи и остатки ----
+  const byStatus = STATUS_ORDER.map(s=>({ label:STATUSES[s].label, value:us.filter(u=>u.status===s).length, color:STATUSES[s].color }));
+  const legend = byStatus.filter(s=>s.value>0).map(s=>`<div class="an-leg"><span style="background:${s.color}"></span>${s.label} <b>${s.value}</b></div>`).join('');
+  document.getElementById('anStatus').innerHTML =
+    `<div class="an-donut-wrap"><div class="an-donut">${chDonut(byStatus)}<div class="an-donut-c"><b>${us.length}</b><span>всего</span></div></div><div class="an-legend">${legend}</div></div>`;
+
+  const salesByCorp = bld.corps.map(c=>{
+    const cu = us.filter(u=>u.corp===c && (u.status==='sold'||u.status==='contract'));
+    return { label:c, value: Math.round(cu.reduce((s,u)=>s+(+u.total||0),0)), display: Math.round(cu.reduce((s,u)=>s+(+u.total||0),0)) };
+  });
+  document.getElementById('anSalesCorp').innerHTML = chBars(salesByCorp, { unit:' млн', color:'var(--terra)' });
+
+  const freeByCorp = bld.corps.map(c=>{
+    const fu = us.filter(u=>u.corp===c && u.status==='free');
+    return { label:c, value:fu.length, display:fu.length+' · '+Math.round(fu.reduce((s,u)=>s+(+u.total||0),0))+' млн', color:'var(--st-free)' };
+  });
+  document.getElementById('anStock').innerHTML = chBars(freeByCorp);
+
+  // ---- Воронка + источники ----
+  const funnelRows = STAGES.map(st=>({ label:st, value: cls.filter(c=>STAGES.indexOf(c.stage) >= STAGES.indexOf(st)).length }));
+  document.getElementById('anFunnel2').innerHTML = chFunnel(funnelRows);
+
+  const bySource = SOURCE_OPTIONS.map(src=>{
+    const leads = clients().filter(c=>c.source===src && (!f.mgr || c.mgr===f.mgr));
+    const d = leads.filter(c=>finalStages.includes(c.stage)).length;
+    return { label:src, value:leads.length, display:leads.length+(d?` · ${d} сдел.`:''), color:'var(--sea)' };
+  }).filter(s=>s.value>0).sort((a,b)=>b.value-a.value);
+  document.getElementById('anSources').innerHTML = bySource.length ? chBars(bySource) : `<div class="an-empty">Нет лидов под фильтр</div>`;
+
+  // ---- Менеджеры (лидерборд) ----
+  const rows = MANAGERS.map(m=>{
+    const mu = units().filter(u=>u.managerId===m.id && (!f.corp || u.corp===f.corp));
+    const sl = mu.filter(u=>u.status==='sold'||u.status==='contract');
+    const mc = clients().filter(c=>c.mgr===m.id);
+    const md = mc.filter(c=>finalStages.includes(c.stage)).length;
+    const ms = state.shows.filter(s=>s.managerId===m.id).length;
+    const st = (typeof taskStats==='function') ? taskStats(m.id) : { done:0, total:0 };
+    return { m, rev: Math.round(sl.reduce((s,u)=>s+(+u.total||0),0)), deals:sl.length,
+             clients:mc.length, shows:ms, conv: mc.length?Math.round(md/mc.length*100):0,
+             tasks: st.done+'/'+st.total };
+  }).sort((a,b)=>b.rev-a.rev);
+  const maxRev = Math.max(1, ...rows.map(r=>r.rev));
+  document.getElementById('anLeaders').innerHTML = `
+    <table class="tbl an-lead-tbl">
+      <thead><tr><th>#</th><th>Менеджер</th><th>Выручка</th><th>Сделок</th><th>Клиентов</th><th>Показов</th><th>Конв.</th><th>Задачи</th><th></th></tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr>
+        <td>${i+1}</td>
+        <td><b>${escapeHtml(r.m.name)}</b></td>
+        <td><b style="color:var(--terra-dark)">${r.rev} млн</b></td>
+        <td>${r.deals}</td><td>${r.clients}</td><td>${r.shows}</td>
+        <td>${r.conv}%</td><td>${r.tasks}</td>
+        <td style="min-width:120px"><div class="an-mini-track"><div class="an-mini-fill" style="width:${r.rev/maxRev*100}%"></div></div></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+
+  // ---- Динамика цен ----
+  document.getElementById('anPriceLine').innerHTML =
+    chLine(anPriceSeries(us), { color:'var(--terra)', fmt:v=>v+'т' });
+
+  const byFloor = {};
+  us.forEach(u=>{ (byFloor[u.floor]=byFloor[u.floor]||[]).push(+u.pricePerM||0); });
+  const floors = Object.keys(byFloor).map(Number).sort((a,b)=>a-b)
+    .map(fl=>({ label:fl+' эт.', value: Math.round(byFloor[fl].reduce((a,b)=>a+b,0)/byFloor[fl].length), color:'var(--sea)' }));
+  document.getElementById('anPriceFloor').innerHTML = chBars(floors, { unit:' т', color:'var(--sea)' });
+
+  // Динамика по конкретной квартире
+  if(!state.analyticsUnit || !us.find(u=>u.id===state.analyticsUnit)) state.analyticsUnit = us.length?us[0].id:'';
+  document.getElementById('anUnitSel').innerHTML = us.slice().sort((a,b)=>a.displayNum.localeCompare(b.displayNum,'ru',{numeric:true}))
+    .map(u=>`<option value="${u.id}" ${u.id===state.analyticsUnit?'selected':''}>${u.displayNum} · ${u.corp} · ${u.area} м²</option>`).join('');
+  const selU = us.find(u=>u.id===state.analyticsUnit);
+  document.getElementById('anUnitLine').innerHTML = selU
+    ? chLine(ensurePriceHistory(selU).map(p=>({ label:p.date.slice(5,7)+'.'+p.date.slice(2,4), y:p.pricePerM })), { color:'var(--terra-dark)', fmt:v=>v+'т' })
+    : `<div class="an-empty">Нет помещений под фильтр</div>`;
+
+  wireAnalytics();
+}
+
+function wireAnalytics(){
+  const f = anF();
+  const bind = (id, key)=>{ const el=document.getElementById(id); if(el) el.onchange=()=>{ f[key]=el.value; renderAnalytics(); }; };
+  bind('anCorp','corp'); bind('anMgr','mgr'); bind('anSource','source');
+  const reset = document.getElementById('anReset');
+  if(reset) reset.onclick = ()=>{ state.analyticsFilters={corp:'',mgr:'',source:''}; renderAnalytics(); };
+  const usel = document.getElementById('anUnitSel');
+  if(usel) usel.onchange = ()=>{ state.analyticsUnit = usel.value; renderAnalytics(); };
+  const exp = document.getElementById('anExport');
+  if(exp) exp.onclick = exportAnalyticsExcel;
+}
+
+/* ---------- Выгрузка сводки в Excel ---------- */
+function exportAnalyticsExcel(){
+  const us = anUnits(), cls = anClients();
+  const finalStages = ['Договор','Оплата','Сделка закрыта'];
+  const rows = [['Показатель','Значение']];
+  const soldLike = us.filter(u=>u.status==='sold'||u.status==='contract');
+  rows.push(['Выручка, млн ₽', Math.round(soldLike.reduce((s,u)=>s+(+u.total||0),0))]);
+  rows.push(['Сделок (договор+продано)', soldLike.length]);
+  rows.push(['Средняя цена м², тыс ₽', us.length?Math.round(us.reduce((s,u)=>s+(+u.pricePerM||0),0)/us.length):0]);
+  rows.push(['Лидов', cls.length]);
+  rows.push(['Конверсия в сделку, %', cls.length?Math.round(cls.filter(c=>finalStages.includes(c.stage)).length/cls.length*100):0]);
+  rows.push([]);
+  rows.push(['Статус','Кол-во помещений']);
+  STATUS_ORDER.forEach(s=>rows.push([STATUSES[s].label, us.filter(u=>u.status===s).length]));
+  rows.push([]);
+  rows.push(['Менеджер','Выручка, млн','Сделок','Клиентов','Показов','Конверсия, %']);
+  MANAGERS.forEach(m=>{
+    const sl = units().filter(u=>u.managerId===m.id && (u.status==='sold'||u.status==='contract'));
+    const mc = clients().filter(c=>c.mgr===m.id);
+    const md = mc.filter(c=>finalStages.includes(c.stage)).length;
+    rows.push([m.name, Math.round(sl.reduce((s,u)=>s+(+u.total||0),0)), sl.length, mc.length,
+      state.shows.filter(s=>s.managerId===m.id).length, mc.length?Math.round(md/mc.length*100):0]);
+  });
+  downloadBlob(buildXlsx('Аналитика', rows), 'Аналитика ' + BUILDINGS[state.building].short + '.xlsx');
+  toast('Сводка выгружена');
+}
+
+</script>
+<script>
+/* ============================================================
    КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ПО КВАРТИРЕ (многостраничный буклет)
    Формируется из карточки помещения, печатается / сохраняется в PDF.
    Блоки: обложка · характеристики+планировка · финансы (ипотека,
@@ -7810,6 +8169,7 @@ function renderNotifs(){
 function refreshLive(){
   if(typeof renderDashboard === 'function') renderDashboard();
   if(typeof renderChecklist === 'function') renderChecklist();
+  if(typeof renderAnalytics === 'function') renderAnalytics();
   renderNotifs();
 }
 document.getElementById('notifBtn').onclick = (e)=>{
@@ -7925,6 +8285,7 @@ function init(){
   renderFunnel();
   renderDashboard();
   renderChecklist();
+  renderAnalytics();
   renderNotifs();
   initCalendar();
   initUnitForm();

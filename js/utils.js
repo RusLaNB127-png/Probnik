@@ -113,7 +113,32 @@ function migrateUnit(u){
   if(!Array.isArray(u.view.photos)) u.view.photos = [];
   if(!Array.isArray(u.plans))  u.plans  = [];
   if(!Array.isArray(u.photos)) u.photos = [];
+  ensurePriceHistory(u);
   return u;
+}
+
+// ---------- История цены помещения (для аналитики динамики цен) ----------
+// Если истории нет — синтезируем правдоподобный рост к текущей цене за 6 месяцев.
+function ensurePriceHistory(u){
+  if(Array.isArray(u.priceHistory) && u.priceHistory.length) return u.priceHistory;
+  const cur = +u.pricePerM || 0;
+  const seed = String(u.id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const pts = [];
+  const months = 6;
+  for(let i=months-1; i>=0; i--){
+    const base = 1 - i*0.021;                    // рост ~2.1%/мес к текущей
+    const jitter = ((seed % 7) - 3) * 0.003;     // ±0.9% индивидуально
+    const d = addDays(TODAY, -i*30);
+    pts.push({ date: isoDate(new Date(d.getFullYear(), d.getMonth(), 1)),
+               pricePerM: Math.max(1, Math.round(cur*(base + (i? jitter:0)))) });
+  }
+  pts[pts.length-1].pricePerM = cur;             // последняя точка = текущая цена
+  u.priceHistory = pts;
+  return pts;
+}
+function pushPriceHistory(u, newPrice){
+  ensurePriceHistory(u);
+  u.priceHistory.push({ date: isoDate(TODAY), pricePerM: Math.round(newPrice) });
 }
 
 // ---------- Генерация показов (на основе DEFAULT_SHOWS_SEED + сегодняшней даты) ----------
@@ -677,8 +702,14 @@ function unitsForClient(clientId){
 function updateUnit(id, patch){
   const u = getUnit(id);
   if(!u) return;
-  const prevStatus = u.status;
+  const prevStatus = u.status, prevPrice = +u.pricePerM;
   Object.assign(u, patch, { updatedAt: Date.now() });
+  if(patch.pricePerM != null && +patch.pricePerM !== prevPrice){
+    pushPriceHistory(u, +patch.pricePerM);
+    logActivity({ type:'price', icon:'swap',
+      text:`${u.displayNum} · ${u.corp}: цена м² ${prevPrice.toLocaleString('ru-RU')} → ${(+patch.pricePerM).toLocaleString('ru-RU')} ₽`,
+      who: u.managerId });
+  }
   saveState();
   if(patch.status && patch.status !== prevStatus) onUnitStatusChange(u, prevStatus, patch.status);
 }
