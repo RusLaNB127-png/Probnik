@@ -178,6 +178,7 @@ function init(){
   initDashEdit();
   initTaskModal();
   initUserSwitch();
+  initKP();
   renderCalLauncher();
 }
 init();

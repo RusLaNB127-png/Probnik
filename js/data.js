@@ -32,10 +32,10 @@ const SHOW_STATUS_ORDER = ['planned','confirmed','completed','cancelled'];
 
 // ---------- Менеджеры ----------
 const MANAGERS = [
-  { id:'m1', name:'Игорь Васнецов',  short:'ИВ' },
-  { id:'m2', name:'Марина Дёмина',   short:'МД' },
-  { id:'m3', name:'Олег Кравцов',    short:'ОК' },
-  { id:'m4', name:'Полина Адова',    short:'ПА' },
+  { id:'m1', name:'Игорь Васнецов',  short:'ИВ', phone:'+7 900 120-45-01', email:'vasnecov@italika.ru' },
+  { id:'m2', name:'Марина Дёмина',   short:'МД', phone:'+7 900 120-45-02', email:'demina@italika.ru' },
+  { id:'m3', name:'Олег Кравцов',    short:'ОК', phone:'+7 900 120-45-03', email:'kravcov@italika.ru' },
+  { id:'m4', name:'Полина Адова',    short:'ПА', phone:'+7 900 120-45-04', email:'adova@italika.ru' },
 ];
 
 // ---------- Конфигурация объекта ----------
