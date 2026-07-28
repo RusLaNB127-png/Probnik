@@ -187,6 +187,7 @@ const state = {
   currentUser:     'rop',            // активная учётная запись (роль)
   activity:        [],               // живой журнал действий (авто-события)
   auth:            { users:null, sessionUid:null },  // учётные записи + сессия
+  mortgage:        null,             // программы ипотеки (в базе)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -205,6 +206,7 @@ function saveState(){
       currentUser:    state.currentUser,
       activity:       state.activity,
       auth:           { users: state.auth.users },
+      mortgage:       state.mortgage,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -266,6 +268,7 @@ function loadState(){
     state.currentUser    = data.currentUser || 'rop';
     state.activity       = Array.isArray(data.activity) ? data.activity : [];
     state.auth           = normalizeAuth(data.auth);
+    state.mortgage       = (data.mortgage && Array.isArray(data.mortgage.programs)) ? data.mortgage : null;
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -283,6 +286,7 @@ function resetToDefaults(){
   state.checklist      = defaultChecklist();
   state.activity       = [];
   state.auth           = normalizeAuth(null);
+  state.mortgage       = null;
   saveState();
 }
 

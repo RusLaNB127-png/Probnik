@@ -181,6 +181,7 @@ function init(){
   initTaskModal();
   initUserSwitch();
   initKP();
+  initMortgage();
   initAuth();
   renderCalLauncher();
 }

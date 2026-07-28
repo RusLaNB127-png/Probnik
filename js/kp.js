@@ -29,11 +29,10 @@ function generateKP(unitId){
 
   // Ипотека: первый взнос 20%
   const downPct = 20, loan = priceRub * (1 - downPct/100);
-  const progs = [
-    { name:'Семейная ипотека', rate:6,  years:30 },
-    { name:'IT-ипотека',       rate:5,  years:30 },
-    { name:'Базовая программа',rate:18, years:25 },
-  ].map(p=>({ ...p, pay: kpAnnuity(loan, p.rate, p.years) }));
+  // Программы берём из ипотечного калькулятора (единый источник)
+  const progs = (typeof mortgagePrograms === 'function' ? mortgagePrograms() : [])
+    .filter(p=>p.rate > 0).slice(0,3)
+    .map(p=>({ name:p.name, rate:p.rate, years:p.years, pay: kpAnnuity(loan, p.rate, p.years) }));
   const rassrochka = Math.round((priceRub - priceRub*downPct/100) / 12);
 
   const flag = '<span class="kp-flag"></span>';

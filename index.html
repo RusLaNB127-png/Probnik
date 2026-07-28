@@ -869,6 +869,38 @@
   </div>
 </div>
 
+<!-- ======================= ИПОТЕЧНЫЙ КАЛЬКУЛЯТОР ======================= -->
+<div class="form-modal mort-modal" id="mortModal">
+  <div class="form-shell mort-shell">
+    <header class="form-head">
+      <div><h3>Ипотечный калькулятор</h3><div class="form-sub" id="mortSub">—</div></div>
+      <button class="icon-btn" id="mortClose">✕</button>
+    </header>
+    <div class="form-body mort-body">
+      <div class="dash-admin" id="mortAdmin" style="display:none;"></div>
+
+      <div class="mort-progs" id="mortProgs"></div>
+
+      <div class="mort-cols">
+        <div class="mort-form" id="mortFields"></div>
+        <div class="mort-out" id="mortResult"></div>
+      </div>
+
+      <h4 class="mort-h">Сравнение программ</h4>
+      <div class="mort-tbl-wrap" id="mortCompare"></div>
+
+      <h4 class="mort-h">График погашения</h4>
+      <div class="mort-tbl-wrap" id="mortSchedule"></div>
+
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button class="btn btn-primary" id="mortRequest">Оформить заявку на ипотеку</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= УЧЁТНЫЕ ЗАПИСИ (РОП) ======================= -->
 <div class="form-modal" id="usersModal">
   <div class="form-shell">
@@ -922,6 +954,7 @@
 <script src="js/checklist.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/mortgage.js"></script>
 <script src="js/kp.js"></script>
 <script src="js/calendar.js"></script>
 <script src="js/app.js"></script>

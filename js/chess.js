@@ -684,6 +684,7 @@ function openPanel(id){
       <button class="btn btn-primary" data-act="book">Забронировать</button>
       <button class="btn" data-act="show">Назначить показ</button>
       <button class="btn" data-act="deal">Создать сделку</button>
+      <button class="btn ic-inline" data-act="mortgage">${icon('diamond',15)} Ипотечный калькулятор</button>
       <button class="btn ic-inline" data-act="kp">${icon('doc',15)} Коммерческое предложение</button>
       ${ state.adminMode
           ? `<button class="btn ic-inline" data-act="edit">${icon('edit',15)} Редактировать</button>`
@@ -771,6 +772,7 @@ function openPanel(id){
     else if(a==='show'){ openShowFormForUnit(id); }
     else if(a==='deal'){ updateUnit(id,{status:'contract'}); openPanel(id); renderAside(); renderChess(); toast('Сделка создана по '+u.displayNum); }
     else if(a==='kp'){ generateKP(id); }
+    else if(a==='mortgage'){ openMortgage(id); }
     else if(a==='status'){ if(ss) ss.scrollIntoView({behavior:'smooth',block:'center'}); }
     else if(a==='edit'){ closePanel(); openUnitForm(id); }
   });
