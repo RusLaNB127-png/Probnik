@@ -106,24 +106,32 @@ function renderMortgage(){
   document.getElementById('mortFields').innerHTML = `
     <div class="mort-field">
       <div class="mort-field-top"><label>Стоимость</label><b>${mRub(price)}</b></div>
-      <input type="range" id="mPriceR" min="1000000" max="80000000" step="100000" value="${price}">
-      <input type="number" id="mPriceN" value="${price}" step="100000">
+      <div class="mort-ctl">
+        <input type="range" id="mPriceR" min="1000000" max="80000000" step="100000" value="${price}">
+        <input type="number" id="mPriceN" value="${price}" step="100000">
+      </div>
     </div>
     <div class="mort-field">
       <div class="mort-field-top"><label>Первый взнос</label><b>${mRub(down)} · ${mCalc.downPct}%</b></div>
-      <input type="range" id="mDownR" min="${prog.minDown||0}" max="90" step="1" value="${mCalc.downPct}">
-      <input type="number" id="mDownN" value="${down}" step="100000">
+      <div class="mort-ctl">
+        <input type="range" id="mDownR" min="${prog.minDown||0}" max="90" step="1" value="${mCalc.downPct}">
+        <input type="number" id="mDownN" value="${down}" step="100000">
+      </div>
       ${prog.minDown ? `<div class="mort-hint">Минимальный взнос по программе — ${prog.minDown}%</div>`:''}
     </div>
     <div class="mort-field">
       <div class="mort-field-top"><label>Срок кредита</label><b>${mCalc.years} ${plural(mCalc.years,'год','года','лет')}</b></div>
-      <input type="range" id="mYearsR" min="1" max="30" step="1" value="${mCalc.years}">
-      <input type="number" id="mYearsN" value="${mCalc.years}" min="1" max="30">
+      <div class="mort-ctl">
+        <input type="range" id="mYearsR" min="1" max="30" step="1" value="${mCalc.years}">
+        <input type="number" id="mYearsN" value="${mCalc.years}" min="1" max="30">
+      </div>
     </div>
     <div class="mort-field">
       <div class="mort-field-top"><label>Ставка</label><b>${mCalc.rate}%</b></div>
-      <input type="range" id="mRateR" min="0" max="30" step="0.1" value="${mCalc.rate}">
-      <input type="number" id="mRateN" value="${mCalc.rate}" step="0.1">
+      <div class="mort-ctl">
+        <input type="range" id="mRateR" min="0" max="30" step="0.1" value="${mCalc.rate}">
+        <input type="number" id="mRateN" value="${mCalc.rate}" step="0.1">
+      </div>
     </div>`;
 
   // Результат
