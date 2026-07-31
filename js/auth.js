@@ -10,11 +10,16 @@ function hideLogin(){ document.getElementById('authScreen').classList.remove('sh
 function applyPermissions(){
   const dashTab = document.querySelector('.tab[data-view="dashboard"]');
   if(dashTab) dashTab.style.display = can('dashboard') ? '' : 'none';
+  const rulesTab = document.querySelector('.tab[data-view="rules"]');
+  if(rulesTab) rulesTab.style.display = can('admin') ? '' : 'none';
   const gear = document.getElementById('adminToggle');
   if(gear) gear.style.display = can('admin') ? '' : 'none';
   if(!can('admin') && state.adminMode){ state.adminMode = false; }
   // Если менеджер стоит на скрытой вкладке — увести на шахматку
   const active = document.querySelector('.tab.active');
+  if(active && active.dataset.view==='rules' && !can('admin')){
+    const chess = document.querySelector('.tab[data-view="chess"]'); if(chess) chess.click();
+  }
   if(active && active.dataset.view==='dashboard' && !can('dashboard')){
     const chess = document.querySelector('.tab[data-view="chess"]'); if(chess) chess.click();
   }

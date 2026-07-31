@@ -2507,6 +2507,75 @@ table.mort-tbl th{ padding-top:7px; padding-bottom:7px; }
 
 @media(max-width:900px){ .mort-cols{ grid-template-columns:1fr; } .mort-out{ position:static; } }
 
+/* ============================================================
+   КОНСТРУКТОР ПРАВИЛ АВТОМАТИЗАЦИИ
+   ============================================================ */
+.rules-grid{ display:grid; grid-template-columns:1fr 330px; gap:20px; align-items:start; }
+
+/* Карточка правила */
+.rule{ background:var(--bg-2); border:1px solid var(--line); border-radius:14px;
+  margin-bottom:12px; box-shadow:var(--shadow-sm); overflow:hidden; transition:.15s; }
+.rule.off{ opacity:.6; }
+.rule-head{ display:flex; align-items:center; gap:11px; padding:12px 16px;
+  background:linear-gradient(135deg,#FBFAF7,#F1ECE3); border-bottom:1px solid var(--line); }
+.rule-head b{ font-family:Georgia,serif; font-size:15px; color:var(--sea-dark); }
+.rule-fired{ font-size:10.5px; font-weight:700; color:var(--sea); background:#E3EDF1; padding:2px 9px; border-radius:20px; }
+.rule-kind{ font-size:10.5px; color:var(--brown-soft); background:var(--sand); padding:2px 9px; border-radius:20px; }
+.rule-ctrls{ margin-left:auto; display:flex; gap:5px; }
+.rule-body{ padding:12px 16px 14px; display:flex; flex-direction:column; gap:6px; }
+.rule-line{ display:flex; align-items:flex-start; gap:10px; font-size:13px; line-height:1.45; }
+.rule-tag{ flex-shrink:0; width:46px; text-align:center; font-size:9.5px; font-weight:700;
+  letter-spacing:.06em; padding:3px 0; border-radius:5px; margin-top:1px; }
+.rule-tag.if{ background:var(--sea); color:#fff; }
+.rule-tag.and{ background:var(--sand); color:var(--brown); }
+.rule-tag.then{ background:var(--terra); color:#fff; }
+
+/* Переключатель */
+.rule-sw{ position:relative; display:inline-block; width:36px; height:20px; flex-shrink:0; cursor:pointer; }
+.rule-sw input{ opacity:0; width:0; height:0; }
+.rule-sw span{ position:absolute; inset:0; background:var(--beige); border-radius:20px; transition:.2s; }
+.rule-sw span::before{ content:''; position:absolute; width:15px; height:15px; left:3px; top:2.5px;
+  background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.rule-sw input:checked + span{ background:var(--st-free); }
+.rule-sw input:checked + span::before{ transform:translateX(15px); }
+
+/* Журнал срабатываний */
+.rules-side{ background:var(--bg-2); border:1px solid var(--line); border-radius:16px;
+  padding:16px; box-shadow:var(--shadow-sm); position:sticky; top:78px; }
+.rules-side-t{ font-size:14px; margin-bottom:12px; }
+.rule-log-item{ display:flex; align-items:flex-start; gap:9px; padding:9px 0; border-bottom:1px solid var(--line-soft); }
+.rule-log-item:last-child{ border-bottom:0; }
+.rule-log-item .ic{ width:24px; height:24px; border-radius:7px; background:#E3EEDD; color:#3B6831;
+  display:grid; place-items:center; flex-shrink:0; }
+.rule-log-item b{ font-size:12.5px; display:block; }
+.rule-log-item span{ font-size:11px; color:var(--brown-soft); display:block; margin-top:2px; }
+.rule-log-item .tm{ font-size:10px; color:var(--brown-soft); white-space:nowrap; margin-left:auto; }
+.rule-log-empty{ font-size:12.5px; color:var(--brown-soft); text-align:center; padding:16px 0; }
+
+/* Форма конструктора */
+.rule-shell{ width:min(880px, 96vw); max-width:880px; max-height:94vh; }
+.rule-body-form{ max-height:none; overflow-y:auto; }
+.rule-block{ border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-bottom:13px; background:var(--bg); }
+.rule-block-h{ display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600;
+  color:var(--brown); margin-bottom:11px; }
+.rule-block-h .btn{ margin-left:auto; }
+.rule-row{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:8px; }
+.rule-row:last-child{ margin-bottom:0; }
+.rule-row select, .rule-row input{ padding:8px 11px; border:1px solid var(--line); border-radius:8px;
+  font-size:13px; background:var(--bg-2); font-family:inherit; }
+.rule-row input[type=text]{ flex:1; min-width:180px; }
+.rule-row input[type=number]{ width:92px; }
+.rule-row.act{ background:#FBF6EF; border-radius:9px; padding:9px 11px; }
+.rule-inline{ font-size:11.5px; color:var(--brown-soft); }
+.rule-hint{ font-size:12px; color:var(--brown-soft); font-style:italic; }
+.rule-preview-box{ background:linear-gradient(135deg,#FBEFE4,#F6E4D2); border:1px solid #E8CBAE;
+  border-radius:12px; padding:14px 16px; margin-bottom:6px; }
+.rule-preview-t{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--terra-dark); margin-bottom:10px; }
+.rule-preview-box .rule-line{ margin-bottom:5px; }
+
+@media(max-width:1000px){ .rules-grid{ grid-template-columns:1fr; } .rules-side{ position:static; } }
+
 </style>
 </head>
 <body>
@@ -2608,6 +2677,10 @@ table.mort-tbl th{ padding-top:7px; padding-bottom:7px; }
   <button class="tab" data-view="checklist">
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/></svg>
     <span>Чек-лист ОП</span>
+  </button>
+  <button class="tab" data-view="rules">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="17" r="2.4"/><path d="M6 9.4V15a3 3 0 0 0 3 3h6.6"/><path d="M13.4 15.6 15.6 18l-2.2 2.2"/></svg>
+    <span>Автоматизация</span>
   </button>
   <button class="tab" data-view="analytics">
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>
@@ -2839,6 +2912,25 @@ table.mort-tbl th{ padding-top:7px; padding-bottom:7px; }
     <div id="clHeadActions"></div>
   </div>
   <div id="clContent"></div>
+</main>
+
+<!-- ============ ВКЛАДКА: АВТОМАТИЗАЦИЯ ============ -->
+<main class="view" id="view-rules">
+  <div class="view-head">
+    <div><h2>Автоматизация: правила «если → то»</h2><p id="rulesSub">—</p></div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="rulesReset">Сбросить</button>
+      <button class="btn" id="rulesCheck">Проверить сейчас</button>
+      <button class="btn btn-primary" id="rulesNew">+ Новое правило</button>
+    </div>
+  </div>
+  <div class="rules-grid">
+    <div id="rulesList"></div>
+    <aside class="rules-side">
+      <h3 class="rules-side-t">Журнал срабатываний</h3>
+      <div id="rulesLog"></div>
+    </aside>
+  </div>
 </main>
 
 <!-- ============ ВКЛАДКА 6: АНАЛИТИКА ============ -->
@@ -3366,6 +3458,48 @@ table.mort-tbl th{ padding-top:7px; padding-bottom:7px; }
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ======================= КОНСТРУКТОР ПРАВИЛА ======================= -->
+<div class="form-modal rule-modal" id="ruleModal">
+  <div class="form-shell rule-shell">
+    <header class="form-head">
+      <div><h3 id="ruleFormTitle">Новое правило</h3><div class="form-sub">Настройте условие и действия — без программиста</div></div>
+      <button class="icon-btn" id="ruleClose">✕</button>
+    </header>
+    <div class="form-body rule-body-form">
+      <div class="form-row"><label>Название правила</label><input type="text" id="ruleName" placeholder="Например: Бронь — напомнить об оплате"></div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag if">ЕСЛИ</span> происходит событие</div>
+        <div class="rule-row" id="ruleTrigger"></div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag and">И</span> выполняются условия
+          <button class="btn btn-sm" id="ruleAddCond">+ Условие</button></div>
+        <div id="ruleConds"></div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag then">ТО</span> система делает
+          <button class="btn btn-sm" id="ruleAddAct">+ Действие</button></div>
+        <div id="ruleActs"></div>
+      </div>
+
+      <div class="rule-preview-box">
+        <div class="rule-preview-t">Предпросмотр правила</div>
+        <div id="rulePreview"></div>
+      </div>
+
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button class="btn" id="ruleCancel">Отмена</button>
+          <button class="btn btn-primary" id="ruleSave">Сохранить правило</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3905,7 +4039,9 @@ function genUnits(buildingConfig){
           plans:        [],     // [{ id, url, title }]
           photos:       [],     // [{ id, url, isMain }]
           createdAt:    Date.now(),
-          updatedAt:    Date.now(),
+          // Разное время последнего изменения — как в реальной базе:
+          // часть помещений давно без движения (нужно для правил «зависла»)
+          updatedAt:    Date.now() - Math.floor(rng()*150)*86400000,
         });
       }
     }
@@ -3996,6 +4132,7 @@ const state = {
   activity:        [],               // живой журнал действий (авто-события)
   auth:            { users:null, sessionUid:null },  // учётные записи + сессия
   mortgage:        null,             // программы ипотеки (в базе)
+  rules:           null,             // правила автоматизации (в базе)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -4015,6 +4152,7 @@ function saveState(){
       activity:       state.activity,
       auth:           { users: state.auth.users },
       mortgage:       state.mortgage,
+      rules:          state.rules,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -4077,6 +4215,7 @@ function loadState(){
     state.activity       = Array.isArray(data.activity) ? data.activity : [];
     state.auth           = normalizeAuth(data.auth);
     state.mortgage       = (data.mortgage && Array.isArray(data.mortgage.programs)) ? data.mortgage : null;
+    state.rules          = (data.rules && Array.isArray(data.rules.list)) ? data.rules : null;
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -4095,6 +4234,7 @@ function resetToDefaults(){
   state.activity       = [];
   state.auth           = normalizeAuth(null);
   state.mortgage       = null;
+  state.rules          = null;
   saveState();
 }
 
@@ -4226,6 +4366,7 @@ function onUnitStatusChange(u, from, to){
     autoTask('deal:'+u.id, { title:`Собрать документы — ${u.displayNum} (${u.corp})`,
       managerId:u.managerId, due: isoDate(addDays(TODAY,2)), status:'planned',
       comment:'Автозадача: оформление сделки' });
+  if(typeof rulesRun === 'function') rulesRun('unit_status', { unit:u, mgrId:u.managerId, to });
 }
 
 /* ============================================================
@@ -4364,6 +4505,7 @@ function createClient(data){
   logInteraction(client.id, 'created', 'Создан клиент · источник: '+client.source);
   saveState();
   logActivity({ type:'lead', icon:'user', text:'Новый клиент: '+client.name+' · '+client.source, who: client.mgr });
+  if(typeof rulesRun === 'function') rulesRun('client_created', { client, mgrId: client.mgr });
   return client;
 }
 
@@ -4527,6 +4669,7 @@ function updateUnit(id, patch){
     logActivity({ type:'price', icon:'swap',
       text:`${u.displayNum} · ${u.corp}: цена м² ${prevPrice.toLocaleString('ru-RU')} → ${(+patch.pricePerM).toLocaleString('ru-RU')} ₽`,
       who: u.managerId });
+    if(typeof rulesRun === 'function') rulesRun('price_changed', { unit:u, mgrId:u.managerId });
   }
   saveState();
   if(patch.status && patch.status !== prevStatus) onUnitStatusChange(u, prevStatus, patch.status);
@@ -4698,6 +4841,7 @@ function createShow(data){
     title:`Провести показ${cl?' — '+cl.name:''}${un?' ('+un.displayNum+')':''}`,
     managerId: show.managerId, due: show.date, status:'planned',
     comment:'Автозадача: назначен показ' + (show.time?' в '+show.time:'') });
+  if(typeof rulesRun === 'function') rulesRun('show_created', { unit:un, client:cl, mgrId:show.managerId });
   return show;
 }
 
@@ -8053,11 +8197,16 @@ function hideLogin(){ document.getElementById('authScreen').classList.remove('sh
 function applyPermissions(){
   const dashTab = document.querySelector('.tab[data-view="dashboard"]');
   if(dashTab) dashTab.style.display = can('dashboard') ? '' : 'none';
+  const rulesTab = document.querySelector('.tab[data-view="rules"]');
+  if(rulesTab) rulesTab.style.display = can('admin') ? '' : 'none';
   const gear = document.getElementById('adminToggle');
   if(gear) gear.style.display = can('admin') ? '' : 'none';
   if(!can('admin') && state.adminMode){ state.adminMode = false; }
   // Если менеджер стоит на скрытой вкладке — увести на шахматку
   const active = document.querySelector('.tab.active');
+  if(active && active.dataset.view==='rules' && !can('admin')){
+    const chess = document.querySelector('.tab[data-view="chess"]'); if(chess) chess.click();
+  }
   if(active && active.dataset.view==='dashboard' && !can('dashboard')){
     const chess = document.querySelector('.tab[data-view="chess"]'); if(chess) chess.click();
   }
@@ -8157,6 +8306,399 @@ function renderUsersList(){
   host.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{
     const a=account(b.dataset.toggle); userSetActive(a.uid, !a.active); renderUsersList(); refreshLive();
   });
+}
+
+</script>
+<script>
+/* ============================================================
+   КОНСТРУКТОР ПРАВИЛ АВТОМАТИЗАЦИИ  «ЕСЛИ … ТО …»
+   Правила настраиваются пользователем без программиста и
+   срабатывают на реальных событиях системы.
+   ============================================================ */
+
+/* ---------- Справочники ---------- */
+const RULE_TRIGGERS = {
+  unit_status:    { label:'Статус помещения изменился', kind:'event',
+                    param:{ key:'to', label:'Новый статус', type:'status' } },
+  price_changed:  { label:'Изменилась цена помещения',  kind:'event' },
+  show_created:   { label:'Назначен показ',             kind:'event' },
+  client_created: { label:'Появился новый клиент',      kind:'event' },
+  unit_stale:     { label:'Помещение без движения',     kind:'schedule',
+                    param:{ key:'days', label:'Дней без изменений', type:'number', def:60 } },
+  task_overdue:   { label:'Задача просрочена',          kind:'schedule',
+                    param:{ key:'days', label:'Дней просрочки', type:'number', def:1 } },
+};
+
+const RULE_FIELDS = {
+  corp:   { label:'Корпус',            type:'corp' },
+  floor:  { label:'Этаж',              type:'number' },
+  area:   { label:'Площадь, м²',       type:'number' },
+  price:  { label:'Стоимость, млн ₽',  type:'number' },
+  status: { label:'Статус помещения',  type:'status' },
+  mgr:    { label:'Менеджер',          type:'mgr' },
+  source: { label:'Источник клиента',  type:'source' },
+  stage:  { label:'Этап воронки',      type:'stage' },
+};
+const RULE_OPS = { eq:'равно', ne:'не равно', gt:'больше', lt:'меньше', gte:'не меньше', lte:'не больше' };
+
+const RULE_ACTIONS = {
+  task:    { label:'Поставить задачу менеджеру', fields:[
+             { k:'text', label:'Текст задачи', type:'text', def:'Связаться с клиентом' },
+             { k:'days', label:'Срок, дней',    type:'number', def:2 } ] },
+  notify:  { label:'Уведомить руководителя', fields:[
+             { k:'text', label:'Текст уведомления', type:'text', def:'Требуется внимание' } ] },
+  message: { label:'Отправить сообщение клиенту', fields:[
+             { k:'channel', label:'Канал', type:'channel', def:'whatsapp' },
+             { k:'text', label:'Текст сообщения', type:'text', def:'Здравствуйте! Напоминаем о вашей заявке.' } ] },
+  flag:    { label:'Пометить помещение', fields:[
+             { k:'text', label:'Метка', type:'text', def:'Зависла' } ] },
+};
+const RULE_CHANNELS = { whatsapp:'WhatsApp', telegram:'Telegram', email:'Электронная почта' };
+
+/* ---------- Правила по умолчанию (демонстрационные) ---------- */
+function defaultRules(){
+  return [
+    { id:uid('r'), name:'Бронь — напомнить об оплате', enabled:true, fired:0,
+      trigger:{ type:'unit_status', to:'booked' }, conditions:[],
+      actions:[ { type:'task', text:'Согласовать оплату и подготовить договор', days:2 },
+                { type:'message', channel:'whatsapp', text:'Здравствуйте! Квартира забронирована за вами на 3 дня.' } ] },
+    { id:uid('r'), name:'Дорогая сделка — под контроль РОП', enabled:true, fired:0,
+      trigger:{ type:'unit_status', to:'contract' },
+      conditions:[ { field:'price', op:'gte', value:25 } ],
+      actions:[ { type:'notify', text:'Крупная сделка — взять на контроль' } ] },
+    { id:uid('r'), name:'Зависшие квартиры — предложить акцию', enabled:true, fired:0,
+      trigger:{ type:'unit_stale', days:60 },
+      conditions:[ { field:'status', op:'eq', value:'free' } ],
+      actions:[ { type:'flag', text:'Зависла' },
+                { type:'task', text:'Проработать скидку или включить в рассылку', days:3 } ] },
+    { id:uid('r'), name:'Новый лид — связаться в тот же день', enabled:true, fired:0,
+      trigger:{ type:'client_created' }, conditions:[],
+      actions:[ { type:'task', text:'Первый звонок новому клиенту', days:0 } ] },
+    { id:uid('r'), name:'Показ назначен — напомнить клиенту', enabled:false, fired:0,
+      trigger:{ type:'show_created' }, conditions:[],
+      actions:[ { type:'message', channel:'telegram', text:'Напоминаем о завтрашнем показе.' } ] },
+  ];
+}
+function rulesData(){
+  if(!state.rules || !Array.isArray(state.rules.list)) state.rules = { list: defaultRules(), log: [] };
+  if(!Array.isArray(state.rules.log)) state.rules.log = [];
+  return state.rules;
+}
+function rulesList(){ return rulesData().list; }
+
+/* ---------- Движок ---------- */
+// Достаём значение поля из контекста события
+function ruleValue(field, ctx){
+  const u = ctx.unit, c = ctx.client;
+  switch(field){
+    case 'corp':   return u ? u.corp : null;
+    case 'floor':  return u ? +u.floor : null;
+    case 'area':   return u ? +u.area : null;
+    case 'price':  return u ? +u.total : null;
+    case 'status': return u ? u.status : null;
+    case 'mgr':    return ctx.mgrId || (u && u.managerId) || (c && c.mgr) || null;
+    case 'source': return c ? c.source : null;
+    case 'stage':  return c ? c.stage : null;
+  }
+  return null;
+}
+function ruleCondOk(cond, ctx){
+  const v = ruleValue(cond.field, ctx);
+  if(v === null || v === undefined) return false;
+  const t = cond.value;
+  const num = a => (typeof a === 'number' ? a : parseFloat(String(a).replace(',','.')));
+  switch(cond.op){
+    case 'eq':  return String(v) === String(t);
+    case 'ne':  return String(v) !== String(t);
+    case 'gt':  return num(v) >  num(t);
+    case 'lt':  return num(v) <  num(t);
+    case 'gte': return num(v) >= num(t);
+    case 'lte': return num(v) <= num(t);
+  }
+  return false;
+}
+function ruleActionRun(a, rule, ctx){
+  const u = ctx.unit, c = ctx.client;
+  const who = ctx.mgrId || (u && u.managerId) || (c && c.mgr) || MANAGERS[0].id;
+  const about = u ? `${u.displayNum} (${u.corp})` : (c ? c.name : '');
+  switch(a.type){
+    case 'task':
+      taskAdd({ title: a.text + (about ? ' — ' + about : ''), managerId: who,
+        due: isoDate(addDays(TODAY, +a.days || 0)), status:'planned',
+        comment: 'Создано правилом «' + rule.name + '»' });
+      return `задача менеджеру ${mgrName(who)}`;
+    case 'notify':
+      logActivity({ type:'note', icon:'alert', who,
+        text: `Правило «${rule.name}»: ${a.text}${about ? ' · ' + about : ''}` });
+      return 'уведомление руководителю';
+    case 'message':
+      // В прототипе отправка эмулируется: реальная — через провайдера рассылок
+      logActivity({ type:'note', icon:'mail', who,
+        text: `${RULE_CHANNELS[a.channel]||'Сообщение'} клиенту${c ? ' · ' + c.name : ''}: «${a.text}»` });
+      return `сообщение (${RULE_CHANNELS[a.channel]||'—'})`;
+    case 'flag':
+      if(u){ u.flag = a.text; saveState(); }
+      return `метка «${a.text}»`;
+  }
+  return '';
+}
+// Основная точка входа: вызывается из событий системы
+function rulesRun(triggerType, ctx){
+  if(typeof state === 'undefined' || !state.rules) rulesData();
+  const done = [];
+  rulesList().filter(r => r.enabled && r.trigger.type === triggerType).forEach(r => {
+    // параметр триггера (например, конкретный статус)
+    if(triggerType === 'unit_status' && r.trigger.to && ctx.to !== r.trigger.to) return;
+    if(!(r.conditions||[]).every(cd => ruleCondOk(cd, ctx))) return;
+    const res = (r.actions||[]).map(a => ruleActionRun(a, r, ctx)).filter(Boolean);
+    r.fired = (r.fired||0) + 1;
+    rulesData().log.unshift({ ts: Date.now(), rule: r.name,
+      about: ctx.unit ? ctx.unit.displayNum : (ctx.client ? ctx.client.name : ''),
+      result: res.join(' · ') });
+    if(rulesData().log.length > 60) rulesData().log.length = 60;
+    done.push(r.name);
+  });
+  if(done.length) saveState();
+  return done;
+}
+// Правила «по расписанию» — запускаются вручную или при входе
+function rulesRunScheduled(){
+  const fired = [];
+  const today = isoDate(TODAY);
+  rulesList().filter(r => r.enabled && (RULE_TRIGGERS[r.trigger.type]||{}).kind === 'schedule').forEach(r => {
+    if(r.trigger.type === 'unit_stale'){
+      const days = +r.trigger.days || 60;
+      units().forEach(u => {
+        const idle = Math.floor((Date.now() - (u.updatedAt || 0)) / 86400000);
+        if(idle < days) return;
+        const ctx = { unit:u, mgrId:u.managerId };
+        if(!(r.conditions||[]).every(cd => ruleCondOk(cd, ctx))) return;
+        if(u.flag && r.actions.some(a=>a.type==='flag' && a.text===u.flag)) return; // уже помечено
+        const res = r.actions.map(a => ruleActionRun(a, r, ctx)).filter(Boolean);
+        r.fired = (r.fired||0)+1;
+        rulesData().log.unshift({ ts:Date.now(), rule:r.name, about:u.displayNum, result:res.join(' · ') });
+        fired.push(r.name);
+      });
+    }
+    if(r.trigger.type === 'task_overdue'){
+      const days = +r.trigger.days || 1;
+      tasksAll().filter(t => t.status !== 'done' && t.due && t.due < today).forEach(t => {
+        const late = Math.floor((new Date(today) - new Date(t.due)) / 86400000);
+        if(late < days) return;
+        if(t.ruleNotified) return;
+        const ctx = { mgrId: t.managerId };
+        if(!(r.conditions||[]).every(cd => ruleCondOk(cd, ctx))) return;
+        const res = r.actions.map(a => ruleActionRun(a, r, ctx)).filter(Boolean);
+        t.ruleNotified = true;
+        r.fired = (r.fired||0)+1;
+        rulesData().log.unshift({ ts:Date.now(), rule:r.name, about:t.title, result:res.join(' · ') });
+        fired.push(r.name);
+      });
+    }
+  });
+  if(rulesData().log.length > 60) rulesData().log.length = 60;
+  saveState();
+  return fired;
+}
+
+/* ---------- Человекочитаемое описание ---------- */
+function ruleTriggerText(r){
+  const t = RULE_TRIGGERS[r.trigger.type] || {};
+  let s = t.label || r.trigger.type;
+  if(r.trigger.type === 'unit_status' && r.trigger.to) s += ' на «' + (STATUSES[r.trigger.to]||{}).label + '»';
+  if(r.trigger.type === 'unit_stale')   s += ' более ' + (r.trigger.days||60) + ' дней';
+  if(r.trigger.type === 'task_overdue') s += ' более чем на ' + (r.trigger.days||1) + ' дн.';
+  return s;
+}
+function ruleCondText(c){
+  const f = RULE_FIELDS[c.field] || {};
+  let v = c.value;
+  if(f.type === 'status') v = (STATUSES[v]||{}).label || v;
+  if(f.type === 'mgr')    v = mgrName(v);
+  return `${f.label} ${RULE_OPS[c.op]} ${v}`;
+}
+function ruleActionText(a){
+  const d = RULE_ACTIONS[a.type] || {};
+  if(a.type === 'task')    return `Задача: «${a.text}» (срок +${a.days||0} дн.)`;
+  if(a.type === 'notify')  return `Уведомить руководителя: «${a.text}»`;
+  if(a.type === 'message') return `${RULE_CHANNELS[a.channel]||'Сообщение'} клиенту: «${a.text}»`;
+  if(a.type === 'flag')    return `Пометить помещение: «${a.text}»`;
+  return d.label || a.type;
+}
+
+/* ---------- Рендер вкладки ---------- */
+function renderRules(){
+  const host = document.getElementById('rulesList');
+  if(!host) return;
+  const d = rulesData();
+  const active = d.list.filter(r=>r.enabled).length;
+  document.getElementById('rulesSub').textContent =
+    `${d.list.length} правил · активно ${active} · сработали ${d.list.reduce((s,r)=>s+(r.fired||0),0)} раз`;
+
+  host.innerHTML = d.list.length ? d.list.map(r=>`
+    <div class="rule ${r.enabled?'':'off'}">
+      <div class="rule-head">
+        <label class="rule-sw"><input type="checkbox" ${r.enabled?'checked':''} data-toggle="${r.id}"><span></span></label>
+        <b>${escapeHtml(r.name)}</b>
+        ${r.fired ? `<span class="rule-fired">сработало ${r.fired}</span>` : ''}
+        <span class="rule-kind">${(RULE_TRIGGERS[r.trigger.type]||{}).kind==='schedule'?'по расписанию':'по событию'}</span>
+        <span class="rule-ctrls">
+          <button class="cl-cbtn" data-edit="${r.id}" title="Изменить">${icon('edit',12)}</button>
+          <button class="cl-cbtn del" data-del="${r.id}" title="Удалить">${icon('close',12)}</button>
+        </span>
+      </div>
+      <div class="rule-body">
+        <div class="rule-line"><span class="rule-tag if">ЕСЛИ</span><div>${escapeHtml(ruleTriggerText(r))}</div></div>
+        ${(r.conditions||[]).map(c=>`<div class="rule-line"><span class="rule-tag and">И</span><div>${escapeHtml(ruleCondText(c))}</div></div>`).join('')}
+        ${(r.actions||[]).map((a,i)=>`<div class="rule-line"><span class="rule-tag then">${i?'И':'ТО'}</span><div>${escapeHtml(ruleActionText(a))}</div></div>`).join('')}
+      </div>
+    </div>`).join('') : `<div class="dash-empty">Правил пока нет — создайте первое</div>`;
+
+  // журнал
+  document.getElementById('rulesLog').innerHTML = d.log.length
+    ? d.log.slice(0,14).map(l=>`<div class="rule-log-item">
+        <div class="ic">${icon('check',13)}</div>
+        <div><b>${escapeHtml(l.rule)}</b>${l.about?` · ${escapeHtml(l.about)}`:''}
+          <span>${escapeHtml(l.result||'')}</span></div>
+        <div class="tm">${timeAgo(l.ts)}</div></div>`).join('')
+    : `<div class="rule-log-empty">Пока ничего не срабатывало</div>`;
+
+  host.querySelectorAll('[data-toggle]').forEach(cb=>cb.onchange=()=>{
+    const r = rulesList().find(x=>x.id===cb.dataset.toggle);
+    if(r){ r.enabled = cb.checked; saveState(); renderRules(); }
+  });
+  host.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openRuleForm(b.dataset.edit));
+  host.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Удалить правило?')){
+      state.rules.list = rulesList().filter(x=>x.id!==b.dataset.del);
+      saveState(); renderRules(); toast('Правило удалено');
+    }
+  });
+}
+
+/* ---------- Форма правила ---------- */
+let ruleDraft = null;
+function openRuleForm(id){
+  const src = id ? rulesList().find(r=>r.id===id) : null;
+  ruleDraft = src ? JSON.parse(JSON.stringify(src))
+    : { id:uid('r'), name:'', enabled:true, fired:0,
+        trigger:{ type:'unit_status', to:'booked' }, conditions:[], actions:[{ type:'task', text:'Связаться с клиентом', days:2 }] };
+  document.getElementById('ruleFormTitle').textContent = id ? 'Изменение правила' : 'Новое правило';
+  renderRuleForm();
+  document.getElementById('ruleModal').classList.add('show');
+}
+function valueInput(type, val, attr){
+  if(type==='status') return `<select ${attr}>${STATUS_ORDER.map(s=>`<option value="${s}" ${s===val?'selected':''}>${STATUSES[s].label}</option>`).join('')}</select>`;
+  if(type==='mgr')    return `<select ${attr}>${MANAGERS.map(m=>`<option value="${m.id}" ${m.id===val?'selected':''}>${m.name}</option>`).join('')}</select>`;
+  if(type==='corp')   return `<select ${attr}>${state.buildingConfig.corps.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join('')}</select>`;
+  if(type==='source') return `<select ${attr}>${SOURCE_OPTIONS.map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join('')}</select>`;
+  if(type==='stage')  return `<select ${attr}>${STAGES.map(s=>`<option ${s===val?'selected':''}>${s}</option>`).join('')}</select>`;
+  if(type==='channel')return `<select ${attr}>${Object.keys(RULE_CHANNELS).map(c=>`<option value="${c}" ${c===val?'selected':''}>${RULE_CHANNELS[c]}</option>`).join('')}</select>`;
+  if(type==='number') return `<input type="number" value="${val!==undefined?val:''}" ${attr}>`;
+  return `<input type="text" value="${escapeHtml(val!==undefined?String(val):'')}" ${attr}>`;
+}
+function renderRuleForm(){
+  const d = ruleDraft, T = RULE_TRIGGERS[d.trigger.type] || {};
+  document.getElementById('ruleName').value = d.name || '';
+
+  // ЕСЛИ
+  document.getElementById('ruleTrigger').innerHTML = `
+    <select id="rtType">${Object.keys(RULE_TRIGGERS).map(k=>`<option value="${k}" ${k===d.trigger.type?'selected':''}>${RULE_TRIGGERS[k].label}</option>`).join('')}</select>
+    ${T.param ? `<span class="rule-inline">${T.param.label}</span>${valueInput(T.param.type, d.trigger[T.param.key] ?? T.param.def, 'id="rtParam"')}` : ''}`;
+
+  // И (условия)
+  document.getElementById('ruleConds').innerHTML = (d.conditions||[]).map((c,i)=>{
+    const f = RULE_FIELDS[c.field] || {};
+    return `<div class="rule-row">
+      <select data-c="${i}" data-k="field">${Object.keys(RULE_FIELDS).map(k=>`<option value="${k}" ${k===c.field?'selected':''}>${RULE_FIELDS[k].label}</option>`).join('')}</select>
+      <select data-c="${i}" data-k="op">${Object.keys(RULE_OPS).map(o=>`<option value="${o}" ${o===c.op?'selected':''}>${RULE_OPS[o]}</option>`).join('')}</select>
+      ${valueInput(f.type, c.value, `data-c="${i}" data-k="value"`)}
+      <button class="cl-cbtn del" data-delc="${i}">${icon('close',12)}</button>
+    </div>`;
+  }).join('') || `<div class="rule-hint">Условий нет — правило сработает при каждом событии</div>`;
+
+  // ТО (действия)
+  document.getElementById('ruleActs').innerHTML = (d.actions||[]).map((a,i)=>{
+    const def = RULE_ACTIONS[a.type] || { fields:[] };
+    return `<div class="rule-row act">
+      <select data-a="${i}" data-k="type">${Object.keys(RULE_ACTIONS).map(k=>`<option value="${k}" ${k===a.type?'selected':''}>${RULE_ACTIONS[k].label}</option>`).join('')}</select>
+      ${def.fields.map(f=>`<span class="rule-inline">${f.label}</span>${valueInput(f.type, a[f.k] ?? f.def, `data-a="${i}" data-k="${f.k}"`)}`).join('')}
+      <button class="cl-cbtn del" data-dela="${i}">${icon('close',12)}</button>
+    </div>`;
+  }).join('');
+
+  // предпросмотр
+  document.getElementById('rulePreview').innerHTML = `
+    <div class="rule-line"><span class="rule-tag if">ЕСЛИ</span><div>${escapeHtml(ruleTriggerText(d))}</div></div>
+    ${(d.conditions||[]).map(c=>`<div class="rule-line"><span class="rule-tag and">И</span><div>${escapeHtml(ruleCondText(c))}</div></div>`).join('')}
+    ${(d.actions||[]).map((a,i)=>`<div class="rule-line"><span class="rule-tag then">${i?'И':'ТО'}</span><div>${escapeHtml(ruleActionText(a))}</div></div>`).join('')}`;
+
+  wireRuleForm();
+}
+function wireRuleForm(){
+  const d = ruleDraft;
+  document.getElementById('ruleName').oninput = e => { d.name = e.target.value; };
+  const tt = document.getElementById('rtType');
+  tt.onchange = ()=>{
+    const T = RULE_TRIGGERS[tt.value];
+    d.trigger = { type: tt.value };
+    if(T.param) d.trigger[T.param.key] = T.param.def ?? (T.param.type==='status'?'booked':'');
+    renderRuleForm();
+  };
+  const tp = document.getElementById('rtParam');
+  if(tp) tp.onchange = ()=>{ d.trigger[RULE_TRIGGERS[d.trigger.type].param.key] = tp.value; renderRuleForm(); };
+
+  document.querySelectorAll('#ruleConds [data-c]').forEach(el=>el.onchange=()=>{
+    const i = +el.dataset.c, k = el.dataset.k;
+    d.conditions[i][k] = el.value;
+    if(k==='field'){ d.conditions[i].value = ''; }
+    renderRuleForm();
+  });
+  document.querySelectorAll('#ruleConds [data-delc]').forEach(b=>b.onclick=()=>{
+    d.conditions.splice(+b.dataset.delc,1); renderRuleForm();
+  });
+  document.querySelectorAll('#ruleActs [data-a]').forEach(el=>el.onchange=()=>{
+    const i = +el.dataset.a, k = el.dataset.k;
+    if(k==='type'){
+      const def = RULE_ACTIONS[el.value];
+      d.actions[i] = { type: el.value };
+      def.fields.forEach(f=> d.actions[i][f.k] = f.def);
+    } else d.actions[i][k] = el.value;
+    renderRuleForm();
+  });
+  document.querySelectorAll('#ruleActs [data-dela]').forEach(b=>b.onclick=()=>{
+    if(d.actions.length<=1){ toast('Нужно хотя бы одно действие'); return; }
+    d.actions.splice(+b.dataset.dela,1); renderRuleForm();
+  });
+}
+function initRules(){
+  const modal = document.getElementById('ruleModal');
+  document.getElementById('ruleClose').onclick  = ()=>modal.classList.remove('show');
+  document.getElementById('ruleCancel').onclick = ()=>modal.classList.remove('show');
+  document.getElementById('ruleAddCond').onclick = ()=>{
+    ruleDraft.conditions.push({ field:'price', op:'gte', value:10 }); renderRuleForm();
+  };
+  document.getElementById('ruleAddAct').onclick = ()=>{
+    ruleDraft.actions.push({ type:'notify', text:'Требуется внимание' }); renderRuleForm();
+  };
+  document.getElementById('ruleSave').onclick = ()=>{
+    if(!ruleDraft.name.trim()){ toast('Укажите название правила'); return; }
+    const i = rulesList().findIndex(r=>r.id===ruleDraft.id);
+    if(i>=0) rulesList()[i] = ruleDraft; else rulesList().push(ruleDraft);
+    saveState(); modal.classList.remove('show'); renderRules();
+    toast('Правило сохранено');
+  };
+  document.getElementById('rulesNew').onclick   = ()=>openRuleForm(null);
+  document.getElementById('rulesCheck').onclick = ()=>{
+    const f = rulesRunScheduled();
+    renderRules(); if(typeof refreshLive==='function') refreshLive();
+    toast(f.length ? `Сработало правил: ${f.length}` : 'Подходящих объектов не найдено');
+  };
+  document.getElementById('rulesReset').onclick = ()=>{
+    if(confirm('Вернуть набор правил по умолчанию?')){
+      state.rules = { list: defaultRules(), log: [] }; saveState(); renderRules(); toast('Правила сброшены');
+    }
+  };
 }
 
 </script>
@@ -9070,6 +9612,7 @@ function refreshLive(){
   if(typeof renderDashboard === 'function') renderDashboard();
   if(typeof renderChecklist === 'function') renderChecklist();
   if(typeof renderAnalytics === 'function') renderAnalytics();
+  if(typeof renderRules === 'function') renderRules();
   renderNotifs();
 }
 document.getElementById('notifBtn').onclick = (e)=>{
@@ -9195,6 +9738,8 @@ function init(){
   initUserSwitch();
   initKP();
   initMortgage();
+  initRules();
+  renderRules();
   initAuth();
   renderCalLauncher();
 }

@@ -57,6 +57,7 @@ function refreshLive(){
   if(typeof renderDashboard === 'function') renderDashboard();
   if(typeof renderChecklist === 'function') renderChecklist();
   if(typeof renderAnalytics === 'function') renderAnalytics();
+  if(typeof renderRules === 'function') renderRules();
   renderNotifs();
 }
 document.getElementById('notifBtn').onclick = (e)=>{
@@ -182,6 +183,8 @@ function init(){
   initUserSwitch();
   initKP();
   initMortgage();
+  initRules();
+  renderRules();
   initAuth();
   renderCalLauncher();
 }

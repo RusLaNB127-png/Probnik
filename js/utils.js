@@ -97,7 +97,9 @@ function genUnits(buildingConfig){
           plans:        [],     // [{ id, url, title }]
           photos:       [],     // [{ id, url, isMain }]
           createdAt:    Date.now(),
-          updatedAt:    Date.now(),
+          // Разное время последнего изменения — как в реальной базе:
+          // часть помещений давно без движения (нужно для правил «зависла»)
+          updatedAt:    Date.now() - Math.floor(rng()*150)*86400000,
         });
       }
     }
@@ -188,6 +190,7 @@ const state = {
   activity:        [],               // живой журнал действий (авто-события)
   auth:            { users:null, sessionUid:null },  // учётные записи + сессия
   mortgage:        null,             // программы ипотеки (в базе)
+  rules:           null,             // правила автоматизации (в базе)
   // совместимость со старым кодом других вкладок
   units:           {},
 };
@@ -207,6 +210,7 @@ function saveState(){
       activity:       state.activity,
       auth:           { users: state.auth.users },
       mortgage:       state.mortgage,
+      rules:          state.rules,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
   }catch(err){
@@ -269,6 +273,7 @@ function loadState(){
     state.activity       = Array.isArray(data.activity) ? data.activity : [];
     state.auth           = normalizeAuth(data.auth);
     state.mortgage       = (data.mortgage && Array.isArray(data.mortgage.programs)) ? data.mortgage : null;
+    state.rules          = (data.rules && Array.isArray(data.rules.list)) ? data.rules : null;
     return true;
   }catch(err){
     console.warn('Не удалось загрузить состояние:', err);
@@ -287,6 +292,7 @@ function resetToDefaults(){
   state.activity       = [];
   state.auth           = normalizeAuth(null);
   state.mortgage       = null;
+  state.rules          = null;
   saveState();
 }
 
@@ -418,6 +424,7 @@ function onUnitStatusChange(u, from, to){
     autoTask('deal:'+u.id, { title:`Собрать документы — ${u.displayNum} (${u.corp})`,
       managerId:u.managerId, due: isoDate(addDays(TODAY,2)), status:'planned',
       comment:'Автозадача: оформление сделки' });
+  if(typeof rulesRun === 'function') rulesRun('unit_status', { unit:u, mgrId:u.managerId, to });
 }
 
 /* ============================================================
@@ -556,6 +563,7 @@ function createClient(data){
   logInteraction(client.id, 'created', 'Создан клиент · источник: '+client.source);
   saveState();
   logActivity({ type:'lead', icon:'user', text:'Новый клиент: '+client.name+' · '+client.source, who: client.mgr });
+  if(typeof rulesRun === 'function') rulesRun('client_created', { client, mgrId: client.mgr });
   return client;
 }
 
@@ -719,6 +727,7 @@ function updateUnit(id, patch){
     logActivity({ type:'price', icon:'swap',
       text:`${u.displayNum} · ${u.corp}: цена м² ${prevPrice.toLocaleString('ru-RU')} → ${(+patch.pricePerM).toLocaleString('ru-RU')} ₽`,
       who: u.managerId });
+    if(typeof rulesRun === 'function') rulesRun('price_changed', { unit:u, mgrId:u.managerId });
   }
   saveState();
   if(patch.status && patch.status !== prevStatus) onUnitStatusChange(u, prevStatus, patch.status);
@@ -890,6 +899,7 @@ function createShow(data){
     title:`Провести показ${cl?' — '+cl.name:''}${un?' ('+un.displayNum+')':''}`,
     managerId: show.managerId, due: show.date, status:'planned',
     comment:'Автозадача: назначен показ' + (show.time?' в '+show.time:'') });
+  if(typeof rulesRun === 'function') rulesRun('show_created', { unit:un, client:cl, mgrId:show.managerId });
   return show;
 }
 

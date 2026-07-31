@@ -109,6 +109,10 @@
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5V3.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 3.5v1"/><path d="M8.5 12.5l2 2 4-4.2"/></svg>
     <span>Чек-лист ОП</span>
   </button>
+  <button class="tab" data-view="rules">
+    <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="17" r="2.4"/><path d="M6 9.4V15a3 3 0 0 0 3 3h6.6"/><path d="M13.4 15.6 15.6 18l-2.2 2.2"/></svg>
+    <span>Автоматизация</span>
+  </button>
   <button class="tab" data-view="analytics">
     <svg class="licon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>
     <span>Аналитика</span>
@@ -339,6 +343,25 @@
     <div id="clHeadActions"></div>
   </div>
   <div id="clContent"></div>
+</main>
+
+<!-- ============ ВКЛАДКА: АВТОМАТИЗАЦИЯ ============ -->
+<main class="view" id="view-rules">
+  <div class="view-head">
+    <div><h2>Автоматизация: правила «если → то»</h2><p id="rulesSub">—</p></div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="rulesReset">Сбросить</button>
+      <button class="btn" id="rulesCheck">Проверить сейчас</button>
+      <button class="btn btn-primary" id="rulesNew">+ Новое правило</button>
+    </div>
+  </div>
+  <div class="rules-grid">
+    <div id="rulesList"></div>
+    <aside class="rules-side">
+      <h3 class="rules-side-t">Журнал срабатываний</h3>
+      <div id="rulesLog"></div>
+    </aside>
+  </div>
 </main>
 
 <!-- ============ ВКЛАДКА 6: АНАЛИТИКА ============ -->
@@ -869,6 +892,48 @@
   </div>
 </div>
 
+<!-- ======================= КОНСТРУКТОР ПРАВИЛА ======================= -->
+<div class="form-modal rule-modal" id="ruleModal">
+  <div class="form-shell rule-shell">
+    <header class="form-head">
+      <div><h3 id="ruleFormTitle">Новое правило</h3><div class="form-sub">Настройте условие и действия — без программиста</div></div>
+      <button class="icon-btn" id="ruleClose">✕</button>
+    </header>
+    <div class="form-body rule-body-form">
+      <div class="form-row"><label>Название правила</label><input type="text" id="ruleName" placeholder="Например: Бронь — напомнить об оплате"></div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag if">ЕСЛИ</span> происходит событие</div>
+        <div class="rule-row" id="ruleTrigger"></div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag and">И</span> выполняются условия
+          <button class="btn btn-sm" id="ruleAddCond">+ Условие</button></div>
+        <div id="ruleConds"></div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-block-h"><span class="rule-tag then">ТО</span> система делает
+          <button class="btn btn-sm" id="ruleAddAct">+ Действие</button></div>
+        <div id="ruleActs"></div>
+      </div>
+
+      <div class="rule-preview-box">
+        <div class="rule-preview-t">Предпросмотр правила</div>
+        <div id="rulePreview"></div>
+      </div>
+
+      <div class="form-actions">
+        <div style="margin-left:auto; display:flex; gap:10px;">
+          <button class="btn" id="ruleCancel">Отмена</button>
+          <button class="btn btn-primary" id="ruleSave">Сохранить правило</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= ИПОТЕЧНЫЙ КАЛЬКУЛЯТОР ======================= -->
 <div class="form-modal mort-modal" id="mortModal">
   <div class="form-shell mort-shell">
@@ -954,6 +1019,7 @@
 <script src="js/checklist.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/rules.js"></script>
 <script src="js/mortgage.js"></script>
 <script src="js/kp.js"></script>
 <script src="js/calendar.js"></script>
